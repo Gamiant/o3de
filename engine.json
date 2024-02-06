@@ -72,11 +72,8 @@
         "Gems/SurfaceData",
         "Gems/Terrain",
         "Gems/TextureAtlas",
-        "Gems/TickBusOrderViewer",
         "Gems/UiBasics",
         "Gems/Vegetation",
-        "Gems/VideoPlaybackFramework",
-        "Gems/VirtualGamepad",
         "Gems/WhiteBox"
     ],
     "gem_names": [
