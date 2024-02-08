@@ -131,4 +131,4 @@ namespace HoudiniEngine
 
 }
 
-#include <moc_extractpoints.cpp>
+#include <moc_ExtractPoints.cpp>
