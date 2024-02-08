@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+
 #include "HE_ParameterWidget_Button.h"
 
 #include "HE_ParameterWidget.h"

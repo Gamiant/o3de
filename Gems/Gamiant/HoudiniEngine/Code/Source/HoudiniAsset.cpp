@@ -1,5 +1,3 @@
-#include "StdAfx.h"
-
 #include <HoudiniCommon.h>
 
 namespace HoudiniEngine

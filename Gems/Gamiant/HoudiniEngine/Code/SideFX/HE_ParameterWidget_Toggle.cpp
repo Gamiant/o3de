@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "HE_ParameterWidget_Toggle.h"
 
 #include <QtWidgets/qboxlayout.h>

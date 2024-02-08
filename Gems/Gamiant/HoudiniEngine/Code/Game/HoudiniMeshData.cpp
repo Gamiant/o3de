@@ -1,9 +1,10 @@
-#include "StdAfx.h"
 
 #include <Game/HoudiniMeshData.h>
 
 #include <AzCore/Component/TickBus.h>
 #include <IIndexedMesh.h>
+
+#include <AzFramework/StringFunc/StringFunc.h>
 
 namespace HoudiniEngine
 {

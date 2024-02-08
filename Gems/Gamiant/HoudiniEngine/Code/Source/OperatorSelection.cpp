@@ -1,5 +1,3 @@
-#include "StdAfx.h"
-
 #include "OperatorSelection.h"
 
 #include <HoudiniEngine/HoudiniApi.h>

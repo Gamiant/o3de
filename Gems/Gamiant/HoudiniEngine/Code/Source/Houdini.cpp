@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 
 #ifdef AZ_PLATFORM_WINDOWS
 #include <Shlobj.h>
@@ -28,6 +27,10 @@ if ( (result) != HAPI_RESULT_SUCCESS ) \
 #include "Util/EditorUtils.h"
 
 #include <AzFramework/IO/LocalFileIO.h>
+
+#if defined(AZ_PLATFORM_WINDOWS)
+#include <ShlObj.h>
+#endif
 
 namespace HoudiniEngine
 {

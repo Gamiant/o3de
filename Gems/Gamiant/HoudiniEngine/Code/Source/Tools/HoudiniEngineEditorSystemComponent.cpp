@@ -1,6 +1,4 @@
 
-#include "StdAfx.h"
-
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzToolsFramework/Entity/EditorEntityContextBus.h>

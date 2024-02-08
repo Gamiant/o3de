@@ -1,5 +1,3 @@
-#include "StdAfx.h"
-//#include "..\..\BinTemp\win_x64_vs2015_profile\qt5\EzStreet.Editor\Source\ui_EzStreetMainWindow.h"  //TEMP So I can see intellisense
 
 #include "ExtractPoints.h"
 

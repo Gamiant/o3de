@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 
 #include <HoudiniEngine/HoudiniApi.h>
 #include <HoudiniEngine/HoudiniEngineBus.h>
@@ -9,7 +8,10 @@
 #include "HoudiniPaintAttribTool.h"
 
 #include <ISystem.h>
+
+#if defined(AZ_PLATFORM_WINDOWS)
 #include <Windows.h>
+#endif
 
 #include <QApplication>
 #include <QClipboard>

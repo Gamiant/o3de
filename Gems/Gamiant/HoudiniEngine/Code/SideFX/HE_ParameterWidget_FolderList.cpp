@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "HE_ParameterWidget_FolderList.h"
 
 #include <QtWidgets/qboxlayout.h>

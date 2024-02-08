@@ -1,6 +1,4 @@
-#include "StdAfx.h"
 
-//Removed for now, we might use something like this later:
 #include "SideFX/HE_Viewer.h" 
 
 #include <HoudiniEngine/HoudiniApi.h>
@@ -13,7 +11,10 @@
 #include "OperatorSelection.h"
 
 #include <ISystem.h>
+
+#if defined(AZ_PLATFORM_WINDOWS)
 #include <Windows.h>
+#endif
 
 #include <AzToolsFramework/Entity/EditorEntityContextBus.h>
 #include <AzToolsFramework/Entity/EditorEntityInfoBus.h>

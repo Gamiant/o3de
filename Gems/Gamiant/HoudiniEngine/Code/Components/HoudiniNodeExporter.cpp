@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 
 #include <HoudiniCommon.h>
 #include <Components/HoudiniNodeExporter.h>
@@ -11,6 +10,16 @@
 #include <AzQtComponents/Utilities/DesktopUtilities.h>
 #include <AtomLyIntegration/CommonFeatures/Mesh/MeshComponentBus.h>
 #include <AtomLyIntegration/CommonFeatures/Mesh/MeshComponentConstants.h>
+
+#include <AzToolsFramework/API/EntityCompositionRequestBus.h>
+#include <AzCore/Component/TransformBus.h>
+#include <AzCore/Component/NonUniformScaleBus.h>
+
+#include <AzToolsFramework/Entity/EditorEntityHelpers.h>
+
+#include <AzToolsFramework/ToolsComponents/TransformComponentBus.h>
+#include <AzFramework/Components/TransformComponent.h>
+
 
 namespace HoudiniEngine
 {
@@ -106,7 +115,7 @@ namespace HoudiniEngine
             if (assetName == m_fbxFilename)
             {
                 auto entity = AzToolsFramework::GetEntity(m_entityId);
-                auto transformComponent = entity->FindComponent<AzToolsFramework::Components::TransformComponent>();
+                auto transformComponent = entity->FindComponent<AzFramework::TransformComponent>();
                 AZ::EntityId parentId = transformComponent->GetParentId();
                 auto worldTransform = transformComponent->GetWorldTM();
 

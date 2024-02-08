@@ -1,5 +1,4 @@
 
-#include "StdAfx.h"
 
 #include <HoudiniCommon.h>
 #include "HoudiniPaintAttribTool.h"

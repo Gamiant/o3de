@@ -12,6 +12,8 @@
 #include <AzToolsFramework/ToolsComponents/EditorVisibilityBus.h>
 #include <LmbrCentral/Shape/SplineComponentBus.h>
 
+#include <Editor/IEditor.h>
+
 namespace HoudiniEngine
 {
     class HoudiniNode;

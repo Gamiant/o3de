@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "HE_ParameterWidget.h"
 
 #include <HAPI/HAPI.h>

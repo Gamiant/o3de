@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 
 #include <EditorDefs.h>
 
@@ -17,7 +16,10 @@
 
 #include <HAPI/HAPI.h>
 #include <ISystem.h>
+
+#if defined(AZ_PLATFORM_WINDOWS)
 #include <Windows.h>
+#endif
 
 #include <AzCore/Component/TickBus.h>
 #include <AzToolsFramework/Entity/EditorEntityInfoBus.h>

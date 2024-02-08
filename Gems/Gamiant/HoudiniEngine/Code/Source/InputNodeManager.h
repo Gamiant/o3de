@@ -1,4 +1,4 @@
-﻿
+
 #pragma once
 
 #include <LmbrCentral/Shape/SplineComponentBus.h>
@@ -6,6 +6,8 @@
 #include <HoudiniEngine/HoudiniApi.h>
 #include <Atom/RPI.Public/Model/Model.h>
 #include <Atom/RPI.Public/Base.h>
+
+#include <AzCore/Component/TransformBus.h>
 
 #define HOUDINI_ZERO_ID 0
 #define HOUDINI_INVALID_ID -1

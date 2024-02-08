@@ -1,7 +1,9 @@
-#include "StdAfx.h"
-
 #include <EditorDefs.h>
 #include "HoudiniScatterComponent.h"
+
+#include <AzToolsFramework/API/ToolsApplicationAPI.h>
+#include <AzToolsFramework/Entity/EditorEntityAPIBus.h>
+#include <AzToolsFramework/Entity/EditorEntityInfoBus.h>
 
 #include <HoudiniEngine/HoudiniApi.h>
 #include <HoudiniEngine/HoudiniEngineBus.h>

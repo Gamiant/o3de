@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 
 #include <AzCore/Component/Entity.h>
 #include <AzCore/Serialization/EditContext.h>
@@ -7,6 +6,9 @@
 #include <Game/HoudiniMeshData.h>
 
 #include <IIndexedMesh.h>
+
+#include <AzCore/Component/TransformBus.h>
+#include <AzCore/Debug/Profiler.h>
 
 namespace HoudiniEngine
 {

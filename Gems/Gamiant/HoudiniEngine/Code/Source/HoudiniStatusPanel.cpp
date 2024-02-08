@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 
 #include <Source/ui_HoudiniStatusPanel.h>
 #include "HoudiniStatusPanel.h"

@@ -1,10 +1,16 @@
 #pragma once
 
+#include <AzFramework/Entity/EntityDebugDisplayBus.h>
+
 #include <Components/HoudiniNodeComponentConfig.h>
 #include <HoudiniEngine/HoudiniCommonForwards.h>
 
 #include <AzToolsFramework/Entity/EditorEntityContextBus.h>
 #include <AzToolsFramework/API/ComponentEntitySelectionBus.h>
+
+#include <AzCore/Component/TransformBus.h>
+
+#include <AzFramework/Slice/SliceInstantiationBus.h>
 
 namespace HoudiniEngine
 {

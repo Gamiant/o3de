@@ -12,8 +12,6 @@ set(FILES
     Source/HoudiniStatusPanel.h
     Source/HoudiniStatusPanel.cpp
     Source/HoudiniStatusPanel.ui
-    Source/StdAfx.cpp
-    Source/StdAfx.h
     SideFX/HE_ParameterWidget.cpp
     SideFX/HE_ParameterWidget.h
     SideFX/HE_ParameterWidget_Button.cpp

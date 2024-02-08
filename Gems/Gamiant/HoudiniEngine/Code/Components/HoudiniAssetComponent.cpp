@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 
 #include <HoudiniEngine/HoudiniApi.h>
 #include <HoudiniEngine/HoudiniEngineBus.h>
@@ -9,7 +8,11 @@
 #include <ISystem.h>
 #include <IEditor.h>
 #include <Settings.h>
+
+#if defined(AZ_PLATFORM_WINDOWS)
 #include <Windows.h>
+#endif
+
 
 #include <AzToolsFramework/Entity/EditorEntityInfoBus.h>
 

@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 
 #include <HoudiniCommon.h>
 #include "InputNodeManager.h"

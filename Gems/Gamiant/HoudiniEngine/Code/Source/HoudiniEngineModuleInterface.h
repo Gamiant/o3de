@@ -1,10 +1,10 @@
 
-#include "StdAfx.h"
-
 #include <AzCore/Memory/SystemAllocator.h>
 #include <AzCore/Module/Module.h>
 #include <Clients/HoudiniEngineSystemComponent.h>
 #include <Game/HoudiniMeshComponent.h>
+
+#include <CryCommon/IGem.h>
 
 namespace HoudiniEngine
 {

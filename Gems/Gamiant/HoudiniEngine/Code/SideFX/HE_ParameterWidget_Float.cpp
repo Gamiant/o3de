@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+
 #include "HE_ParameterWidget_Float.h"
 
 #include <string>

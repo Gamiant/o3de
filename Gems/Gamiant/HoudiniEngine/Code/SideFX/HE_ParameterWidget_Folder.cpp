@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+
 #include "HE_ParameterWidget_Folder.h"
 
 #include <QtWidgets/qgridlayout.h>

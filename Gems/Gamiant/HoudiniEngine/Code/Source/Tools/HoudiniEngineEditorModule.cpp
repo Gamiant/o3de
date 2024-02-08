@@ -1,5 +1,4 @@
 
-#include "StdAfx.h"
 
 #include <HoudiniEngineModuleInterface.h>
 #include "HoudiniEngineEditorSystemComponent.h"

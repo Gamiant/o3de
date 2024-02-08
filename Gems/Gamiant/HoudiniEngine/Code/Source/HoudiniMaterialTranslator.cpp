@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+
 #include "HoudiniMaterialTranslator.h"
 #include <HoudiniEngine/HoudiniApi.h>
 #include <HoudiniEngine/HoudiniEngineBus.h>

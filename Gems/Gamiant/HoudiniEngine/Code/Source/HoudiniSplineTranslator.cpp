@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+
 #include "HoudiniSplineTranslator.h"
 #include "HoudiniEngineUtils.h"
 #include "HoudiniEngineString.h"
@@ -10,6 +10,8 @@
 #include <HoudiniEngine/HoudiniEngineBus.h>
 #include <AzCore/StringFunc/StringFunc.h>
 #include <AzToolsFramework/Component/EditorComponentAPIBus.h>
+#include <AzToolsFramework/API/EntityCompositionRequestBus.h>
+
 namespace HoudiniEngine
 {
     bool HoudiniSplineTranslator::UpdateHoudiniCurve(AZ::EntityId entityId, const AZ::s32& GeoId, bool bIsLegacyInputCurve)

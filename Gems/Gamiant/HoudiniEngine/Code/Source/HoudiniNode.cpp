@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 
 #include <AzCore/std/containers/stack.h>
 

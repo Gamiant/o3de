@@ -8,6 +8,8 @@
 #include <IConsole.h>
 #include <IEditor.h>
 
+#include <AzCore/Debug/Profiler.h>
+
 #define HOUDINI_INVALID_ID -1
 #define HOUDINI_ROOT_NODE_ID -1
 

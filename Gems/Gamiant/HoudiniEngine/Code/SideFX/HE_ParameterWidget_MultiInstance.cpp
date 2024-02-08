@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+
 #include "HE_ParameterWidget_MultiInstance.h"
 
 #include "HE_ParameterWidget.h"
@@ -6,6 +6,9 @@
 #include <QtWidgets/qgridlayout.h>
 #include <QtWidgets/qpushbutton.h>
 #include <vector>
+
+#include <AzCore/Casting/numeric_cast.h>
+
 
 namespace HoudiniEngine
 {
