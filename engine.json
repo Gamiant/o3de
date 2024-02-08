@@ -101,7 +101,8 @@
         "Gems/Vegetation",
         "Gems/VideoPlaybackFramework",
         "Gems/VirtualGamepad",
-        "Gems/WhiteBox"
+        "Gems/WhiteBox",
+        "Gems/Gamiant/HoudiniEngine"
     ],
     "gem_names": [
         "Atom_Bootstrap",
