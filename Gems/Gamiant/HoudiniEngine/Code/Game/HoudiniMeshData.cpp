@@ -326,24 +326,14 @@ namespace HoudiniEngine
         return m_indicesRange.offset;
     }
 
-    void HoudiniMeshData::SetIndexOffset(AZ::u32 offset)
-    {
-        m_indicesRange.offset = offset;
-    }
-
     void HoudiniMeshData::SetIndexOffset(AZ::u64 offset)
     {
-        SetIndexOffset(aznumeric_cast<AZ::u32>(offset));
-    }
-
-    void HoudiniMeshData::SetIndexCount(AZ::u32 count)
-    {
-        m_indicesRange.count = count;
+        m_indicesRange.offset = aznumeric_cast<AZ::u32>(offset);
     }
 
     void HoudiniMeshData::SetIndexCount(AZ::u64 count)
     {
-        SetIndexCount(aznumeric_cast<AZ::u32>(count));
+        m_indicesRange.count = aznumeric_cast<AZ::u32>(count);
     }
 
     const U32Vector& HoudiniMeshData::GetIndices() const
@@ -361,27 +351,27 @@ namespace HoudiniEngine
     {
         if constexpr (AttributeTypeT == AttributeType::Position)
         {
-            return aznumeric_cast<AZ::u32>(m_positionsRange.count);
+            return m_positionsRange.count;
         }
         else if constexpr (AttributeTypeT == AttributeType::Normal)
         {
-            return aznumeric_cast<AZ::u32>(m_normalsRange.count);
+            return m_normalsRange.count;
         }
         else if constexpr (AttributeTypeT == AttributeType::Tangent)
         {
-            return aznumeric_cast<AZ::u32>(m_tangentsRange.count);
+            return m_tangentsRange.count;
         }
         else if constexpr (AttributeTypeT == AttributeType::Bitangent)
         {
-            return aznumeric_cast<AZ::u32>(m_bitangentsRange.count);
+            return m_bitangentsRange.count;
         }
         else if constexpr (AttributeTypeT == AttributeType::UV)
         {
-            return aznumeric_cast<AZ::u32>(m_uvsRange.count);
+            return m_uvsRange.count;
         }
         else if constexpr (AttributeTypeT == AttributeType::Color)
         {
-            return aznumeric_cast<AZ::u32>(m_colorsRange.count);
+            return m_colorsRange.count;
         }
     }
     template<AttributeType AttributeTypeT>
@@ -413,71 +403,63 @@ namespace HoudiniEngine
         }
     }
     template<AttributeType AttributeTypeT>
-    void HoudiniMeshData::SetCount(AZ::u32 count)
-    {
-        if constexpr (AttributeTypeT == AttributeType::Position)
-        {
-            m_positionsRange.count = count;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::Normal)
-        {
-            m_normalsRange.count = count;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::Tangent)
-        {
-            m_tangentsRange.count = count;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::Bitangent)
-        {
-            m_bitangentsRange.count = count;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::UV)
-        {
-            m_uvsRange.count = count;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::Color)
-        {
-            m_colorsRange.count = count;
-        }
-    }
-    template<AttributeType AttributeTypeT>
     void HoudiniMeshData::SetCount(AZ::u64 count)
     {
-        SetCount<AttributeTypeT>(aznumeric_cast<AZ::u32>(count));
-    }
-    template<AttributeType AttributeTypeT>
-    void HoudiniMeshData::SetOffset(AZ::u32 offset)
-    {
         if constexpr (AttributeTypeT == AttributeType::Position)
         {
-            m_positionsRange.offset = offset;
+            m_positionsRange.count = aznumeric_cast<AZ::u32>(count);
         }
         else if constexpr (AttributeTypeT == AttributeType::Normal)
         {
-            m_normalsRange.offset = offset;
+            m_normalsRange.count = aznumeric_cast<AZ::u32>(count);
         }
         else if constexpr (AttributeTypeT == AttributeType::Tangent)
         {
-            m_tangentsRange.offset = offset;
+            m_tangentsRange.count = aznumeric_cast<AZ::u32>(count);
         }
         else if constexpr (AttributeTypeT == AttributeType::Bitangent)
         {
-            m_bitangentsRange.offset = offset;
+            m_bitangentsRange.count = aznumeric_cast<AZ::u32>(count);
         }
         else if constexpr (AttributeTypeT == AttributeType::UV)
         {
-            m_uvsRange.offset = offset;
+            m_uvsRange.count = aznumeric_cast<AZ::u32>(count);
         }
         else if constexpr (AttributeTypeT == AttributeType::Color)
         {
-            m_colorsRange.offset = offset;
+            m_colorsRange.count = aznumeric_cast<AZ::u32>(count);
         }
     }
+
     template<AttributeType AttributeTypeT>
     void HoudiniMeshData::SetOffset(AZ::u64 offset)
     {
-        SetOffset<AttributeTypeT>(aznumeric_cast<AZ::u32>(offset));
+        if constexpr (AttributeTypeT == AttributeType::Position)
+        {
+            m_positionsRange.offset = aznumeric_cast<AZ::u32>(offset);
+        }
+        else if constexpr (AttributeTypeT == AttributeType::Normal)
+        {
+            m_normalsRange.offset = aznumeric_cast<AZ::u32>(offset);
+        }
+        else if constexpr (AttributeTypeT == AttributeType::Tangent)
+        {
+            m_tangentsRange.offset = aznumeric_cast<AZ::u32>(offset);
+        }
+        else if constexpr (AttributeTypeT == AttributeType::Bitangent)
+        {
+            m_bitangentsRange.offset = aznumeric_cast<AZ::u32>(offset);
+        }
+        else if constexpr (AttributeTypeT == AttributeType::UV)
+        {
+            m_uvsRange.offset = aznumeric_cast<AZ::u32>(offset);
+        }
+        else if constexpr (AttributeTypeT == AttributeType::Color)
+        {
+            m_colorsRange.offset = aznumeric_cast<AZ::u32>(offset);
+        }
     }
+
     template<AttributeType AttributeTypeT>
     const auto& HoudiniMeshData::GetDataBuffer() const
     {
@@ -626,21 +608,21 @@ namespace HoudiniEngine
 
         Vert3Vector rhsPositions = rhs.m_positions;
         m_positions.insert(m_positions.end(), rhsPositions.begin(), rhsPositions.end());
-        SetCount<AttributeType::Position>(m_positions.size());
+        SetCount<AttributeType::Position>(aznumeric_cast<AZ::u32>(m_positions.size()));
 
         Vert3Vector rhsNormals = rhs.m_normals;
         m_normals.insert(m_normals.end(), rhsNormals.begin(), rhsNormals.end());
-        SetCount<AttributeType::Normal>(m_normals.size());
+        SetCount<AttributeType::Normal>(aznumeric_cast<AZ::u32>(m_normals.size()));
 
         m_colors.insert(m_colors.end(), rhs.m_colors.begin(), rhs.m_colors.end());
-        SetCount<AttributeType::Color>(m_colors.size());
+        SetCount<AttributeType::Color>(aznumeric_cast<AZ::u32>(m_colors.size()));
 
         m_uvs.insert(m_uvs.end(), rhs.m_uvs.begin(), rhs.m_uvs.end());
-        SetCount<AttributeType::UV>(m_uvs.size());
+        SetCount<AttributeType::UV>(aznumeric_cast<AZ::u32>(m_uvs.size()));
         m_tangents.insert(m_tangents.end(), rhs.m_tangents.begin(), rhs.m_tangents.end());
-        SetCount<AttributeType::Tangent>(m_tangents.size());
+        SetCount<AttributeType::Tangent>(aznumeric_cast<AZ::u32>(m_tangents.size()));
         m_bitangents.insert(m_bitangents.end(), rhs.m_bitangents.begin(), rhs.m_bitangents.end());
-        SetCount<AttributeType::Bitangent>(m_bitangents.size());
+        SetCount<AttributeType::Bitangent>(aznumeric_cast<AZ::u32>(m_bitangents.size()));
     
         return *this;
     }
