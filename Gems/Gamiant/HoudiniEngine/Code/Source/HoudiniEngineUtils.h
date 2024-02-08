@@ -4,6 +4,10 @@
 
 #include <AzCore/base.h>
 #include <AzCore/std/string/string.h>
+#include <AzCore/std/containers/vector.h>
+#include <AzCore/IO/FileIO.h>
+
+#include <AzToolsFramework/API/ToolsApplicationAPI.h>
 
 namespace HoudiniEngine
 {
