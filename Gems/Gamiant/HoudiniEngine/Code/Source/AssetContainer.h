@@ -10,5 +10,6 @@ namespace HoudiniEngine
         IHoudiniAsset* asset = nullptr;
     };
 
-    Q_DECLARE_METATYPE(AssetContainer)
 } // namespace HoudiniEngine
+
+Q_DECLARE_METATYPE(HoudiniEngine::AssetContainer);

@@ -134,6 +134,8 @@ namespace HoudiniEngine
 
     bool HoudiniEngineEditorSystemComponent::LoadHoudiniEngine()
     {
+
+#if defined(AZ_PLATFORM_WINDOWS)
         //char houdiniInstallDir[AZ_MAX_PATH_LEN] = { 0 };
         AZStd::string houdiniPath = "C:\\Program Files\\Side Effects Software\\Houdini 20.0.506\\bin\\";
 
@@ -141,6 +143,9 @@ namespace HoudiniEngine
         SetDllDirectoryA(houdiniPath.c_str());
         hPlugin = ::LoadLibraryEx(L"libhapi.dll", 0, 0);
         return hPlugin != nullptr;
+#else
+        return false;
+#endif
 
 #if 0
         HKEY key;
