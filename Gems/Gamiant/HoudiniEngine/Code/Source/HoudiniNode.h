@@ -30,7 +30,7 @@ namespace HoudiniEngine
             HAPI_NodeId m_nodeId;
             HAPI_NodeInfo m_nodeInfo;
             HAPI_GeoInfo m_geoInfo;
-			HAPI_AssetInfo m_assetInfo;
+            HAPI_AssetInfo m_assetInfo;
 
             AZ::EntityId m_entityId;
 
@@ -88,7 +88,7 @@ namespace HoudiniEngine
 
                 m_nodeId = -1;
                 m_deleteCount++;
-				m_hasEditableGeometryBuilt = false;
+                m_hasEditableGeometryBuilt = false;
             }
         
             HAPI_NodeInfo GetNodeInfo() override
@@ -109,19 +109,19 @@ namespace HoudiniEngine
             
             HAPI_AssetInfo GetAssetInfo() override
             {
-				HAPI_GetAssetInfo(m_session, m_nodeInfo.id, &m_assetInfo);
+                HAPI_GetAssetInfo(m_session, m_nodeInfo.id, &m_assetInfo);
                 return m_assetInfo;
             }
-			
+            
             bool HasEditableGeometryInfo() override
             {
                 return !m_editableGeoInfo.empty();
             }
 
-			HAPI_GeoInfo GetEditableGeometryInfo() override
-			{
-				return m_editableGeoInfo[0];
-			}
+            HAPI_GeoInfo GetEditableGeometryInfo() override
+            {
+                return m_editableGeoInfo[0];
+            }
 
             bool IsEditableGeometryBuilt() override
             {

@@ -17,10 +17,10 @@ namespace HoudiniEngine
     HoudiniNodeExporter::~HoudiniNodeExporter()
     {
         RemoveMeshData();
-		AzFramework::AssetCatalogEventBus::Handler::BusDisconnect();
-		AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusDisconnect();
+        AzFramework::AssetCatalogEventBus::Handler::BusDisconnect();
+        AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusDisconnect();
         AzFramework::BoundsRequestBus::Handler::BusDisconnect();
-		m_renderMesh.reset();
+        m_renderMesh.reset();
     }
 
     AZ::Aabb HoudiniNodeExporter::GetEditorSelectionBoundsViewport([[maybe_unused]] const AzFramework::ViewportInfo& viewportInfo)
@@ -30,29 +30,29 @@ namespace HoudiniEngine
 
     bool HoudiniNodeExporter::EditorSelectionIntersectRayViewport([[maybe_unused]] const AzFramework::ViewportInfo& viewportInfo, const AZ::Vector3& src, const AZ::Vector3& dir, float& distance)
     {
-		AZ_PROFILE_FUNCTION(AzToolsFramework);
+        AZ_PROFILE_FUNCTION(AzToolsFramework);
 
-		if (!m_renderMesh->GetModel())
-		{
-			return false;
-		}
+        if (!m_renderMesh->GetModel())
+        {
+            return false;
+        }
 
-		AZ::Transform transform = AZ::Transform::CreateIdentity();
-		AZ::TransformBus::EventResult(transform, m_entityId, &AZ::TransformBus::Events::GetWorldTM);
+        AZ::Transform transform = AZ::Transform::CreateIdentity();
+        AZ::TransformBus::EventResult(transform, m_entityId, &AZ::TransformBus::Events::GetWorldTM);
 
-		AZ::Vector3 nonUniformScale = AZ::Vector3::CreateOne();
-		AZ::NonUniformScaleRequestBus::EventResult(nonUniformScale, m_entityId, &AZ::NonUniformScaleRequests::GetScale);
+        AZ::Vector3 nonUniformScale = AZ::Vector3::CreateOne();
+        AZ::NonUniformScaleRequestBus::EventResult(nonUniformScale, m_entityId, &AZ::NonUniformScaleRequests::GetScale);
 
-		float t;
-		AZ::Vector3 ignoreNormal;
-		constexpr float rayLength = 1000.0f;
-		if (m_renderMesh->GetModel()->RayIntersection(transform, nonUniformScale, src, dir * rayLength, t, ignoreNormal))
-		{
-			distance = rayLength * t;
-			return true;
-		}
+        float t;
+        AZ::Vector3 ignoreNormal;
+        constexpr float rayLength = 1000.0f;
+        if (m_renderMesh->GetModel()->RayIntersection(transform, nonUniformScale, src, dir * rayLength, t, ignoreNormal))
+        {
+            distance = rayLength * t;
+            return true;
+        }
 
-		return false;
+        return false;
     }
 
     bool HoudiniNodeExporter::SupportsEditorRayIntersect()
@@ -62,29 +62,29 @@ namespace HoudiniEngine
 
     AZ::Aabb HoudiniNodeExporter::GetWorldBounds() const
     {
-		if (!m_worldAabb.has_value())
-		{
-			m_worldAabb = GetLocalBounds();
-			m_worldAabb->ApplyTransform(m_world);
-		}
+        if (!m_worldAabb.has_value())
+        {
+            m_worldAabb = GetLocalBounds();
+            m_worldAabb->ApplyTransform(m_world);
+        }
 
-		return m_worldAabb.value();
+        return m_worldAabb.value();
     }
 
     AZ::Aabb HoudiniNodeExporter::GetLocalBounds() const
     {
-		if (!m_localAabb.has_value() && m_modelData.MeshCount() > 0)
-		{
-			m_localAabb = m_modelData.GetAabb();
-		}
+        if (!m_localAabb.has_value() && m_modelData.MeshCount() > 0)
+        {
+            m_localAabb = m_modelData.GetAabb();
+        }
 
-		return m_localAabb.value();
+        return m_localAabb.value();
     }
 
     void HoudiniNodeExporter::OnSplineChanged()
     {
-		if (!m_node->HasEditableGeometryInfo())
-			return;
+        if (!m_node->HasEditableGeometryInfo())
+            return;
 
         HAPI_GeoInfo geometryInfo = m_node->GetEditableGeometryInfo();
         HoudiniSplineTranslator::HapiUpdateNodeForHoudiniSplineComponent(m_entityId, geometryInfo.nodeId, false);
@@ -92,12 +92,12 @@ namespace HoudiniEngine
 
     void HoudiniNodeExporter::OnCatalogAssetAdded(const AZ::Data::AssetId& assetId)
     {
-		AZ::Data::AssetInfo assetInfo;
-		EBUS_EVENT_RESULT(assetInfo, AZ::Data::AssetCatalogRequestBus, GetAssetInfoById, assetId);
+        AZ::Data::AssetInfo assetInfo;
+        EBUS_EVENT_RESULT(assetInfo, AZ::Data::AssetCatalogRequestBus, GetAssetInfoById, assetId);
 
-		// note that this will get called twice, once with the real assetId and once with legacy assetId.
-		// we only want to add the real asset to the list, in which the assetId passed in is equal to the final assetId returned
-		// otherwise, you look up assetId (and its a legacy assetId) and the actual asset will be different.
+        // note that this will get called twice, once with the real assetId and once with legacy assetId.
+        // we only want to add the real asset to the list, in which the assetId passed in is equal to the final assetId returned
+        // otherwise, you look up assetId (and its a legacy assetId) and the actual asset will be different.
         if ((assetInfo.m_assetId.IsValid()) && (assetInfo.m_assetId == assetId))
         {
             AZStd::string assetName;
@@ -105,56 +105,56 @@ namespace HoudiniEngine
 
             if (assetName == m_fbxFilename)
             {
-				auto entity = AzToolsFramework::GetEntity(m_entityId);
-				auto transformComponent = entity->FindComponent<AzToolsFramework::Components::TransformComponent>();
-				AZ::EntityId parentId = transformComponent->GetParentId();
-				auto worldTransform = transformComponent->GetWorldTM();
+                auto entity = AzToolsFramework::GetEntity(m_entityId);
+                auto transformComponent = entity->FindComponent<AzToolsFramework::Components::TransformComponent>();
+                AZ::EntityId parentId = transformComponent->GetParentId();
+                auto worldTransform = transformComponent->GetWorldTM();
 
-				AZ::EntityId entityId;
-				EBUS_EVENT_RESULT(entityId, AzToolsFramework::EditorRequests::Bus, CreateNewEntity, parentId);
+                AZ::EntityId entityId;
+                EBUS_EVENT_RESULT(entityId, AzToolsFramework::EditorRequests::Bus, CreateNewEntity, parentId);
 
-				AzToolsFramework::EntityIdList entityIdList = { entityId };
+                AzToolsFramework::EntityIdList entityIdList = { entityId };
 
-				AzToolsFramework::EntityCompositionRequests::AddComponentsOutcome addedComponentsResult =
-					AZ::Failure(AZStd::string("Failed to call AddComponentsToEntities on EntityCompositionRequestBus"));
-				AzToolsFramework::EntityCompositionRequestBus::BroadcastResult(
-					addedComponentsResult,
-					&AzToolsFramework::EntityCompositionRequests::AddComponentsToEntities,
-					entityIdList,
-					AZ::ComponentTypeList{ AZ::Render::EditorMeshComponentTypeId });
+                AzToolsFramework::EntityCompositionRequests::AddComponentsOutcome addedComponentsResult =
+                    AZ::Failure(AZStd::string("Failed to call AddComponentsToEntities on EntityCompositionRequestBus"));
+                AzToolsFramework::EntityCompositionRequestBus::BroadcastResult(
+                    addedComponentsResult,
+                    &AzToolsFramework::EntityCompositionRequests::AddComponentsToEntities,
+                    entityIdList,
+                    AZ::ComponentTypeList{ AZ::Render::EditorMeshComponentTypeId });
 
-				if (addedComponentsResult.IsSuccess())
-				{
-					AZ::TransformBus::Event(entityId, &AZ::TransformBus::Events::SetWorldTM, worldTransform);
+                if (addedComponentsResult.IsSuccess())
+                {
+                    AZ::TransformBus::Event(entityId, &AZ::TransformBus::Events::SetWorldTM, worldTransform);
 
-					AZ::Render::MeshComponentRequestBus::Event(
-						entityId, &AZ::Render::MeshComponentRequestBus::Events::SetModelAssetPath, assetInfo.m_relativePath);
+                    AZ::Render::MeshComponentRequestBus::Event(
+                        entityId, &AZ::Render::MeshComponentRequestBus::Events::SetModelAssetPath, assetInfo.m_relativePath);
 
                     if (m_fbxConfig->m_removeHdaAfterBake)
                     {
-						EBUS_EVENT(
-							AzToolsFramework::ToolsApplicationRequests::Bus,
-							DeleteEntitiesAndAllDescendants,
-							AzToolsFramework::EntityIdList{ m_entityId });
+                        EBUS_EVENT(
+                            AzToolsFramework::ToolsApplicationRequests::Bus,
+                            DeleteEntitiesAndAllDescendants,
+                            AzToolsFramework::EntityIdList{ m_entityId });
                     }
-					
-				}
+                    
+                }
             }
             else
-			{
-				if (!m_materialWaitList.empty())
-				{
-					auto iter = AZStd::find(m_materialWaitList.begin(), m_materialWaitList.end(), assetInfo.m_relativePath);
-					if (iter != m_materialWaitList.end())
-					{
-						m_materialWaitList.erase(iter);
-						if (m_materialWaitList.empty())
-						{
-							RebuildRenderMesh();
-						}
-					}
-				}
-			}
+            {
+                if (!m_materialWaitList.empty())
+                {
+                    auto iter = AZStd::find(m_materialWaitList.begin(), m_materialWaitList.end(), assetInfo.m_relativePath);
+                    if (iter != m_materialWaitList.end())
+                    {
+                        m_materialWaitList.erase(iter);
+                        if (m_materialWaitList.empty())
+                        {
+                            RebuildRenderMesh();
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -165,15 +165,15 @@ namespace HoudiniEngine
 
     void HoudiniNodeExporter::UpdateWorldTransformData(const AZ::Transform& transform)
     {
-		m_worldAabb.reset();
-		m_localAabb.reset();
+        m_worldAabb.reset();
+        m_localAabb.reset();
 
         m_world = transform;
 
-		if (m_renderMesh)
-		{
-			m_renderMesh->UpdateTransform(transform);
-		}
+        if (m_renderMesh)
+        {
+            m_renderMesh->UpdateTransform(transform);
+        }
     }
 
     void HoudiniNodeExporter::OnTick()
@@ -360,11 +360,11 @@ namespace HoudiniEngine
         HAPI_SetParmFloatValue(m_session, objTrans, "ry", 1, 180);
         CheckForErrors();
         */
-		HAPI_SetParmFloatValue(m_session, objTrans, "rx", 0, -180);
-		CheckForErrors();
+        HAPI_SetParmFloatValue(m_session, objTrans, "rx", 0, -180);
+        CheckForErrors();
 
-		HAPI_SetParmFloatValue(m_session, objTrans, "rz", 2, -180);
-		CheckForErrors();
+        HAPI_SetParmFloatValue(m_session, objTrans, "rz", 2, -180);
+        CheckForErrors();
 
         HAPI_SetParmFloatValue(m_session, objTrans, "sx", 0, 100);
         CheckForErrors();
@@ -971,10 +971,10 @@ namespace HoudiniEngine
                 data.m_uvs.resize(uvSize == 0 ? 0 : partInfo.vertexCount);
                 data.m_tangents.resize(tanSize == 0 ? 0 : partInfo.vertexCount);
                 data.m_bitangents.resize(bitanSize == 0 ? 0 : partInfo.vertexCount);*/
-				meshData.m_colors.resize(partInfo.vertexCount);
-				meshData.m_uvs.resize(partInfo.vertexCount);
-				meshData.m_tangents.resize(partInfo.vertexCount);
-				meshData.m_bitangents.resize(partInfo.vertexCount);
+                meshData.m_colors.resize(partInfo.vertexCount);
+                meshData.m_uvs.resize(partInfo.vertexCount);
+                meshData.m_tangents.resize(partInfo.vertexCount);
+                meshData.m_bitangents.resize(partInfo.vertexCount);
             }
 
             //AZ_PROFILE_EVENT_BEGIN(EDITOR, "AllocateTempCopyBuffers");
@@ -1104,10 +1104,10 @@ namespace HoudiniEngine
 
                 //HACK:  
                 //meshData.m_materialIndex = 1;
-				/*ReadAttributeHints(nodeId, partInfo);
-				ReadMaterialNameHints(nodeId, partInfo);
-				ReadMaterials(nodeId, partInfo, data);
-				ApplyMaterialsToMesh(data);*/
+                /*ReadAttributeHints(nodeId, partInfo);
+                ReadMaterialNameHints(nodeId, partInfo);
+                ReadMaterials(nodeId, partInfo, data);
+                ApplyMaterialsToMesh(data);*/
             }
             
             if (needsUnwind)
@@ -1306,9 +1306,9 @@ namespace HoudiniEngine
                             int size = uv_info.tupleSize;
                             meshData.m_uvs[i] = Vector2f{ uv[i * size + 0], -uv[i * size + 1] };
                         }
-						else {
-							meshData.m_uvs[i] = Vector2f{ 0.f, 0.f };
-						}
+                        else {
+                            meshData.m_uvs[i] = Vector2f{ 0.f, 0.f };
+                        }
 
                         if (tangent_info.exists && bitangent_info.exists && tangent_info.tupleSize == bitangent_info.tupleSize && tangent_info.tupleSize >= 3)
                         {
@@ -1338,11 +1338,11 @@ namespace HoudiniEngine
                         }
                     }
 
-					if (tangent_info.exists && bitangent_info.exists ||
-						tangent_vinfo.exists && bitangent_vinfo.exists)
-					{
-						meshData.CalculateTangents();
-					}
+                    if (tangent_info.exists && bitangent_info.exists ||
+                        tangent_vinfo.exists && bitangent_vinfo.exists)
+                    {
+                        meshData.CalculateTangents();
+                    }
                 }
             }
 
@@ -1369,10 +1369,10 @@ namespace HoudiniEngine
             m_renderMesh = AZStd::make_unique<HoudiniRenderMesh>(m_entityId);
         }
         
-		AzFramework::AssetCatalogEventBus::Handler::BusConnect();
+        AzFramework::AssetCatalogEventBus::Handler::BusConnect();
 
-		m_world = AZ::Transform::CreateIdentity();
-		AZ::TransformBus::EventResult(m_world, m_entityId, &AZ::TransformBus::Events::GetWorldTM);
+        m_world = AZ::Transform::CreateIdentity();
+        AZ::TransformBus::EventResult(m_world, m_entityId, &AZ::TransformBus::Events::GetWorldTM);
         return true;
     }
 
@@ -1399,8 +1399,8 @@ namespace HoudiniEngine
         if (!CheckHoudiniAccess())
             return false;        
 
-		if (!m_materialWaitList.empty())
-			return false;
+        if (!m_materialWaitList.empty())
+            return false;
 
         HAPI_GeoInfo geometryInfo = m_node->GetGeometryInfo();
         //We only need to do this if things changed, or there is no cache.
@@ -1470,83 +1470,83 @@ namespace HoudiniEngine
 
         if (meshCount > 0)
         {
-			// build the mesh map
+            // build the mesh map
             for (auto& mesh : m_modelData.m_meshes)
             {
                 if (mesh.m_materialNames.size())
                 {
-					for (const auto& materialName : mesh.m_materialNames)
-					{
-						auto indices = mesh.GetIndicesByMaterialIndex(mesh.m_materialMap[materialName]);
-						if (indices.size() > 0)
-						{
-							auto& meshInstance = meshMap[materialName].emplace_back(mesh);
-							meshInstance.SetIndices(indices);
-							meshInstance.CalculateTangents();
-							meshInstance.ClearMaterialList();
-						}
-					}
+                    for (const auto& materialName : mesh.m_materialNames)
+                    {
+                        auto indices = mesh.GetIndicesByMaterialIndex(mesh.m_materialMap[materialName]);
+                        if (indices.size() > 0)
+                        {
+                            auto& meshInstance = meshMap[materialName].emplace_back(mesh);
+                            meshInstance.SetIndices(indices);
+                            meshInstance.CalculateTangents();
+                            meshInstance.ClearMaterialList();
+                        }
+                    }
                 }
                 else
                 {
                     // set the default material here.
                     // defaulthoudini.azmaterial is an attempt to use vertex colors.
                     auto& meshInstance = meshMap["editor/materials/defaulthoudini.azmaterial"/*"materials/basic_grey.azmaterial"*/].emplace_back(mesh);
-					meshInstance.CalculateTangents();
-					meshInstance.ClearMaterialList();
+                    meshInstance.CalculateTangents();
+                    meshInstance.ClearMaterialList();
                 }
             }
             
             m_modelData.m_meshes.clear();
             m_modelData.m_materials.clear();
 
-			// merge all meshes in each mesh group along with their instances
-			AZ::u32 materialIndex = 0;
-			for (auto& meshGroup : meshMap)
-			{
-				HoudiniMeshData meshData;
-				for (const auto& mesh : meshGroup.second)
-				{
-					meshData += mesh;
-				}
+            // merge all meshes in each mesh group along with their instances
+            AZ::u32 materialIndex = 0;
+            for (auto& meshGroup : meshMap)
+            {
+                HoudiniMeshData meshData;
+                for (const auto& mesh : meshGroup.second)
+                {
+                    meshData += mesh;
+                }
 
-				if (meshData.GetCount<AttributeType::Position>() > 0)
-				{
-					meshData.SetMaterialIndex(materialIndex);
-					meshData.CalculateAABB();
+                if (meshData.GetCount<AttributeType::Position>() > 0)
+                {
+                    meshData.SetMaterialIndex(materialIndex);
+                    meshData.CalculateAABB();
                     m_modelData.m_aabb.AddAabb(meshData.GetAabb()); // add mesh data's aabb to get the aabb for the whole model
                     m_modelData.m_meshes.push_back(meshData);
                     m_modelData.m_materials.push_back(meshGroup.first);
-					materialIndex++;
-				}
-			}
+                    materialIndex++;
+                }
+            }
 
             m_modelData.MergeMeshBuffers();
 
             m_renderMesh->SetMaterialPathList(m_modelData.GetMaterials());
-			m_dirty = true;
+            m_dirty = true;
         }
         
         return true;
     }
 
-	bool HoudiniNodeExporter::GenerateEditableMeshData()
-	{
-		AZ_PROFILE_FUNCTION(Editor);
-		if (!CheckHoudiniAccess())
-			return false;
+    bool HoudiniNodeExporter::GenerateEditableMeshData()
+    {
+        AZ_PROFILE_FUNCTION(Editor);
+        if (!CheckHoudiniAccess())
+            return false;
 
         if (!m_node->HasEditableGeometryInfo())
         {
             return false;
         }
 
-		HAPI_GeoInfo geometryInfo = m_node->GetEditableGeometryInfo();
-		//We only need to do this if things changed, or there is no cache.
-		if (m_node->IsGeometryCached() == true && geometryInfo.hasGeoChanged == false)
-		{
-			return false;
-		}
+        HAPI_GeoInfo geometryInfo = m_node->GetEditableGeometryInfo();
+        //We only need to do this if things changed, or there is no cache.
+        if (m_node->IsGeometryCached() == true && geometryInfo.hasGeoChanged == false)
+        {
+            return false;
+        }
 
         if (!m_node->IsEditableGeometryBuilt())
         {
@@ -1554,9 +1554,9 @@ namespace HoudiniEngine
             HoudiniSplineTranslator::CreateHoudiniSplineComponentFromHoudiniEditableNode(m_entityId, geometryInfo.nodeId);
             m_node->SetEditableGeometryBuilt(true);
         }
-		
+        
         return true;
-	}
+    }
 
     //AZStd::vector<IStatObj*> HoudiniNodeExporter::GetStatObjects()
     //{
@@ -1597,54 +1597,54 @@ namespace HoudiniEngine
         if (!m_materialWaitList.empty())
             return;
 
-		m_dirty = false;
-		m_worldAabb.reset();
-		m_localAabb.reset();
+        m_dirty = false;
+        m_worldAabb.reset();
+        m_localAabb.reset();
 
-		if (m_modelData.MeshCount() > 0)
-		{
-			AZ::SystemTickBus::QueueFunction(
-				[=]()
-				{
-					AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusDisconnect();
-					AzFramework::BoundsRequestBus::Handler::BusDisconnect();
+        if (m_modelData.MeshCount() > 0)
+        {
+            AZ::SystemTickBus::QueueFunction(
+                [=]()
+                {
+                    AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusDisconnect();
+                    AzFramework::BoundsRequestBus::Handler::BusDisconnect();
                     m_renderMesh->BuildMesh(m_modelData);
-					m_renderMesh->UpdateTransform(m_world);
-					AzFramework::BoundsRequestBus::Handler::BusConnect(m_entityId);
-					AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusConnect(m_entityId);
-				});
-		}
+                    m_renderMesh->UpdateTransform(m_world);
+                    AzFramework::BoundsRequestBus::Handler::BusConnect(m_entityId);
+                    AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusConnect(m_entityId);
+                });
+        }
     }
 
     bool HoudiniNodeExporter::UpdatePartNeededMaterials(HAPI_NodeId nodeId, HAPI_PartInfo& partInfo)
     {
-		// Update the per face material IDs
-		UpdatePartFaceMaterialIDsIfNeeded(nodeId, partInfo);
+        // Update the per face material IDs
+        UpdatePartFaceMaterialIDsIfNeeded(nodeId, partInfo);
 
-		// See if we have some material overrides
-		UpdatePartFaceMaterialOverridesIfNeeded();
+        // See if we have some material overrides
+        UpdatePartFaceMaterialOverridesIfNeeded();
 
         // TODO: support material overrides
-		//// If we have houdini materials AND overrides:
-		//// We want to only create the Houdini materials that are not "covered" by overrides
-		//// If we have material instance attributes, create all the houdini material anyway
-		//// as their textures could be referenced by the material instance parameters
-		//if (PartFaceMaterialOverrides.Num() > 0 && !bMaterialOverrideNeedsCreateInstance)
-		//{
-		//	// If the material override was set on the detail, no need to look for houdini material IDs, as only the override will be used
-		//	if (AttribInfoFaceMaterialOverrides.exists && AttribInfoFaceMaterialOverrides.owner == HAPI_ATTROWNER_PRIM)
-		//	{
-		//		for (int32 MaterialIdx = 0; MaterialIdx < PartFaceMaterialIds.Num(); ++MaterialIdx)
-		//		{
-		//			// Add a material ID to the unique array only if that face is not using the override
-		//			if (PartFaceMaterialOverrides[MaterialIdx].IsEmpty())
-		//				PartUniqueMaterialIds.AddUnique(PartFaceMaterialIds[MaterialIdx]);
-		//		}
-		//	}
-		//}
-		//else
-		{
-			// No material overrides, simply update the unique material array
+        //// If we have houdini materials AND overrides:
+        //// We want to only create the Houdini materials that are not "covered" by overrides
+        //// If we have material instance attributes, create all the houdini material anyway
+        //// as their textures could be referenced by the material instance parameters
+        //if (PartFaceMaterialOverrides.Num() > 0 && !bMaterialOverrideNeedsCreateInstance)
+        //{
+        //    // If the material override was set on the detail, no need to look for houdini material IDs, as only the override will be used
+        //    if (AttribInfoFaceMaterialOverrides.exists && AttribInfoFaceMaterialOverrides.owner == HAPI_ATTROWNER_PRIM)
+        //    {
+        //        for (int32 MaterialIdx = 0; MaterialIdx < PartFaceMaterialIds.Num(); ++MaterialIdx)
+        //        {
+        //            // Add a material ID to the unique array only if that face is not using the override
+        //            if (PartFaceMaterialOverrides[MaterialIdx].IsEmpty())
+        //                PartUniqueMaterialIds.AddUnique(PartFaceMaterialIds[MaterialIdx]);
+        //        }
+        //    }
+        //}
+        //else
+        {
+            // No material overrides, simply update the unique material array
             AZStd::set<AZ::s32> uniqueMatIds;
             for (int32 MaterialIdx = 0; MaterialIdx < PartFaceMaterialIds.size(); ++MaterialIdx)
             {
@@ -1652,117 +1652,117 @@ namespace HoudiniEngine
                 if(uniqueMatIds.insert(faceMatId).second)
                     PartUniqueMaterialIds.push_back(faceMatId);
             }
-				
-		}
+                
+        }
 
-		//// Remove the invalid material ID from the unique array
-		//PartUniqueMaterialIds.RemoveSingle(-1);
+        //// Remove the invalid material ID from the unique array
+        //PartUniqueMaterialIds.RemoveSingle(-1);
 
-		{
-			// Get the unique material infos
-			PartUniqueMaterialInfos.resize(PartUniqueMaterialIds.size());
-			for (int32 MaterialIdx = 0; MaterialIdx < PartUniqueMaterialIds.size(); MaterialIdx++)
-			{
+        {
+            // Get the unique material infos
+            PartUniqueMaterialInfos.resize(PartUniqueMaterialIds.size());
+            for (int32 MaterialIdx = 0; MaterialIdx < PartUniqueMaterialIds.size(); MaterialIdx++)
+            {
 
-				HAPI_MaterialInfo_Init(&PartUniqueMaterialInfos[MaterialIdx]);
-				if (HAPI_RESULT_SUCCESS != HAPI_GetMaterialInfo(m_session, PartUniqueMaterialIds[MaterialIdx], &PartUniqueMaterialInfos[MaterialIdx]))
-				{
-					// Error retrieving material face assignments.
-					/*HOUDINI_LOG_MESSAGE(
-						TEXT("Creating Static Meshes: Object [%d %s], Geo [%d], Part [%d %s] unable to retrieve material info for material %d"),
-						HGPO.ObjectId, *HGPO.ObjectName, HGPO.GeoId, HGPO.PartId, *HGPO.PartName, PartUniqueMaterialIds[MaterialIdx]);*/
-					continue;
-				}
-			}
-		}
-		return true;
+                HAPI_MaterialInfo_Init(&PartUniqueMaterialInfos[MaterialIdx]);
+                if (HAPI_RESULT_SUCCESS != HAPI_GetMaterialInfo(m_session, PartUniqueMaterialIds[MaterialIdx], &PartUniqueMaterialInfos[MaterialIdx]))
+                {
+                    // Error retrieving material face assignments.
+                    /*HOUDINI_LOG_MESSAGE(
+                        TEXT("Creating Static Meshes: Object [%d %s], Geo [%d], Part [%d %s] unable to retrieve material info for material %d"),
+                        HGPO.ObjectId, *HGPO.ObjectName, HGPO.GeoId, HGPO.PartId, *HGPO.PartName, PartUniqueMaterialIds[MaterialIdx]);*/
+                    continue;
+                }
+            }
+        }
+        return true;
     }
 
     bool HoudiniNodeExporter::UpdatePartFaceMaterialIDsIfNeeded(HAPI_NodeId nodeId, HAPI_PartInfo& partInfo)
     {
-		// Only Retrieve the material IDs if necessary
-		if (PartFaceMaterialIds.size() > 0)
-			return true;
+        // Only Retrieve the material IDs if necessary
+        if (PartFaceMaterialIds.size() > 0)
+            return true;
 
-		AZ::s32 NumFaces = partInfo.faceCount;
-		if (NumFaces <= 0)
-			return true;
+        AZ::s32 NumFaces = partInfo.faceCount;
+        if (NumFaces <= 0)
+            return true;
 
-		PartFaceMaterialIds.resize(NumFaces);
+        PartFaceMaterialIds.resize(NumFaces);
 
-		// Get the materials IDs per face
-		bool bSingleFaceMaterial = false;
-		if (HAPI_RESULT_SUCCESS != HAPI_GetMaterialNodeIdsOnFaces(m_session, nodeId, partInfo.id, &bSingleFaceMaterial, &PartFaceMaterialIds.front(), 0, NumFaces))
-		{
-			// Error retrieving material face assignments.
+        // Get the materials IDs per face
+        bool bSingleFaceMaterial = false;
+        if (HAPI_RESULT_SUCCESS != HAPI_GetMaterialNodeIdsOnFaces(m_session, nodeId, partInfo.id, &bSingleFaceMaterial, &PartFaceMaterialIds.front(), 0, NumFaces))
+        {
+            // Error retrieving material face assignments.
             //TODO:
             /*AZ_Warning("[HOUDINI]", false, "Creating Static Meshes: Object [%d %s], Geo [%d], Part [%d %s] unable to retrieve material face assignments",
-				HGPO.ObjectId, *HGPO.ObjectName, HGPO.GeoId, HGPO.PartId, *HGPO.PartName);*/
-			return false;
-		}
+                HGPO.ObjectId, *HGPO.ObjectName, HGPO.GeoId, HGPO.PartId, *HGPO.PartName);*/
+            return false;
+        }
 
-		bOnlyOneFaceMaterial = bSingleFaceMaterial;
+        bOnlyOneFaceMaterial = bSingleFaceMaterial;
 
-		return true;
+        return true;
     }
 
     bool HoudiniNodeExporter::UpdatePartFaceMaterialOverridesIfNeeded()
     {
         // TODO: port this for overrides
-		//// Only Retrieve the material overrides if necessary
-		//if (PartFaceMaterialOverrides.Num() > 0)
-		//	return true;
+        //// Only Retrieve the material overrides if necessary
+        //if (PartFaceMaterialOverrides.Num() > 0)
+        //    return true;
 
-		//bMaterialOverrideNeedsCreateInstance = false;
+        //bMaterialOverrideNeedsCreateInstance = false;
 
-		//FHoudiniEngineUtils::HapiGetAttributeDataAsString(
-		//	HGPO.GeoInfo.NodeId, HGPO.PartInfo.PartId,
-		//	HAPI_UNREAL_ATTRIB_MATERIAL,
-		//	AttribInfoFaceMaterialOverrides, PartFaceMaterialOverrides);
+        //FHoudiniEngineUtils::HapiGetAttributeDataAsString(
+        //    HGPO.GeoInfo.NodeId, HGPO.PartInfo.PartId,
+        //    HAPI_UNREAL_ATTRIB_MATERIAL,
+        //    AttribInfoFaceMaterialOverrides, PartFaceMaterialOverrides);
 
-		//// If material attribute was not found, check fallback compatibility attribute.
-		//if (!AttribInfoFaceMaterialOverrides.exists)
-		//{
-		//	PartFaceMaterialOverrides.Empty();
-		//	FHoudiniEngineUtils::HapiGetAttributeDataAsString(
-		//		HGPO.GeoInfo.NodeId, HGPO.PartInfo.PartId,
-		//		HAPI_UNREAL_ATTRIB_MATERIAL_FALLBACK,
-		//		AttribInfoFaceMaterialOverrides, PartFaceMaterialOverrides);
-		//}
+        //// If material attribute was not found, check fallback compatibility attribute.
+        //if (!AttribInfoFaceMaterialOverrides.exists)
+        //{
+        //    PartFaceMaterialOverrides.Empty();
+        //    FHoudiniEngineUtils::HapiGetAttributeDataAsString(
+        //        HGPO.GeoInfo.NodeId, HGPO.PartInfo.PartId,
+        //        HAPI_UNREAL_ATTRIB_MATERIAL_FALLBACK,
+        //        AttribInfoFaceMaterialOverrides, PartFaceMaterialOverrides);
+        //}
 
-		//// If material attribute and fallbacks were not found, check the material instance attribute.
-		//if (!AttribInfoFaceMaterialOverrides.exists)
-		//{
-		//	PartFaceMaterialOverrides.Empty();
-		//	FHoudiniEngineUtils::HapiGetAttributeDataAsString(
-		//		HGPO.GeoInfo.NodeId, HGPO.PartInfo.PartId,
-		//		HAPI_UNREAL_ATTRIB_MATERIAL_INSTANCE,
-		//		AttribInfoFaceMaterialOverrides, PartFaceMaterialOverrides);
+        //// If material attribute and fallbacks were not found, check the material instance attribute.
+        //if (!AttribInfoFaceMaterialOverrides.exists)
+        //{
+        //    PartFaceMaterialOverrides.Empty();
+        //    FHoudiniEngineUtils::HapiGetAttributeDataAsString(
+        //        HGPO.GeoInfo.NodeId, HGPO.PartInfo.PartId,
+        //        HAPI_UNREAL_ATTRIB_MATERIAL_INSTANCE,
+        //        AttribInfoFaceMaterialOverrides, PartFaceMaterialOverrides);
 
-		//	// We will we need to create material instances from the override attributes
-		//	bMaterialOverrideNeedsCreateInstance = AttribInfoFaceMaterialOverrides.exists;
-		//}
+        //    // We will we need to create material instances from the override attributes
+        //    bMaterialOverrideNeedsCreateInstance = AttribInfoFaceMaterialOverrides.exists;
+        //}
 
-		//if (AttribInfoFaceMaterialOverrides.exists
-		//	&& AttribInfoFaceMaterialOverrides.owner != HAPI_ATTROWNER_PRIM
-		//	&& AttribInfoFaceMaterialOverrides.owner != HAPI_ATTROWNER_DETAIL)
-		//{
-		//	HOUDINI_LOG_WARNING(TEXT("Static Mesh [%d %s], Geo [%d], Part [%d %s]: unreal_material must be a primitive or detail attribute, ignoring attribute."),
-		//		HGPO.ObjectId, *HGPO.ObjectName, HGPO.GeoId, HGPO.PartId, *HGPO.PartName);
-		//	AttribInfoFaceMaterialOverrides.exists = false;
-		//	bMaterialOverrideNeedsCreateInstance = false;
-		//	PartFaceMaterialOverrides.Empty();
-		//	return false;
-		//}
+        //if (AttribInfoFaceMaterialOverrides.exists
+        //    && AttribInfoFaceMaterialOverrides.owner != HAPI_ATTROWNER_PRIM
+        //    && AttribInfoFaceMaterialOverrides.owner != HAPI_ATTROWNER_DETAIL)
+        //{
+        //    HOUDINI_LOG_WARNING(TEXT("Static Mesh [%d %s], Geo [%d], Part [%d %s]: unreal_material must be a primitive or detail attribute, ignoring attribute."),
+        //        HGPO.ObjectId, *HGPO.ObjectName, HGPO.GeoId, HGPO.PartId, *HGPO.PartName);
+        //    AttribInfoFaceMaterialOverrides.exists = false;
+        //    bMaterialOverrideNeedsCreateInstance = false;
+        //    PartFaceMaterialOverrides.Empty();
+        //    return false;
+        //}
 
-		return true;
+        return true;
     }
 
     bool HoudiniNodeExporter::CreateNeededMaterials(const AZStd::string& objectName, HAPI_NodeId nodeId, HAPI_PartInfo& partInfo, HoudiniMeshData& meshData)
     {
-		PartFaceMaterialIds.clear();
-		PartUniqueMaterialIds.clear();
-		PartUniqueMaterialInfos.clear();
+        PartFaceMaterialIds.clear();
+        PartUniqueMaterialIds.clear();
+        PartUniqueMaterialInfos.clear();
 
         UpdatePartNeededMaterials(nodeId, partInfo);
 
@@ -1824,8 +1824,8 @@ namespace HoudiniEngine
 
         // read the material indices
         bool allSame = false;
-		AZStd::vector<HAPI_NodeId> materialIds(partInfo.faceCount);
-		HAPI_GetMaterialNodeIdsOnFaces(m_session, nodeId, partInfo.id, &allSame, &materialIds.front(), 0, partInfo.faceCount);
+        AZStd::vector<HAPI_NodeId> materialIds(partInfo.faceCount);
+        HAPI_GetMaterialNodeIdsOnFaces(m_session, nodeId, partInfo.id, &allSame, &materialIds.front(), 0, partInfo.faceCount);
 
         meshData.m_materialIndices = materialIds;
 

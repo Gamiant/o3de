@@ -27,7 +27,7 @@ namespace HoudiniEngine
 
         AZStd::string m_namedPipe;
         HAPI_Session m_session;
-        HAPI_CookOptions m_cookOptions;	
+        HAPI_CookOptions m_cookOptions;    
 
         HAPI_ProcessId m_thriftServerProcId;
         HAPI_ThriftServerOptions m_thriftServerOptions;

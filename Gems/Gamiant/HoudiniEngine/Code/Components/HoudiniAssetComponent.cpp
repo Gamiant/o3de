@@ -55,7 +55,7 @@ namespace HoudiniEngine
                 HoudiniScriptPropertyMultiparm::Reflect(context);
                 HoudiniScriptPropertyButton::Reflect(context);  // FL[FD-12463] Implement button interface parm in houdini engine for lumberyard
                 HoudiniPropertyGroup::Reflect(context);
-				
+                
 
                 ec->Class<HoudiniAssetComponent>("HoudiniDigitalAsset", "Houdini Digital Asset")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
@@ -72,9 +72,9 @@ namespace HoudiniEngine
                     ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniAssetComponent::m_config, "Houdini", "")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC("RefreshAttributesAndValues", 0xcbc2147c))
 
-					->DataElement(0, &HoudiniAssetComponent::m_fbxConfig, "Bake Settings", "")
-					//->Attribute(AZ::Edit::Attributes::ChangeNotify, &EditorDebugDrawLineComponent::OnPropertyUpdate)
-					->Attribute(AZ::Edit::Attributes::AutoExpand, true)
+                    ->DataElement(0, &HoudiniAssetComponent::m_fbxConfig, "Bake Settings", "")
+                    //->Attribute(AZ::Edit::Attributes::ChangeNotify, &EditorDebugDrawLineComponent::OnPropertyUpdate)
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ;
             }
         }
@@ -199,8 +199,8 @@ namespace HoudiniEngine
         }
         
         m_config.m_entityId = GetEntityId();        
-		m_nodeExporter.Initialize(GetEntityId(), &m_fbxConfig);
-		m_nodeExporter.SetDirty(true);
+        m_nodeExporter.Initialize(GetEntityId(), &m_fbxConfig);
+        m_nodeExporter.SetDirty(true);
         m_nodeExporter.GenerateMeshMaterials();
 
         AZ::Transform transform = AZ::Transform::CreateIdentity();

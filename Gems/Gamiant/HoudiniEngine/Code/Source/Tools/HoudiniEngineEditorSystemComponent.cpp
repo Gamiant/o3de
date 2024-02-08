@@ -80,8 +80,8 @@ namespace HoudiniEngine
         AZ::TickBus::Handler::BusConnect();
         AZ::EntitySystemBus::Handler::BusConnect();
 
-		//TODO: maybe call this in a system or manager class if we have one later.
-		PropertyFolderListHandler::Register();
+        //TODO: maybe call this in a system or manager class if we have one later.
+        PropertyFolderListHandler::Register();
     }
 
     void HoudiniEngineEditorSystemComponent::Deactivate()

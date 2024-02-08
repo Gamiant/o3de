@@ -364,33 +364,33 @@ namespace HoudiniEngine
                 if (newId.IsValid() == false)
                 {
 
-					AZ::EntityId newEntityId;
-					//AZ::Entity* newSplineEntity;
+                    AZ::EntityId newEntityId;
+                    //AZ::Entity* newSplineEntity;
 
-					AzToolsFramework::EditorEntityContextRequestBus::BroadcastResult(newEntityId, &AzToolsFramework::EditorEntityContextRequests::CreateNewEditorEntity, newName.c_str());
+                    AzToolsFramework::EditorEntityContextRequestBus::BroadcastResult(newEntityId, &AzToolsFramework::EditorEntityContextRequests::CreateNewEditorEntity, newName.c_str());
 
-					//AZ::ComponentApplicationBus::BroadcastResult(newSplineEntity, &AZ::ComponentApplicationRequests::FindEntity, newEntityId);
+                    //AZ::ComponentApplicationBus::BroadcastResult(newSplineEntity, &AZ::ComponentApplicationRequests::FindEntity, newEntityId);
 
-					if (m_entityId.IsValid())
-					{
-						AZ::TransformBus::Event(newEntityId, &AZ::TransformInterface::SetParent, m_entityId);
-					}
+                    if (m_entityId.IsValid())
+                    {
+                        AZ::TransformBus::Event(newEntityId, &AZ::TransformInterface::SetParent, m_entityId);
+                    }
 
-					AZ::TransformBus::Event(newEntityId, &AZ::TransformInterface::SetLocalTM, AZ::Transform::CreateIdentity());
+                    AZ::TransformBus::Event(newEntityId, &AZ::TransformInterface::SetLocalTM, AZ::Transform::CreateIdentity());
 
-					AzToolsFramework::EntityIdList entityIdList = { newEntityId };
+                    AzToolsFramework::EntityIdList entityIdList = { newEntityId };
 
-					AzToolsFramework::EntityCompositionRequests::AddComponentsOutcome addedComponentsResult =
-						AZ::Failure(AZStd::string("Failed to call AddComponentsToEntities on EntityCompositionRequestBus"));
-					AzToolsFramework::EntityCompositionRequestBus::BroadcastResult(
-						addedComponentsResult,
-						&AzToolsFramework::EntityCompositionRequests::AddComponentsToEntities,
-						entityIdList,
-						AZ::ComponentTypeList{ AZ::Uuid("{5B29D788-4885-4D56-BD9B-C0C45BE08EC1}") });
+                    AzToolsFramework::EntityCompositionRequests::AddComponentsOutcome addedComponentsResult =
+                        AZ::Failure(AZStd::string("Failed to call AddComponentsToEntities on EntityCompositionRequestBus"));
+                    AzToolsFramework::EntityCompositionRequestBus::BroadcastResult(
+                        addedComponentsResult,
+                        &AzToolsFramework::EntityCompositionRequests::AddComponentsToEntities,
+                        entityIdList,
+                        AZ::ComponentTypeList{ AZ::Uuid("{5B29D788-4885-4D56-BD9B-C0C45BE08EC1}") });
 
-					//newSplineEntity->Deactivate();
-					//newSplineEntity->CreateComponent(AZ::Uuid("{5B29D788-4885-4D56-BD9B-C0C45BE08EC1}") /*Editor Spline component*/);
-					//newSplineEntity->Activate();
+                    //newSplineEntity->Deactivate();
+                    //newSplineEntity->CreateComponent(AZ::Uuid("{5B29D788-4885-4D56-BD9B-C0C45BE08EC1}") /*Editor Spline component*/);
+                    //newSplineEntity->Activate();
 
                     newId = newEntityId;
                     //newId = CreateSplineEntity(newName, m_entityId);
@@ -516,66 +516,66 @@ namespace HoudiniEngine
                 continue;
             }
 
-			if (param->GetInfo().invisible || param->GetInfo().disabled)
-			{
+            if (param->GetInfo().invisible || param->GetInfo().disabled)
+            {
                 param->SetProcessed(true);
                 continue;
-			}
+            }
 
-			if (param->GetType() == HAPI_PARMTYPE_FOLDERLIST)
-			{
-				//TODO: We don't need to react here unless we want to support multi-level nesting which atm we do not.
-				//TODO: add a folder list property and make that the active folder list
-				//      the property will show the tabs or maybe buttons
-				param->SetProcessed(true);
-				continue;
-			}
+            if (param->GetType() == HAPI_PARMTYPE_FOLDERLIST)
+            {
+                //TODO: We don't need to react here unless we want to support multi-level nesting which atm we do not.
+                //TODO: add a folder list property and make that the active folder list
+                //      the property will show the tabs or maybe buttons
+                param->SetProcessed(true);
+                continue;
+            }
 
-			if (param->GetType() == HAPI_PARMTYPE_FOLDER)
-			{
-				auto subGroup = group.GetGroup(param->GetLabel().c_str());
-				if (subGroup == nullptr)
-				{
-					group.m_groups.emplace_back();
-					subGroup = &group.m_groups.back();
-					subGroup->m_name = param->GetLabel();
-				}
-				param->SetProcessed(true);
+            if (param->GetType() == HAPI_PARMTYPE_FOLDER)
+            {
+                auto subGroup = group.GetGroup(param->GetLabel().c_str());
+                if (subGroup == nullptr)
+                {
+                    group.m_groups.emplace_back();
+                    subGroup = &group.m_groups.back();
+                    subGroup->m_name = param->GetLabel();
+                }
+                param->SetProcessed(true);
                 
-				populateGroup(node, params, *subGroup, isReload, param->GetId());
+                populateGroup(node, params, *subGroup, isReload, param->GetId());
 
                 continue;
-			}
+            }
 
-			HoudiniScriptProperty* prop = nullptr;
-			HoudiniScriptProperty* propOld = isReload ? nullptr : azrtti_cast<HoudiniScriptProperty*>(group.GetProperty(param->GetName().c_str()));
+            HoudiniScriptProperty* prop = nullptr;
+            HoudiniScriptProperty* propOld = isReload ? nullptr : azrtti_cast<HoudiniScriptProperty*>(group.GetProperty(param->GetName().c_str()));
 
-			// FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
-			if (param->GetInfo().isChildOfMultiParm)
-			{
-				param->SetProcessed(true);
-				continue;
-			}
+            // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+            if (param->GetInfo().isChildOfMultiParm)
+            {
+                param->SetProcessed(true);
+                continue;
+            }
 
-			if (propOld == nullptr)
-			{
-				prop = HoudiniScriptPropertyFactory::CreateNew(param);
-				if (prop != nullptr)
-				{
-					prop->SetNode(node);
-					//prop->SetGroupName(group);
-					group.m_properties.push_back(prop);
-				}
-			}
-			else
-			{
-				propOld->SetNode(node);
-				propOld->SetParameter(param);
-				//propOld->SetGroupName(group);
-				propOld->ScriptHasChanged();
-			}
+            if (propOld == nullptr)
+            {
+                prop = HoudiniScriptPropertyFactory::CreateNew(param);
+                if (prop != nullptr)
+                {
+                    prop->SetNode(node);
+                    //prop->SetGroupName(group);
+                    group.m_properties.push_back(prop);
+                }
+            }
+            else
+            {
+                propOld->SetNode(node);
+                propOld->SetParameter(param);
+                //propOld->SetGroupName(group);
+                propOld->ScriptHasChanged();
+            }
 
-			param->SetProcessed(true);
+            param->SetProcessed(true);
         }
     }
 
@@ -1097,12 +1097,12 @@ namespace HoudiniEngine
             m_properties.m_properties.push_back(prop);
         }
 
-		auto& params = m_node->GetParameters();
-		for (auto param : params)
-		{
-			param->SetProcessed(false);
-		}
-		populateGroup(m_node, params, m_properties, true);
+        auto& params = m_node->GetParameters();
+        for (auto param : params)
+        {
+            param->SetProcessed(false);
+        }
+        populateGroup(m_node, params, m_properties, true);
 
         AZ::TickBus::QueueFunction([]()
             {

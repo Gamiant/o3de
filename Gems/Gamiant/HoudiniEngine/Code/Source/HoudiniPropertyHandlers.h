@@ -21,13 +21,13 @@ namespace HoudiniEngine
         PropertyFolderListCtrl(QWidget* pParent = nullptr);
 
 #if HE_TOGGLE
-		void SetFolderList(const AZStd::vector<HoudiniPropertyGroup>& groups);
+        void SetFolderList(const AZStd::vector<HoudiniPropertyGroup>& groups);
         AZStd::vector<HoudiniPropertyGroup> GetFolderList() const;
 #else
         void SetFolderList(const AZStd::vector<AZStd::string>& groups);
         AZStd::vector<AZStd::string> GetFolderList() const;
 #endif
-		
+        
 
     protected:
         QVBoxLayout* Layout;

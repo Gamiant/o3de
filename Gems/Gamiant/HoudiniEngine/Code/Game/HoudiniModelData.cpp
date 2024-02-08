@@ -114,23 +114,23 @@ namespace HoudiniEngine
         }
 
         // need to convert positions to O3DE
-		AZ::Matrix3x3 rotateX = AZ::Matrix3x3::CreateRotationX(AZ::DegToRad(90.0f));
+        AZ::Matrix3x3 rotateX = AZ::Matrix3x3::CreateRotationX(AZ::DegToRad(90.0f));
 
-		auto rotate4x4 = AZ::Matrix4x4::CreateFromMatrix3x4(AZ::Matrix3x4::CreateFromMatrix3x3(rotateX));
+        auto rotate4x4 = AZ::Matrix4x4::CreateFromMatrix3x4(AZ::Matrix3x4::CreateFromMatrix3x3(rotateX));
 
-		for (auto& position : m_positions)
-		{
-			auto vec3 = rotate4x4 * MathHelper::Vec3fToVec3(position);
-			position = MathHelper::Vec3ToVec3f(vec3);
-		}
+        for (auto& position : m_positions)
+        {
+            auto vec3 = rotate4x4 * MathHelper::Vec3fToVec3(position);
+            position = MathHelper::Vec3ToVec3f(vec3);
+        }
 
-		auto normalMatrix = rotate4x4.GetInverseFull();
-		normalMatrix.Transpose();
-		for (auto& normal : m_normals)
-		{
-			auto vec3 = normalMatrix * MathHelper::Vec3fToVec3(normal);
+        auto normalMatrix = rotate4x4.GetInverseFull();
+        normalMatrix.Transpose();
+        for (auto& normal : m_normals)
+        {
+            auto vec3 = normalMatrix * MathHelper::Vec3fToVec3(normal);
             vec3.Normalize();
-			normal = MathHelper::Vec3ToVec3f(vec3);
-		}
+            normal = MathHelper::Vec3ToVec3f(vec3);
+        }
     }
 } // namespace HoudiniEngine

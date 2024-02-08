@@ -154,26 +154,26 @@ namespace HoudiniEngine
             AZ::u32 ScriptHasChanged() override;
     };
 
-	class HoudiniScriptPropertyIntChoice : public HoudiniScriptProperty
-	{
-	public:
-		int m_value;
+    class HoudiniScriptPropertyIntChoice : public HoudiniScriptProperty
+    {
+    public:
+        int m_value;
         AZStd::string m_choice;
         AZStd::vector<AZStd::string> m_choices;
 
-	public:
-		AZ_CLASS_ALLOCATOR(HoudiniScriptPropertyIntChoice, AZ::SystemAllocator);
-		AZ_RTTI(HoudiniScriptPropertyIntChoice, "{65C109CE-88AE-420E-BCCC-15F78C64EFAF}", HoudiniScriptProperty);
-		static void Reflect(AZ::ReflectContext* reflection);
+    public:
+        AZ_CLASS_ALLOCATOR(HoudiniScriptPropertyIntChoice, AZ::SystemAllocator);
+        AZ_RTTI(HoudiniScriptPropertyIntChoice, "{65C109CE-88AE-420E-BCCC-15F78C64EFAF}", HoudiniScriptProperty);
+        static void Reflect(AZ::ReflectContext* reflection);
 
         HoudiniScriptPropertyIntChoice() = default;
         HoudiniScriptPropertyIntChoice(HoudiniParameterPtr parameter);
 
-		AZ::u32 ScriptHasChanged() override;
+        AZ::u32 ScriptHasChanged() override;
 
         AZStd::vector<AZStd::string> GetChoices();
         int GetChoiceIndex(const AZStd::string& choice);
-	};
+    };
 
     class HoudiniScriptPropertyFloat : public HoudiniScriptProperty
     {

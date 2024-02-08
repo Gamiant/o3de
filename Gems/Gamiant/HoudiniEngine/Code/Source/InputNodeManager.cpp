@@ -19,51 +19,51 @@ namespace HoudiniEngine
 {
     #define EDITOR_SPLINE_COMPONENT_GUID "{5B29D788-4885-4D56-BD9B-C0C45BE08EC1}"
 
-	// Gets the view for the specified scene
-	static const AZ::RPI::ViewPtr GetViewFromScene(const AZ::RPI::Scene* scene)
-	{
-		const auto viewportContextRequests = AZ::RPI::ViewportContextRequests::Get();
-		const auto viewportContext = viewportContextRequests->GetViewportContextByScene(scene);
-		const AZ::RPI::ViewPtr viewPtr = viewportContext->GetDefaultView();
-		return viewPtr;
-	}
+    // Gets the view for the specified scene
+    static const AZ::RPI::ViewPtr GetViewFromScene(const AZ::RPI::Scene* scene)
+    {
+        const auto viewportContextRequests = AZ::RPI::ViewportContextRequests::Get();
+        const auto viewportContext = viewportContextRequests->GetViewportContextByScene(scene);
+        const AZ::RPI::ViewPtr viewPtr = viewportContext->GetDefaultView();
+        return viewPtr;
+    }
 
-	// utility class based on DrawableMetaData
-	class ModelMetaData
-	{
-	public:
-		ModelMetaData(const AZ::EntityId& entityId);
+    // utility class based on DrawableMetaData
+    class ModelMetaData
+    {
+    public:
+        ModelMetaData(const AZ::EntityId& entityId);
         AZ::RPI::Scene* GetScene() const;
-		const AZ::RPI::ViewPtr GetView() const;
-		const AZ::Render::MeshFeatureProcessorInterface* GetFeatureProcessor() const;
+        const AZ::RPI::ViewPtr GetView() const;
+        const AZ::Render::MeshFeatureProcessorInterface* GetFeatureProcessor() const;
 
-	private:
+    private:
         AZ::RPI::Scene* m_scene = nullptr;
         AZ::RPI::ViewPtr m_view = nullptr;
         AZ::Render::MeshFeatureProcessorInterface* m_featureProcessor = nullptr;
-	};
+    };
 
-	ModelMetaData::ModelMetaData(const AZ::EntityId& entityId)
-	{
-		m_scene = AZ::RPI::Scene::GetSceneForEntityId(entityId);
-		m_view = GetViewFromScene(m_scene);
-		m_featureProcessor = m_scene->GetFeatureProcessor<AZ::Render::MeshFeatureProcessorInterface>();
-	}
+    ModelMetaData::ModelMetaData(const AZ::EntityId& entityId)
+    {
+        m_scene = AZ::RPI::Scene::GetSceneForEntityId(entityId);
+        m_view = GetViewFromScene(m_scene);
+        m_featureProcessor = m_scene->GetFeatureProcessor<AZ::Render::MeshFeatureProcessorInterface>();
+    }
 
     AZ::RPI::Scene* ModelMetaData::GetScene() const
-	{
-		return m_scene;
-	}
+    {
+        return m_scene;
+    }
 
-	const AZ::RPI::ViewPtr ModelMetaData::GetView() const
-	{
-		return m_view;
-	}
+    const AZ::RPI::ViewPtr ModelMetaData::GetView() const
+    {
+        return m_view;
+    }
 
-	const AZ::Render::MeshFeatureProcessorInterface* ModelMetaData::GetFeatureProcessor() const
-	{
-		return m_featureProcessor;
-	}
+    const AZ::Render::MeshFeatureProcessorInterface* ModelMetaData::GetFeatureProcessor() const
+    {
+        return m_featureProcessor;
+    }
 
     void InputNodeManager::Reset()
     {
@@ -595,12 +595,12 @@ namespace HoudiniEngine
             *m_hou << ("-------- UPDATING MESH ------- " + entity->GetName());
 
 
-			const AZ::Render::MeshFeatureProcessorInterface::MeshHandle* meshHandle = nullptr;
+            const AZ::Render::MeshFeatureProcessorInterface::MeshHandle* meshHandle = nullptr;
             AZ::Render::MeshHandleStateRequestBus::EventResult(meshHandle, id, &AZ::Render::MeshHandleStateRequestBus::Events::GetMeshHandle);
 
             if (meshHandle == nullptr || !meshHandle->IsValid()) {
-				CryLog("(HOUDINI) Could not get a valid mesh handle");
-				return HOUDINI_INVALID_ID;
+                CryLog("(HOUDINI) Could not get a valid mesh handle");
+                return HOUDINI_INVALID_ID;
             }
             
             HAPI_NodeId newInput = previousInputNode;
@@ -609,12 +609,12 @@ namespace HoudiniEngine
             HAPI_GeoInfo geoInfo;
 
             // Mesh info
-			const ModelMetaData modelMetaData(id);
-			if (const auto model = modelMetaData.GetFeatureProcessor()->GetModel(*meshHandle))
-			{
-				const auto modelLodIndex = GetModelLodIndex(modelMetaData.GetView(), model, id);
+            const ModelMetaData modelMetaData(id);
+            if (const auto model = modelMetaData.GetFeatureProcessor()->GetModel(*meshHandle))
+            {
+                const auto modelLodIndex = GetModelLodIndex(modelMetaData.GetView(), model, id);
                 auto modelAsset = model->GetModelAsset();
-				const AZ::Data::Asset<AZ::RPI::ModelLodAsset>& modelLodAsset = modelAsset->GetLodAssets()[modelLodIndex.m_index];
+                const AZ::Data::Asset<AZ::RPI::ModelLodAsset>& modelLodAsset = modelAsset->GetLodAssets()[modelLodIndex.m_index];
                 AZ::Data::Instance<AZ::RPI::ModelLod> modelLod = AZ::RPI::ModelLod::FindOrCreate(modelLodAsset, modelAsset).get();
 
                 // compute the counts
@@ -627,139 +627,139 @@ namespace HoudiniEngine
                     indexCount += mesh.GetIndexCount();
                 }
 
-				newInfo.pointCount = positionCount;      // Vertex Count
-				newInfo.faceCount = indexCount / 3;  // Faces Count
-				newInfo.vertexCount = indexCount;    // Index Count (for some reason in Houdini it is called vertex)
+                newInfo.pointCount = positionCount;      // Vertex Count
+                newInfo.faceCount = indexCount / 3;  // Faces Count
+                newInfo.vertexCount = indexCount;    // Index Count (for some reason in Houdini it is called vertex)
 
-				newInfo.type = HAPI_PARTTYPE_MESH;
+                newInfo.type = HAPI_PARTTYPE_MESH;
 
-				if (newInput == HOUDINI_INVALID_ID)
-				{
-					AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateNodeFromMesh::CreateNewMeshInputNode");
-					AZStd::string nodeName = "MESH " + entity->GetName();
-					HAPI_CreateInputNode(&session, &newInput, nodeName.c_str());
-					*m_hou << "Create Input Node: " << nodeName << " verts: " << newInfo.pointCount << "";
-					m_meshNodesCache[id] = newInput;
-				}
+                if (newInput == HOUDINI_INVALID_ID)
+                {
+                    AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateNodeFromMesh::CreateNewMeshInputNode");
+                    AZStd::string nodeName = "MESH " + entity->GetName();
+                    HAPI_CreateInputNode(&session, &newInput, nodeName.c_str());
+                    *m_hou << "Create Input Node: " << nodeName << " verts: " << newInfo.pointCount << "";
+                    m_meshNodesCache[id] = newInput;
+                }
 
-				HAPI_GetDisplayGeoInfo(&session, newInput, &geoInfo);
+                HAPI_GetDisplayGeoInfo(&session, newInput, &geoInfo);
 
-				// Push Part Info
-				HAPI_SetPartInfo(&session, newInput, 0, &newInfo);
+                // Push Part Info
+                HAPI_SetPartInfo(&session, newInput, 0, &newInfo);
 
-				HAPI_AttributeInfo pos_attr_info;
-				pos_attr_info.exists = true;
-				pos_attr_info.owner = HAPI_ATTROWNER_POINT;
-				pos_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
-				pos_attr_info.count = newInfo.pointCount;
-				pos_attr_info.tupleSize = 3;
+                HAPI_AttributeInfo pos_attr_info;
+                pos_attr_info.exists = true;
+                pos_attr_info.owner = HAPI_ATTROWNER_POINT;
+                pos_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
+                pos_attr_info.count = newInfo.pointCount;
+                pos_attr_info.tupleSize = 3;
 
-				// Normals attribute
-				HAPI_AttributeInfo normal_attr_info;
-				normal_attr_info.exists = true;
-				normal_attr_info.owner = HAPI_ATTROWNER_VERTEX;
-				normal_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
-				normal_attr_info.count = newInfo.vertexCount;
-				normal_attr_info.tupleSize = HAPI_NORMAL_VECTOR_SIZE;
+                // Normals attribute
+                HAPI_AttributeInfo normal_attr_info;
+                normal_attr_info.exists = true;
+                normal_attr_info.owner = HAPI_ATTROWNER_VERTEX;
+                normal_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
+                normal_attr_info.count = newInfo.vertexCount;
+                normal_attr_info.tupleSize = HAPI_NORMAL_VECTOR_SIZE;
 
-				// UV attribute
-				HAPI_AttributeInfo uv1_attr_info;
-				uv1_attr_info.exists = true;
-				uv1_attr_info.owner = HAPI_ATTROWNER_VERTEX;
-				uv1_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
-				uv1_attr_info.count = newInfo.vertexCount;
-				uv1_attr_info.tupleSize = 3;
-				
-				// Color and alpha arrays
-				HAPI_AttributeInfo color_attr_info;
-				color_attr_info.exists = true;
-				color_attr_info.owner = HAPI_ATTROWNER_VERTEX;
-				color_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
-				color_attr_info.count = newInfo.vertexCount;
-				color_attr_info.tupleSize = 3;
+                // UV attribute
+                HAPI_AttributeInfo uv1_attr_info;
+                uv1_attr_info.exists = true;
+                uv1_attr_info.owner = HAPI_ATTROWNER_VERTEX;
+                uv1_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
+                uv1_attr_info.count = newInfo.vertexCount;
+                uv1_attr_info.tupleSize = 3;
+                
+                // Color and alpha arrays
+                HAPI_AttributeInfo color_attr_info;
+                color_attr_info.exists = true;
+                color_attr_info.owner = HAPI_ATTROWNER_VERTEX;
+                color_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
+                color_attr_info.count = newInfo.vertexCount;
+                color_attr_info.tupleSize = 3;
 
-				HAPI_AttributeInfo alpha_attr_info;
-				alpha_attr_info.exists = true;
-				alpha_attr_info.owner = HAPI_ATTROWNER_VERTEX;
-				alpha_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
-				alpha_attr_info.count = newInfo.vertexCount;
-				alpha_attr_info.tupleSize = 1;
+                HAPI_AttributeInfo alpha_attr_info;
+                alpha_attr_info.exists = true;
+                alpha_attr_info.owner = HAPI_ATTROWNER_VERTEX;
+                alpha_attr_info.storage = HAPI_STORAGETYPE_FLOAT;
+                alpha_attr_info.count = newInfo.vertexCount;
+                alpha_attr_info.tupleSize = 1;
 
                 // Get mesh data
-				AZStd::vector<float> points;
-				points.reserve(newInfo.pointCount * 3);
+                AZStd::vector<float> points;
+                points.reserve(newInfo.pointCount * 3);
 
-				AZStd::vector<int> faces;
-				faces.reserve(newInfo.faceCount);
+                AZStd::vector<int> faces;
+                faces.reserve(newInfo.faceCount);
 
-				AZStd::vector<int> vertices;
-				vertices.reserve(newInfo.vertexCount);
+                AZStd::vector<int> vertices;
+                vertices.reserve(newInfo.vertexCount);
 
-				// Normals array
-				AZStd::vector<float> normals;
-				normals.reserve(newInfo.vertexCount * 3);
+                // Normals array
+                AZStd::vector<float> normals;
+                normals.reserve(newInfo.vertexCount * 3);
 
-				// UV array
-				AZStd::vector<float> uv1;
-				uv1.reserve(newInfo.vertexCount * 3);
+                // UV array
+                AZStd::vector<float> uv1;
+                uv1.reserve(newInfo.vertexCount * 3);
 
-				AZStd::vector<float> colors;
-				colors.reserve(newInfo.vertexCount * 3);
+                AZStd::vector<float> colors;
+                colors.reserve(newInfo.vertexCount * 3);
 
-				AZStd::vector<float> alphas;
-				alphas.reserve(newInfo.vertexCount);
+                AZStd::vector<float> alphas;
+                alphas.reserve(newInfo.vertexCount);
 
-				// Points array with transform data inside
-				AZ::Transform transform = m_hou->LookupTransform(id);
+                // Points array with transform data inside
+                AZ::Transform transform = m_hou->LookupTransform(id);
 
-				struct Vec2
-				{
-					float x, y;
-				};
-				struct Vec3
-				{
-					float x, y, z;
-				};
-				struct Vec4
-				{
-					float x, y, z, w;
-				};
+                struct Vec2
+                {
+                    float x, y;
+                };
+                struct Vec3
+                {
+                    float x, y, z;
+                };
+                struct Vec4
+                {
+                    float x, y, z, w;
+                };
 
-				for (int meshIdx = 0; meshIdx < modelLodAsset->GetMeshes().size(); meshIdx++)
-				{
+                for (int meshIdx = 0; meshIdx < modelLodAsset->GetMeshes().size(); meshIdx++)
+                {
                     auto mesh = modelLodAsset->GetMeshes()[meshIdx];
-					const auto sourceIndices = mesh.GetIndexBufferTyped<AZ::u32>();
+                    const auto sourceIndices = mesh.GetIndexBufferTyped<AZ::u32>();
                     //NOTE: don't use AZ::Vector3/2/4 when using GetSemanticBufferTyped those classes are not packed.
-					const auto sourcePositions = mesh.GetSemanticBufferTyped<Vec3>(AZ::Name("POSITION"));
+                    const auto sourcePositions = mesh.GetSemanticBufferTyped<Vec3>(AZ::Name("POSITION"));
                     const auto sourceNormals = mesh.GetSemanticBufferTyped<Vec3>(AZ::Name("NORMAL"));
                     const auto sourceUVs = mesh.GetSemanticBufferTyped<Vec2>(AZ::Name("UV"));
                     const auto sourceColors = mesh.GetSemanticBufferTyped<Vec4>(AZ::Name("COLOR"));
 
-					auto locPosCount = sourcePositions.size();      // Vertex Count
+                    auto locPosCount = sourcePositions.size();      // Vertex Count
                     auto locVertexCount = sourceIndices.size(); 
                     auto locFaceCount = locVertexCount / 3;  // Faces Count
-					
+                    
                     for (int i = 0; i < locPosCount; ++i)
-					{
-						AZ::Vector3 point = transform.TransformPoint(AZ::Vector3(sourcePositions[i].x, sourcePositions[i].y, sourcePositions[i].z)); //O3DECONVERT check
+                    {
+                        AZ::Vector3 point = transform.TransformPoint(AZ::Vector3(sourcePositions[i].x, sourcePositions[i].y, sourcePositions[i].z)); //O3DECONVERT check
 
                         // switch the Y and Z and negate Z
-						points.push_back(point.GetX());
-						points.push_back(point.GetZ());
+                        points.push_back(point.GetX());
+                        points.push_back(point.GetZ());
                         points.push_back(-point.GetY());
-					}
-					// Faces array
-					for (int i = 0; i < locFaceCount; ++i)
-					{
-						faces.push_back(3);
-					}
-					// Indices array
-					for (int i = 0; i < locFaceCount; ++i)
-					{
-                    	vertices.push_back(sourceIndices[i * 3 + 0]);
-						vertices.push_back(sourceIndices[i * 3 + 2]);
-						vertices.push_back(sourceIndices[i * 3 + 1]);
-					}
+                    }
+                    // Faces array
+                    for (int i = 0; i < locFaceCount; ++i)
+                    {
+                        faces.push_back(3);
+                    }
+                    // Indices array
+                    for (int i = 0; i < locFaceCount; ++i)
+                    {
+                        vertices.push_back(sourceIndices[i * 3 + 0]);
+                        vertices.push_back(sourceIndices[i * 3 + 2]);
+                        vertices.push_back(sourceIndices[i * 3 + 1]);
+                    }
 
                     int index = 0;
                     if (sourceNormals.size() > 0)
@@ -810,89 +810,89 @@ namespace HoudiniEngine
 
                     if (sourceColors.size() > 0)
                     {
-						for (int i = 0; i < locFaceCount; ++i)
-						{
-							index = sourceIndices[i * 3 + 0];
-							colors.push_back(sourceColors[index].x);
-							colors.push_back(sourceColors[index].y);
-							colors.push_back(sourceColors[index].z);
+                        for (int i = 0; i < locFaceCount; ++i)
+                        {
+                            index = sourceIndices[i * 3 + 0];
+                            colors.push_back(sourceColors[index].x);
+                            colors.push_back(sourceColors[index].y);
+                            colors.push_back(sourceColors[index].z);
 
-							alphas.push_back(sourceColors[index].w);
+                            alphas.push_back(sourceColors[index].w);
 
-							index = sourceIndices[i * 3 + 1];
-							colors.push_back(sourceColors[index].x);
-							colors.push_back(sourceColors[index].y);
-							colors.push_back(sourceColors[index].z);
+                            index = sourceIndices[i * 3 + 1];
+                            colors.push_back(sourceColors[index].x);
+                            colors.push_back(sourceColors[index].y);
+                            colors.push_back(sourceColors[index].z);
 
-							alphas.push_back(sourceColors[index].w);
+                            alphas.push_back(sourceColors[index].w);
 
-							index = sourceIndices[i * 3 + 2];
-							colors.push_back(sourceColors[index].x);
-							colors.push_back(sourceColors[index].y);
-							colors.push_back(sourceColors[index].z);
+                            index = sourceIndices[i * 3 + 2];
+                            colors.push_back(sourceColors[index].x);
+                            colors.push_back(sourceColors[index].y);
+                            colors.push_back(sourceColors[index].z);
 
-							alphas.push_back(sourceColors[index].w);
-						}
+                            alphas.push_back(sourceColors[index].w);
+                        }
                     }
                 }
-				
-				// FL[FD-12389] Transfer entity name and id from lumberyard
-				// Name attribute
-				const char* kEntityNameAttrName{ "Ly_NameId" };
-				// Create attribute info for <name>_<id> detail attribute
-				HAPI_AttributeInfo entity_name_attr_info;
-				entity_name_attr_info.exists = true;
-				entity_name_attr_info.owner = HAPI_ATTROWNER_DETAIL;
-				entity_name_attr_info.storage = HAPI_STORAGETYPE_STRING;
-				entity_name_attr_info.count = 1;
-				entity_name_attr_info.tupleSize = 1;
+                
+                // FL[FD-12389] Transfer entity name and id from lumberyard
+                // Name attribute
+                const char* kEntityNameAttrName{ "Ly_NameId" };
+                // Create attribute info for <name>_<id> detail attribute
+                HAPI_AttributeInfo entity_name_attr_info;
+                entity_name_attr_info.exists = true;
+                entity_name_attr_info.owner = HAPI_ATTROWNER_DETAIL;
+                entity_name_attr_info.storage = HAPI_STORAGETYPE_STRING;
+                entity_name_attr_info.count = 1;
+                entity_name_attr_info.tupleSize = 1;
 
-				HAPI_AddAttribute(&session, geoInfo.nodeId, 0, kEntityNameAttrName, &entity_name_attr_info);
-				// Set Entity <name>_<id> data as detail attribute
-				AZStd::string entityNameId = entity->GetName() + "_" + AZStd::to_string(static_cast<AZ::u64>(entity->GetId()));
-				const char* entityNameIdAttribData = &entityNameId[0];
+                HAPI_AddAttribute(&session, geoInfo.nodeId, 0, kEntityNameAttrName, &entity_name_attr_info);
+                // Set Entity <name>_<id> data as detail attribute
+                AZStd::string entityNameId = entity->GetName() + "_" + AZStd::to_string(static_cast<AZ::u64>(entity->GetId()));
+                const char* entityNameIdAttribData = &entityNameId[0];
 
-				HAPI_SetAttributeStringData(&session, geoInfo.nodeId, 0, kEntityNameAttrName, &entity_name_attr_info, &entityNameIdAttribData, 0, 1);
+                HAPI_SetAttributeStringData(&session, geoInfo.nodeId, 0, kEntityNameAttrName, &entity_name_attr_info, &entityNameIdAttribData, 0, 1);
 
-				// Push Vertex Data
-				HAPI_SetVertexList(&session, geoInfo.nodeId, 0, &vertices[0], 0, newInfo.vertexCount);
-				HAPI_SetFaceCounts(&session, geoInfo.nodeId, 0, &faces[0], 0, newInfo.faceCount);
+                // Push Vertex Data
+                HAPI_SetVertexList(&session, geoInfo.nodeId, 0, &vertices[0], 0, newInfo.vertexCount);
+                HAPI_SetFaceCounts(&session, geoInfo.nodeId, 0, &faces[0], 0, newInfo.faceCount);
 
-				// Push Attribute Data
-				// Point Position
-				HAPI_AddAttribute(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_POSITION, &pos_attr_info);
-				HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_POSITION, &pos_attr_info, &points[0], 0, newInfo.pointCount);
-				// Vertex Normal
-				HAPI_AddAttribute(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_NORMAL, &normal_attr_info);
-				HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_NORMAL, &normal_attr_info, &normals[0], 0, newInfo.vertexCount);
-				
+                // Push Attribute Data
+                // Point Position
+                HAPI_AddAttribute(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_POSITION, &pos_attr_info);
+                HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_POSITION, &pos_attr_info, &points[0], 0, newInfo.pointCount);
+                // Vertex Normal
+                HAPI_AddAttribute(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_NORMAL, &normal_attr_info);
+                HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_NORMAL, &normal_attr_info, &normals[0], 0, newInfo.vertexCount);
+                
                 // Vertex UV1
                 if (uv1.size() > 0)
                 {
-					HAPI_AddAttribute(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_UV, &uv1_attr_info);
-					HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_UV, &uv1_attr_info, &uv1[0], 0, newInfo.vertexCount);
+                    HAPI_AddAttribute(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_UV, &uv1_attr_info);
+                    HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_UV, &uv1_attr_info, &uv1[0], 0, newInfo.vertexCount);
                 }
-				
-				
+                
+                
                 // Vertex Colors
                 if (colors.size() > 0)
                 {
-					HAPI_AddAttribute(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_COLOR, &color_attr_info);
-					HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_COLOR, &color_attr_info, &colors[0], 0, newInfo.vertexCount);
-					// Vertex Alphas
-					HAPI_AddAttribute(&session, geoInfo.nodeId, 0, "Alpha", &alpha_attr_info);
-					HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, "Alpha", &alpha_attr_info, &alphas[0], 0, newInfo.vertexCount);
+                    HAPI_AddAttribute(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_COLOR, &color_attr_info);
+                    HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_COLOR, &color_attr_info, &colors[0], 0, newInfo.vertexCount);
+                    // Vertex Alphas
+                    HAPI_AddAttribute(&session, geoInfo.nodeId, 0, "Alpha", &alpha_attr_info);
+                    HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, "Alpha", &alpha_attr_info, &alphas[0], 0, newInfo.vertexCount);
                 }
-				
+                
 
-				// Commit Geometry to Houdini
-				auto result = HAPI_CommitGeo(&session, geoInfo.nodeId);
+                // Commit Geometry to Houdini
+                auto result = HAPI_CommitGeo(&session, geoInfo.nodeId);
 
-				if (result != HAPI_RESULT_SUCCESS)
-				{
-					CryLog("(HOUDINI) Commit GEOmetry Failure: %d", result);
-				}
-			}
+                if (result != HAPI_RESULT_SUCCESS)
+                {
+                    CryLog("(HOUDINI) Commit GEOmetry Failure: %d", result);
+                }
+            }
 
             return newInput;
         }
@@ -911,7 +911,7 @@ namespace HoudiniEngine
     
     AZ::RPI::ModelLodIndex InputNodeManager::GetModelLodIndex(const AZ::RPI::ViewPtr view, AZ::Data::Instance<AZ::RPI::Model> model, AZ::EntityId id) const
     {
-		const auto worldTM = AzToolsFramework::GetWorldTransform(id);
-		return AZ::RPI::ModelLodUtils::SelectLod(view.get(), worldTM, *model);
+        const auto worldTM = AzToolsFramework::GetWorldTransform(id);
+        return AZ::RPI::ModelLodUtils::SelectLod(view.get(), worldTM, *model);
     }
 }

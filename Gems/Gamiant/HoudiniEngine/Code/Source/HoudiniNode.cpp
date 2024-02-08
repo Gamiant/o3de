@@ -26,7 +26,7 @@ namespace HoudiniEngine
         // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
         UpdateParamInfoFromEngine();
         UpdateEditableNodeFromEngine();
-		m_hasEditableGeometryBuilt = false;
+        m_hasEditableGeometryBuilt = false;
     }    
 
     // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
@@ -113,36 +113,36 @@ namespace HoudiniEngine
             }
             
             const bool bAssetHasChildren = !(m_nodeInfo.type == HAPI_NODETYPE_SOP && m_nodeInfo.childNodeCount == 0);
-			AZ::s32 EditableNodeCount = 0;
-			if (bAssetHasChildren)
-			{
-				HAPI_ComposeChildNodeList(m_session, m_nodeId, HAPI_NODETYPE_SOP, HAPI_NODEFLAGS_EDITABLE, true, &EditableNodeCount);
-			}
+            AZ::s32 EditableNodeCount = 0;
+            if (bAssetHasChildren)
+            {
+                HAPI_ComposeChildNodeList(m_session, m_nodeId, HAPI_NODETYPE_SOP, HAPI_NODEFLAGS_EDITABLE, true, &EditableNodeCount);
+            }
 
-			if (EditableNodeCount > 0)
-			{
-				AZStd::vector<HAPI_NodeId> EditableNodeIds;
-				//EditableNodeIds.reserve(EditableNodeCount);
-				EditableNodeIds.resize(EditableNodeCount);
-				HAPI_GetComposedChildNodeList(m_session, m_nodeId, &EditableNodeIds[0], EditableNodeCount);
+            if (EditableNodeCount > 0)
+            {
+                AZStd::vector<HAPI_NodeId> EditableNodeIds;
+                //EditableNodeIds.reserve(EditableNodeCount);
+                EditableNodeIds.resize(EditableNodeCount);
+                HAPI_GetComposedChildNodeList(m_session, m_nodeId, &EditableNodeIds[0], EditableNodeCount);
 
-				for (int32 nEditable = 0; nEditable < EditableNodeCount; nEditable++)
-				{
-					HAPI_GeoInfo CurrentEditableGeoInfo;
-					HAPI_GeoInfo_Init(&CurrentEditableGeoInfo);
-					HAPI_GetGeoInfo(m_session, EditableNodeIds[nEditable], &CurrentEditableGeoInfo);
+                for (int32 nEditable = 0; nEditable < EditableNodeCount; nEditable++)
+                {
+                    HAPI_GeoInfo CurrentEditableGeoInfo;
+                    HAPI_GeoInfo_Init(&CurrentEditableGeoInfo);
+                    HAPI_GetGeoInfo(m_session, EditableNodeIds[nEditable], &CurrentEditableGeoInfo);
 
-					// TODO: Check whether this display geo is actually being output
-					//       Just because this is a display node doesn't mean that it will be output (it
-					//       might be in a hidden subnet)
+                    // TODO: Check whether this display geo is actually being output
+                    //       Just because this is a display node doesn't mean that it will be output (it
+                    //       might be in a hidden subnet)
 
-					// Do not process the main display geo twice!
-					if (CurrentEditableGeoInfo.isDisplayGeo)
-						continue;
+                    // Do not process the main display geo twice!
+                    if (CurrentEditableGeoInfo.isDisplayGeo)
+                        continue;
 
-					// We only handle editable curves for now
-					if (CurrentEditableGeoInfo.type != HAPI_GEOTYPE_CURVE)
-						continue;
+                    // We only handle editable curves for now
+                    if (CurrentEditableGeoInfo.type != HAPI_GEOTYPE_CURVE)
+                        continue;
 
                     //HACK: 
                     if (CurrentEditableGeoInfo.partCount <= 0)
@@ -152,10 +152,10 @@ namespace HoudiniEngine
                     }
 
 
-					// Add this geo to the geo info array
-					m_editableGeoInfo.push_back(CurrentEditableGeoInfo);
-				}
-			}
+                    // Add this geo to the geo info array
+                    m_editableGeoInfo.push_back(CurrentEditableGeoInfo);
+                }
+            }
         }
     }
 

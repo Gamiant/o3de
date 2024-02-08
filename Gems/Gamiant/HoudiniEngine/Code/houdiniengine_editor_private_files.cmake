@@ -15,33 +15,33 @@ set(FILES
     Source/StdAfx.cpp
     Source/StdAfx.h
     SideFX/HE_ParameterWidget.cpp
-	SideFX/HE_ParameterWidget.h
-	SideFX/HE_ParameterWidget_Button.cpp
-	SideFX/HE_ParameterWidget_Button.h
-	SideFX/HE_ParameterWidget_Float.cpp
-	SideFX/HE_ParameterWidget_Float.h
-	SideFX/HE_ParameterWidget_Folder.cpp
-	SideFX/HE_ParameterWidget_Folder.h
-	SideFX/HE_ParameterWidget_FolderList.cpp
-	SideFX/HE_ParameterWidget_FolderList.h
-	SideFX/HE_ParameterWidget_Integer.cpp
-	SideFX/HE_ParameterWidget_Integer.h
-	SideFX/HE_ParameterWidget_IntegerChoice.cpp
-	SideFX/HE_ParameterWidget_IntegerChoice.h
-	SideFX/HE_ParameterWidget_Label.cpp
-	SideFX/HE_ParameterWidget_Label.h
-	SideFX/HE_ParameterWidget_Multi.cpp
-	SideFX/HE_ParameterWidget_Multi.h
-	SideFX/HE_ParameterWidget_MultiInstance.cpp
-	SideFX/HE_ParameterWidget_MultiInstance.h
-	SideFX/HE_ParameterWidget_String.cpp
-	SideFX/HE_ParameterWidget_String.h
-	SideFX/HE_ParameterWidget_StringChoice.cpp
-	SideFX/HE_ParameterWidget_StringChoice.h
-	SideFX/HE_ParameterWidget_Toggle.cpp
-	SideFX/HE_ParameterWidget_Toggle.h
-	SideFX/HE_Viewer.cpp
-	SideFX/HE_Viewer.h
+    SideFX/HE_ParameterWidget.h
+    SideFX/HE_ParameterWidget_Button.cpp
+    SideFX/HE_ParameterWidget_Button.h
+    SideFX/HE_ParameterWidget_Float.cpp
+    SideFX/HE_ParameterWidget_Float.h
+    SideFX/HE_ParameterWidget_Folder.cpp
+    SideFX/HE_ParameterWidget_Folder.h
+    SideFX/HE_ParameterWidget_FolderList.cpp
+    SideFX/HE_ParameterWidget_FolderList.h
+    SideFX/HE_ParameterWidget_Integer.cpp
+    SideFX/HE_ParameterWidget_Integer.h
+    SideFX/HE_ParameterWidget_IntegerChoice.cpp
+    SideFX/HE_ParameterWidget_IntegerChoice.h
+    SideFX/HE_ParameterWidget_Label.cpp
+    SideFX/HE_ParameterWidget_Label.h
+    SideFX/HE_ParameterWidget_Multi.cpp
+    SideFX/HE_ParameterWidget_Multi.h
+    SideFX/HE_ParameterWidget_MultiInstance.cpp
+    SideFX/HE_ParameterWidget_MultiInstance.h
+    SideFX/HE_ParameterWidget_String.cpp
+    SideFX/HE_ParameterWidget_String.h
+    SideFX/HE_ParameterWidget_StringChoice.cpp
+    SideFX/HE_ParameterWidget_StringChoice.h
+    SideFX/HE_ParameterWidget_Toggle.cpp
+    SideFX/HE_ParameterWidget_Toggle.h
+    SideFX/HE_Viewer.cpp
+    SideFX/HE_Viewer.h
     Components/HoudiniAssetComponent.h
     Components/HoudiniAssetComponent.cpp
     Components/HoudiniCurveAttributeComponent.h

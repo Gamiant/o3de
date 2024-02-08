@@ -78,8 +78,8 @@ namespace HoudiniEngine
         // EditorComponentSelectionNotificationsBus
         void OnAccentTypeChanged(AzToolsFramework::EntityAccentType accent) override;
 
-		// SplineAttributeNotificationBus
-		void OnSplineChanged() override;
+        // SplineAttributeNotificationBus
+        void OnSplineChanged() override;
         void OnVerticesSet(const AZStd::vector<AZ::Vector3>& vertices) override;
         void OnVerticesCleared() override;
 

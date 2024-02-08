@@ -94,10 +94,10 @@ namespace HoudiniEngine
         AZStd::vector<AZStd::string> choiceLabels(count);
         if (HAPI_GetParmChoiceLists(m_session, GetNode()->GetId(), ChoiceInfos, GetInfo().choiceIndex, count) == HAPI_RESULT_SUCCESS)
         {
-			for (int i = 0; i < count; i++)
-			{
+            for (int i = 0; i < count; i++)
+            {
                 choiceLabels[i] = m_hou->GetString(ChoiceInfos[i].labelSH);
-			}
+            }
         }
 
         delete[] ChoiceInfos;

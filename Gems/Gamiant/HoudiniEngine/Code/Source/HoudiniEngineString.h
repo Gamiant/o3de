@@ -23,14 +23,14 @@ namespace HoudiniEngine
             // Static converters
             static bool ToAZString(const AZ::s32& InStringId, AZStd::string & String);
             
-			// Array converter, uses a map to avoid redundant calls to HAPI
-			static bool SHArrayToStringArray(const AZStd::vector<AZ::s32>& InStringIdArray, AZStd::vector<AZStd::string>& OutStringArray);
+            // Array converter, uses a map to avoid redundant calls to HAPI
+            static bool SHArrayToStringArray(const AZStd::vector<AZ::s32>& InStringIdArray, AZStd::vector<AZStd::string>& OutStringArray);
 
-			// Array converter, uses string batches and a map to reduce HAPI calls
-			static bool SHArrayToStringArray_Batch(const AZStd::vector<AZ::s32>& InStringIdArray, AZStd::vector<AZStd::string>& OutStringArray);
+            // Array converter, uses string batches and a map to reduce HAPI calls
+            static bool SHArrayToStringArray_Batch(const AZStd::vector<AZ::s32>& InStringIdArray, AZStd::vector<AZStd::string>& OutStringArray);
 
-			// Array converter, uses a map to reduce HAPI calls
-			static bool SHArrayToStringArray_Singles(const AZStd::vector<AZ::s32>& InStringIdArray, AZStd::vector<AZStd::string>& OutStringArray);
+            // Array converter, uses a map to reduce HAPI calls
+            static bool SHArrayToStringArray_Singles(const AZStd::vector<AZ::s32>& InStringIdArray, AZStd::vector<AZStd::string>& OutStringArray);
 
             // Return id of this string.
             AZ::s32 GetId() const;

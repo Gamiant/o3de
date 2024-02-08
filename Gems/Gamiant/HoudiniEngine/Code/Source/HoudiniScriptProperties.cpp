@@ -234,16 +234,16 @@ namespace HoudiniEngine
         return AZ::Edit::PropertyRefreshLevels::ValuesOnly;
     }
 
-	//////////////////////////
-	////  CHOICE INT
-	/////////////////////////
-	void HoudiniScriptPropertyIntChoice::Reflect(AZ::ReflectContext* reflection)
-	{
-		AZ::SerializeContext* serializeContext = azrtti_cast<AZ::SerializeContext*>(reflection);
+    //////////////////////////
+    ////  CHOICE INT
+    /////////////////////////
+    void HoudiniScriptPropertyIntChoice::Reflect(AZ::ReflectContext* reflection)
+    {
+        AZ::SerializeContext* serializeContext = azrtti_cast<AZ::SerializeContext*>(reflection);
 
-		if (serializeContext)
-		{
-			serializeContext->Class<HoudiniScriptPropertyIntChoice, HoudiniScriptProperty>()
+        if (serializeContext)
+        {
+            serializeContext->Class<HoudiniScriptPropertyIntChoice, HoudiniScriptProperty>()
                 ->Version(1)
                 ->Field("value", &HoudiniScriptPropertyIntChoice::m_value)
                 ->Field("choice", &HoudiniScriptPropertyIntChoice::m_choice)
@@ -251,47 +251,47 @@ namespace HoudiniEngine
                 ;
 
 
-			AZ::EditContext* ec = serializeContext->GetEditContext();
-			ec->Class<HoudiniScriptPropertyIntChoice>("Integer Choices", "An HDA int choices property")->
-				ClassElement(AZ::Edit::ClassElements::EditorData, "HDA Class attributes")->
-				Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)->
-				DataElement(AZ::Edit::UIHandlers::ComboBox, &HoudiniScriptPropertyIntChoice::m_choice, "", "")->
-				Attribute(AZ::Edit::Attributes::StringList, &HoudiniScriptPropertyIntChoice::GetChoices)->
+            AZ::EditContext* ec = serializeContext->GetEditContext();
+            ec->Class<HoudiniScriptPropertyIntChoice>("Integer Choices", "An HDA int choices property")->
+                ClassElement(AZ::Edit::ClassElements::EditorData, "HDA Class attributes")->
+                Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)->
+                DataElement(AZ::Edit::UIHandlers::ComboBox, &HoudiniScriptPropertyIntChoice::m_choice, "", "")->
+                Attribute(AZ::Edit::Attributes::StringList, &HoudiniScriptPropertyIntChoice::GetChoices)->
                 Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniScriptProperty::ScriptHasChanged)->
-				Attribute(AZ::Edit::Attributes::DescriptionTextOverride, &HoudiniScriptProperty::m_desc)->
-				//Attribute(AZ::Edit::Attributes::GroupDynamic, &HoudiniScriptProperty::GetGroupName)-> //O3DECONVERT
-				Attribute(AZ::Edit::Attributes::NameLabelOverride, &HoudiniScriptProperty::m_label);
-		}
-	}
+                Attribute(AZ::Edit::Attributes::DescriptionTextOverride, &HoudiniScriptProperty::m_desc)->
+                //Attribute(AZ::Edit::Attributes::GroupDynamic, &HoudiniScriptProperty::GetGroupName)-> //O3DECONVERT
+                Attribute(AZ::Edit::Attributes::NameLabelOverride, &HoudiniScriptProperty::m_label);
+        }
+    }
 
-	HoudiniScriptPropertyIntChoice::HoudiniScriptPropertyIntChoice(HoudiniParameterPtr parameter) : HoudiniScriptProperty(parameter)
-	{
-		if (parameter->GetInfo().size == 1 && parameter->GetInfo().choiceCount > 0)
-		{
+    HoudiniScriptPropertyIntChoice::HoudiniScriptPropertyIntChoice(HoudiniParameterPtr parameter) : HoudiniScriptProperty(parameter)
+    {
+        if (parameter->GetInfo().size == 1 && parameter->GetInfo().choiceCount > 0)
+        {
             m_choices = parameter->GetValueChoices();
-			m_value = parameter->GetValuesInt(1)[0];
+            m_value = parameter->GetValuesInt(1)[0];
             if (!m_choices.empty())
             {
                 m_choice = m_choices[m_value];
             }
-		}
-	}
+        }
+    }
 
-	AZ::u32 HoudiniScriptPropertyIntChoice::ScriptHasChanged()
-	{
-		if (m_parameter != nullptr)
-		{
+    AZ::u32 HoudiniScriptPropertyIntChoice::ScriptHasChanged()
+    {
+        if (m_parameter != nullptr)
+        {
             m_value = GetChoiceIndex(m_choice);
-			m_parameter->SetValueInt((int)m_value);
-		}
+            m_parameter->SetValueInt((int)m_value);
+        }
 
-		return AZ::Edit::PropertyRefreshLevels::ValuesOnly;
-	}
+        return AZ::Edit::PropertyRefreshLevels::ValuesOnly;
+    }
 
-	AZStd::vector<AZStd::string> HoudiniScriptPropertyIntChoice::GetChoices()
-	{
-		return m_choices;
-	}
+    AZStd::vector<AZStd::string> HoudiniScriptPropertyIntChoice::GetChoices()
+    {
+        return m_choices;
+    }
 
     int HoudiniScriptPropertyIntChoice::GetChoiceIndex(const AZStd::string& choice)
     {
@@ -789,13 +789,13 @@ namespace HoudiniEngine
 
         if (!filePath.empty())
         {
-			AzToolsFramework::AssetSystemRequestBus::Broadcast(&AzToolsFramework::AssetSystemRequestBus::Events::GetRelativeProductPathFromFullSourceOrProductPath, filePath, relPath);
-			AZ::Data::AssetCatalogRequestBus::BroadcastResult(assetId, &AZ::Data::AssetCatalogRequestBus::Events::GetAssetIdByPath, relPath.c_str(), AZ::Data::s_invalidAssetType, false);
+            AzToolsFramework::AssetSystemRequestBus::Broadcast(&AzToolsFramework::AssetSystemRequestBus::Events::GetRelativeProductPathFromFullSourceOrProductPath, filePath, relPath);
+            AZ::Data::AssetCatalogRequestBus::BroadcastResult(assetId, &AZ::Data::AssetCatalogRequestBus::Events::GetAssetIdByPath, relPath.c_str(), AZ::Data::s_invalidAssetType, false);
 
-			if (assetId.IsValid())
-			{
-				//m_value.SetAssetPath(relPath.c_str()); //ATOMCONVERT
-			}
+            if (assetId.IsValid())
+            {
+                //m_value.SetAssetPath(relPath.c_str()); //ATOMCONVERT
+            }
         }
     }
 
