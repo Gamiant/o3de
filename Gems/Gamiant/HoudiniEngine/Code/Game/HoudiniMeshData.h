@@ -257,7 +257,33 @@ namespace HoudiniEngine
             void SetIndices(const U32Vector& indices);
 
             template<AttributeType AttributeTypeT>
-            const auto& GetDataBuffer() const;
+            const auto& GetDataBuffer() const
+            {
+                if constexpr (AttributeTypeT == AttributeType::Position)
+                {
+                    return m_positions;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Normal)
+                {
+                    return m_normals;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Tangent)
+                {
+                    return m_tangents;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Bitangent)
+                {
+                    return m_bitangents;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::UV)
+                {
+                    return m_uvs;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Color)
+                {
+                    return m_colors;
+                }
+            }
 
             void SetMaterialIndex(AZ::u32 materialIndex);
             AZ::u32 GetMaterialIndex() const;

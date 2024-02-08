@@ -460,35 +460,6 @@ namespace HoudiniEngine
         }
     }
 
-    template<AttributeType AttributeTypeT>
-    const auto& HoudiniMeshData::GetDataBuffer() const
-    {
-        if constexpr (AttributeTypeT == AttributeType::Position)
-        {
-            return m_positions;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::Normal)
-        {
-            return m_normals;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::Tangent)
-        {
-            return m_tangents;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::Bitangent)
-        {
-            return m_bitangents;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::UV)
-        {
-            return m_uvs;
-        }
-        else if constexpr (AttributeTypeT == AttributeType::Color)
-        {
-            return m_colors;
-        }
-    }
-
     void HoudiniMeshData::SetMaterialIndex(AZ::u32 materialIndex)
     {
         m_materialIndex = materialIndex;
