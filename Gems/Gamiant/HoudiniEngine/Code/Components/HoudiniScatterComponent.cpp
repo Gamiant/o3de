@@ -10,8 +10,10 @@
 
 #include <HAPI/HAPI.h>
 #include <ISystem.h>
-#include <Windows.h>
 
+#if defined(AZ_PLATFORM_WINDOWS)
+#include <Windows.h>
+#endif
 
 namespace HoudiniEngine
 {

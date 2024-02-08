@@ -23,7 +23,6 @@ if ( (result) != HAPI_RESULT_SUCCESS ) \
 #define HOUDINI_MODE_ASYNC 1 
 
 #define HOUDINI_NAMED_PIPE "HOUDINI_LUMBERYARD"
-#pragma optimize("", off)
 
 #include <HoudiniCommon.h>
 #include "Util/EditorUtils.h"
@@ -1195,5 +1194,3 @@ namespace HoudiniEngine
 
 
 }
-
-#pragma optimize("", on)
