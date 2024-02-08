@@ -5,6 +5,7 @@
 #include <IIndexedMesh.h>
 
 #include <AzFramework/StringFunc/StringFunc.h>
+#include <AzCore/Debug/Profiler.h>
 
 namespace HoudiniEngine
 {
