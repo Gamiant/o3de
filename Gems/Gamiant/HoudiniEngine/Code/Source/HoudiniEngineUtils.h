@@ -2,6 +2,9 @@
 
 #include "HAPI/HAPI_Common.h"
 
+#include <AzCore/base.h>
+#include <AzCore/std/string/string.h>
+
 namespace HoudiniEngine
 {
     struct HoudiniEngineUtils
