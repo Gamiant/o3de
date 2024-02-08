@@ -146,9 +146,5 @@ namespace HoudiniEngine
         //! model name.
         static constexpr AZStd::string_view ModelName = "HoudiniEngineMesh";
 
-        //! current model transform
-        AZ::Transform m_transform;
-        //! current model scale
-        AZ::Vector3 m_scale;
     };
 } // namespace HoudiniEngine
