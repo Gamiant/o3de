@@ -305,13 +305,13 @@ namespace HoudiniEngine
 
         // For closed NURBS (CVs and Breakpoints), we have to close the curve manually, by duplicating its last point
         // in order to be able to set the rotations and scales attributes properly.
-        bool bCloseCurveManually = false;
+//        bool bCloseCurveManually = false;
         if (CurveClosed && (CurveTypeValue == HAPI_CURVETYPE_NURBS) && (CurveMethodValue != 2))
         {
             // The curve is not closed anymore
             if (HAPI_RESULT_SUCCESS == HAPI_SetParmIntValue(&hou->GetSession(), CurveNodeId, "close", 0, 0))
             {
-                bCloseCurveManually = true;
+//                bCloseCurveManually = true;
 
                 // Duplicating the first point to the end of the curve
                 // This needs to be done before sending the position string

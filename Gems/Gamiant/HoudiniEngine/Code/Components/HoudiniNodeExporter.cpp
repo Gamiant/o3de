@@ -1426,7 +1426,7 @@ namespace HoudiniEngine
 
         AZ_PROFILE_SCOPE(Editor, m_node->GetNodeName().c_str());
 
-        *m_hou << "--- GenerateMeshData --- " + m_hou->GetString(m_node->GetNodeInfo().nameSH) << "";
+        *m_hou << "--- GenerateMeshData --- " + m_hou->GetString(nodeInfo.nameSH) << "";
 
         auto clusters = GetClusters();
         if (clusters.size() == 0) 

@@ -279,7 +279,7 @@ namespace HoudiniEngine
                 }
             }
 
-            HAPI_Result result;
+            [[maybe_unused]] HAPI_Result result;
             
             *m_hou << "HAPI_SetAttributeFloatData: " << newInput << " writing " << numVerts << " from buffer of size: " << points.size() << "";
 
