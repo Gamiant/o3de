@@ -76,7 +76,7 @@ namespace HoudiniEngine
 
             //Builds the data
             bool UpdateData() override;
-            void UpdateParamInfoFromEngine() override;  // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+            void UpdateParamInfoFromEngine() override;
             void UpdateEditableNodeFromEngine() override;
 
             void DeleteNode() override

@@ -35,9 +35,9 @@ namespace HoudiniEngine
         friend class HoudiniScriptPropertyEntity;
         friend class HoudiniScriptPropertyFile;
         friend class HoudiniScriptPropertyInput;
-        friend class HoudiniScriptPropertyColor; // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
-        friend class HoudiniScriptPropertyMultiparm;  // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
-        friend class HoudiniScriptPropertyButton;  // FL[FD-12463] Implement button interface parm in houdini engine for lumberyard
+        friend class HoudiniScriptPropertyColor;
+        friend class HoudiniScriptPropertyMultiparm;
+        friend class HoudiniScriptPropertyButton;
 
         protected:
             IHoudini* m_hou;
@@ -84,7 +84,7 @@ namespace HoudiniEngine
             bool TryRead(AZ::ScriptDataContext& /*context*/, int /*valueIndex*/) override { return true; }
             void CloneDataFrom(const AZ::ScriptProperty* /*scriptProperty*/){}
 
-            virtual void SetNode(HoudiniNodePtr node)  // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+            virtual void SetNode(HoudiniNodePtr node)
             {
                 m_hou = node->GetHou();
                 m_node = node;
@@ -358,7 +358,6 @@ namespace HoudiniEngine
         AZ::u32 ScriptHasChanged() override;
     };
 
-    // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
     class HoudiniScriptPropertyColor : public HoudiniScriptProperty
     {
     public:
@@ -375,7 +374,6 @@ namespace HoudiniEngine
         AZ::u32 ScriptHasChanged() override;
     };
 
-    // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
     class HoudiniMultiparamInstance : public HoudiniScriptProperty
     {
         friend class HoudiniScriptPropertyMultiparm;
@@ -421,7 +419,6 @@ namespace HoudiniEngine
         AZStd::string GetInstanceSlotLabel(int index);
     };
 
-    // FL[FD-12463] Implement button interface parm in houdini engine for lumberyard
     class HoudiniScriptPropertyButton : public HoudiniScriptProperty
     {
     public:

@@ -527,7 +527,7 @@ namespace HoudiniEngine
 
             //Copy points from LY Data
             {
-                AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateInputNodeFromTerrain::CopyPointsFromLYData");
+                AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateInputNodeFromTerrain::CopyPointsFromData");
                 for (int y = 0; y < height; y++)
                 {
                     for (int x = 0; x < width; x++)
@@ -840,9 +840,8 @@ namespace HoudiniEngine
                     }
                 }
                 
-                // FL[FD-12389] Transfer entity name and id from lumberyard
                 // Name attribute
-                const char* kEntityNameAttrName{ "Ly_NameId" };
+                const char* kEntityNameAttrName{ "O3DE_NameId" };
                 // Create attribute info for <name>_<id> detail attribute
                 HAPI_AttributeInfo entity_name_attr_info;
                 entity_name_attr_info.exists = true;

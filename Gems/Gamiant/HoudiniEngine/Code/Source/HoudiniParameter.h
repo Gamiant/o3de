@@ -11,7 +11,7 @@
 #include <HAPI/HAPI.h>
 #include <HoudiniEngine/HoudiniApi.h>
 
-#include <AzCore/std/containers/vector.h> // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+#include <AzCore/std/containers/vector.h>
 
 namespace HoudiniEngine
 {
@@ -30,7 +30,6 @@ namespace HoudiniEngine
             int m_size;
             int m_choiceCount;
             HAPI_ParmId m_id;
-            // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
             HAPI_ParmId m_parentId = 0;
             int m_instanceId = -1;
             HAPI_ParmType m_type;
@@ -49,8 +48,8 @@ namespace HoudiniEngine
             AZ::Vector3 m_valueVec3 = AZ::Vector3(0,0,0);
             AZ::Vector4 m_valueVec4 = AZ::Vector4(0,0,0,0);
             AZStd::string m_valueString;
-            AZ::Color m_valueColor = AZ::Color::CreateZero();  // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
-            int m_multiParamValue{ 0 };  // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+            AZ::Color m_valueColor = AZ::Color::CreateZero();
+            int m_multiParamValue{ 0 };
 
             HoudiniParameter(IHoudini* hou, HAPI_ParmInfo info, IHoudiniNode* node);
             
@@ -160,8 +159,7 @@ namespace HoudiniEngine
             void SetValueVec4(const AZ::Vector4& value) override;
             bool SetValueEntity(const AZ::EntityId & value) override;
             void SetValueString(const AZStd::string & value) override;
-            void SetValueColor(const AZ::Color& value) override;  // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
-            // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+            void SetValueColor(const AZ::Color& value) override;
             void SetValueMultiparm(int value) override;
             void SetParmInfo(HAPI_ParmInfo info) override;
 
@@ -174,11 +172,10 @@ namespace HoudiniEngine
             const AZ::Vector4& GetValueVec4() override;
             const AZ::EntityId& GetValueEntity() override;
             const AZStd::string& GetValueString() override;
-            const AZ::Color& GetValueColor() override;  // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
+            const AZ::Color& GetValueColor() override;
             AZStd::vector<AZStd::string> GetValueChoices() override;
-            const int GetValueMultiparm() override;  // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+            const int GetValueMultiparm() override;
 
-            // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
             HoudiniParameterPtr GetParent() override;
             AZStd::vector<HoudiniParameterPtr> GetChildren(int instanceNum) override;
             void InsertInstance(const int position) override;

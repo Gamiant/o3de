@@ -559,7 +559,6 @@ namespace HoudiniEngine
             HoudiniScriptProperty* prop = nullptr;
             HoudiniScriptProperty* propOld = isReload ? nullptr : azrtti_cast<HoudiniScriptProperty*>(group.GetProperty(param->GetName().c_str()));
 
-            // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
             if (param->GetInfo().isChildOfMultiParm)
             {
                 param->SetProcessed(true);

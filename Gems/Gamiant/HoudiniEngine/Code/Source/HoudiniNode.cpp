@@ -13,7 +13,7 @@
 #include <IIndexedMesh.h>
 #include <AzCore/Math/MathUtils.h>
 
-#include <AzCore/std/algorithm.h>  // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+#include <AzCore/std/algorithm.h>
 
 namespace HoudiniEngine
 {
@@ -29,13 +29,11 @@ namespace HoudiniEngine
         m_geoInfo = HAPI_GeoInfo_Create();
         m_assetInfo = HAPI_AssetInfo_Create();
 
-        // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
         UpdateParamInfoFromEngine();
         UpdateEditableNodeFromEngine();
         m_hasEditableGeometryBuilt = false;
     }    
 
-    // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
     void HoudiniNode::UpdateParamInfoFromEngine()
     {
         if (m_nodeId >= 0)

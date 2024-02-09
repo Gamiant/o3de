@@ -59,11 +59,10 @@ namespace HoudiniEngine
                 HoudiniScriptPropertyFileImage::Reflect(context);
                 HoudiniScriptPropertyString::Reflect(context);
                 HoudiniScriptPropertyInput::Reflect(context);
-                HoudiniScriptPropertyColor::Reflect(context); // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
-                // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+                HoudiniScriptPropertyColor::Reflect(context);
                 HoudiniMultiparamInstance::Reflect(context);
                 HoudiniScriptPropertyMultiparm::Reflect(context);
-                HoudiniScriptPropertyButton::Reflect(context);  // FL[FD-12463] Implement button interface parm in houdini engine for lumberyard
+                HoudiniScriptPropertyButton::Reflect(context);
                 HoudiniPropertyGroup::Reflect(context);
                 
 

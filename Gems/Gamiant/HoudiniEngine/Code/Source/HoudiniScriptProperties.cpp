@@ -929,17 +929,14 @@ namespace HoudiniEngine
         {
             prop = aznew HoudiniScriptPropertyFileImage(param);
         }
-        // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
         else if (param->GetType() == HAPI_PARMTYPE_COLOR)
         {
             prop = aznew HoudiniScriptPropertyColor(param);
         }
-        // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
         else if (param->GetType() == HAPI_PARMTYPE_MULTIPARMLIST)
         {
             prop = aznew HoudiniScriptPropertyMultiparm(param);
         }
-        // FL[FD-12463] Implement button interface parm in houdini engine for lumberyard
         else if (param->GetType() == HAPI_PARMTYPE_BUTTON)
         {
             prop = aznew HoudiniScriptPropertyButton(param);
@@ -948,7 +945,6 @@ namespace HoudiniEngine
         return prop;
     }
 
-    // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
     //////////////////////////
     ////  Color
     /////////////////////////
@@ -993,7 +989,6 @@ namespace HoudiniEngine
         return AZ::Edit::PropertyRefreshLevels::ValuesOnly;
     }
 
-    // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
     //////////////////////////
     ////  Multiparam instance
     //////////////////////////
@@ -1195,7 +1190,6 @@ namespace HoudiniEngine
         }
     }
 
-    // FL[FD-12463] Implement button interface parm in houdini engine for lumberyard
     HoudiniScriptPropertyButton::HoudiniScriptPropertyButton(HoudiniParameterPtr parameter) : HoudiniScriptProperty(parameter)
     {
     }

@@ -27,7 +27,7 @@ namespace HoudiniEngine
             m_type = info.type;
             m_size = info.size;
             m_choiceCount = info.choiceCount;
-            m_parentId = info.parentId; // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+            m_parentId = info.parentId;
         }
     }
 
@@ -84,7 +84,6 @@ namespace HoudiniEngine
         return m_valueVec4;
     }
 
-    // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
     const AZ::Color& HoudiniParameter::GetValueColor()
     {
         float values[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -270,7 +269,6 @@ namespace HoudiniEngine
         return output;
     }    
 
-    // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
     void HoudiniParameter::SetValueColor(const AZ::Color& value)
     {
         float values[4] = { -1.0f, 0.0f, 0.0f, 0.0f };
@@ -287,7 +285,6 @@ namespace HoudiniEngine
         }
     }
 
-    // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
     void HoudiniParameter::SetParmInfo(HAPI_ParmInfo info)
     {
         m_info = info;

@@ -6,8 +6,7 @@
  *
  */
 
-#ifdef AZ_PLATFORM_WINDOWS
-#include <Shlobj.h>
+#if defined(AZ_PLATFORM_WINDOWS)
 
 //AZ_Warning("HOUDINI-COOK", false, (AZStd::string(__FILE__)+ AZStd::string(": ") + QString::number(__LINE__)).c_str());\
 
@@ -21,19 +20,21 @@ if ( (result) != HAPI_RESULT_SUCCESS ) \
 { \
     CheckForErrors(true);\
 }
-
-
 #endif
 
 #define HOUDINI_MODE_EMBEDDED 0 
 #define HOUDINI_MODE_ASYNC 1 
 
-#define HOUDINI_NAMED_PIPE "HOUDINI_LUMBERYARD"
+#define HOUDINI_NAMED_PIPE "HOUDINI_O3DE"
 
 #include <HoudiniCommon.h>
 #include "Util/EditorUtils.h"
 
 #include <AzFramework/IO/LocalFileIO.h>
+
+#if defined (AZ_PLATFORM_WINDOWS)
+#include <Shlobj.h>
+#endif
 
 namespace HoudiniEngine
 {
