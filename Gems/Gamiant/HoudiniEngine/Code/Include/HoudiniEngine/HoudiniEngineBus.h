@@ -90,7 +90,7 @@ namespace HoudiniEngine
             virtual void CancelProcessorThread() = 0;
             virtual void CancelProcessorJob(AZ::EntityId entityToRemove) = 0;
             virtual void JoinProcessorThread() = 0;
-            virtual AZStd::string GetHoudiniResultByCode(int code) = 0;  // FL[FD-10714] Houdini integration to 1.21
+            virtual AZStd::string GetHoudiniResultByCode(int code) = 0;
     };
 
     class HoudiniMaterialRequests : public AZ::ComponentBus

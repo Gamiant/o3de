@@ -59,7 +59,7 @@ namespace HoudiniEngine
             virtual int GetHoudiniMode() = 0;
             virtual bool CheckForErrors(bool printErrors = true, bool includeCookingErrors = true) = 0;
             virtual void LoadAllAssets() = 0;
-            virtual void ReloadAllAssets() = 0;  // FL[FD-10790] Houdini Digital Asset List Hot Reload
+            virtual void ReloadAllAssets() = 0;
             virtual const HAPI_Session& GetSession() = 0;
 
             virtual HoudiniAssetPtr LoadHoudiniDigitalAsset(const AZStd::string& hdaName) = 0;
@@ -83,7 +83,7 @@ namespace HoudiniEngine
             virtual void RenameNode(const AZStd::string& oldNodeName, IHoudiniNode* node) = 0;
             virtual HoudiniNodePtr CreateNode(const AZStd::string& operatorName, const AZStd::string& nodeName, IHoudiniNode* parent = nullptr) = 0;
             virtual HAPI_NodeId FindNode(HAPI_NodeType networkType, const AZStd::string& path) = 0;
-            virtual HoudiniNodePtr GetRootNode() = 0;                        
+            virtual HoudiniNodePtr GetRootNode() = 0;
             virtual void CookNode(HAPI_NodeId node, const AZStd::string& entityName) = 0;
             virtual void OnTick(float deltaTime, AZ::ScriptTimePoint time) = 0;
 
@@ -93,7 +93,7 @@ namespace HoudiniEngine
 
             virtual HoudiniAssetPtr GetAsset(const AZStd::string& assetName) = 0;
             virtual AZStd::vector<AZStd::string> GetAvailableAssetNames() = 0;
-            virtual AZStd::vector<HoudiniAssetPtr> GetAvailableAssets() = 0;            
+            virtual AZStd::vector<HoudiniAssetPtr> GetAvailableAssets() = 0;
             
             virtual void Log(const AZStd::string& msg) = 0;
             virtual void SaveDebugFile() = 0;
@@ -148,7 +148,7 @@ namespace HoudiniEngine
 
             virtual void SetDirty() = 0;
             virtual bool UpdateData() = 0;
-            virtual void UpdateParamInfoFromEngine() = 0;  // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+            virtual void UpdateParamInfoFromEngine() = 0;
             virtual void UpdateEditableNodeFromEngine() = 0;
             virtual void DeleteNode() = 0;
 
@@ -208,7 +208,7 @@ namespace HoudiniEngine
             virtual HAPI_ParmType GetType() = 0;
             virtual int GetSize() = 0;
             virtual const AZStd::string& GetTypeInfo() = 0;
-            virtual const HAPI_ParmInfo& GetInfo() = 0;                        
+            virtual const HAPI_ParmInfo& GetInfo() = 0;
             
             virtual void SetName(const AZStd::string & value) = 0;
             virtual void SetTypeInfo(const AZStd::string & value) = 0;
@@ -220,8 +220,8 @@ namespace HoudiniEngine
             virtual void SetValueVec4(const AZ::Vector4& value) = 0;
             virtual bool SetValueEntity(const AZ::EntityId & value) = 0;
             virtual void SetValueString(const AZStd::string & value) = 0;
-            virtual void SetValueColor(const AZ::Color& value) = 0;  // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
-            virtual void SetValueMultiparm(int value) = 0; // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
+            virtual void SetValueColor(const AZ::Color& value) = 0;
+            virtual void SetValueMultiparm(int value) = 0;
 
             virtual bool GetValueBoolean() = 0;
             virtual const int GetValueInt() = 0;
@@ -232,9 +232,8 @@ namespace HoudiniEngine
             virtual const AZ::Vector4& GetValueVec4() = 0;
             virtual const AZ::EntityId& GetValueEntity() = 0;
             virtual const AZStd::string& GetValueString() = 0;
-            virtual const AZ::Color& GetValueColor() = 0;  // FL[FD-11758] Add support for color parameter to lumberyard houdini engine
+            virtual const AZ::Color& GetValueColor() = 0;
             virtual AZStd::vector<AZStd::string> GetValueChoices() = 0;
-            // FL[FD-11761] Add support for multiparm blocks (lists) to lumberyard houdini engine
             virtual void SetParmInfo(HAPI_ParmInfo info) = 0;
             virtual const int GetValueMultiparm() = 0;
             virtual HoudiniParameterPtr GetParent() = 0;
@@ -258,6 +257,6 @@ namespace HoudiniEngine
             virtual HAPI_NodeId GetNodeIdFromEntity(const AZ::EntityId& id) = 0;
             virtual HAPI_NodeId CreateInputNodeFromSpline(const AZ::EntityId& id) = 0;
             virtual HAPI_NodeId CreateInputNodeFromTerrain(const AZ::EntityId& id) = 0;
-            virtual HAPI_NodeId CreateInputNodeFromMesh(const AZ::EntityId& id) = 0;  // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
+            virtual HAPI_NodeId CreateInputNodeFromMesh(const AZ::EntityId& id) = 0;
     };
 }
