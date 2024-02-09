@@ -1,3 +1,10 @@
+#
+# Copyright (c) Contributors to the Open 3D Engine Project.
+# For complete copyright and license terms please see the LICENSE at the root of this distribution.
+#
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+#
 
 # Currently we are in the Code folder: ${CMAKE_CURRENT_LIST_DIR}
 # Get the platform specific folder ${pal_dir} for the current folder: ${CMAKE_CURRENT_LIST_DIR}/Platform/${PAL_PLATFORM_NAME}
@@ -15,6 +22,7 @@ include(${pal_dir}/PAL_${PAL_PLATFORM_NAME_LOWERCASE}.cmake)
 
 # Check to see if building the Gem Modules are supported for the current platform
 if(NOT PAL_TRAIT_HOUDINIENGINE_SUPPORTED)
+    message("Houdini is not supported on " ${PAL_PLATFORM_NAME_LOWERCASE})
     return()
 endif()
 

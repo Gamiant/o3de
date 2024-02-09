@@ -7,6 +7,7 @@
  */
 
 #pragma once
+
 #include <AzCore/Component/TickBus.h>
 
 #include <Game/HoudiniAttributeBuffer.h>

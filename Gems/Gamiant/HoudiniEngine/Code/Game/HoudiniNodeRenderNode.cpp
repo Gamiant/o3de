@@ -1,9 +1,16 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ *
+ */
+
 #include "StdAfx.h"
 
 #include <Game/HoudiniNodeRenderNode.h>
 #include <AzCore/Component/NonUniformScaleBus.h>
 #include <IIndexedMesh.h>
-// #include <LmbrCentral/Rendering/MaterialOwnerBus.h>
 
 namespace HoudiniEngine
 {

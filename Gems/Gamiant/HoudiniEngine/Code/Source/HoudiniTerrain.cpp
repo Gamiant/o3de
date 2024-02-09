@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ *
+ */
 
 
 #if defined(AZ_PLATFORM_WINDOWS)
@@ -5,7 +12,6 @@
 // Editor
 /////////////////////////////////////////////////////////////////////////////
 #include <EditorDefs.h>
-//#include <EditTool.h> //O3DECONVERT
 #include <Resource.h>
 #endif
 
@@ -14,8 +20,6 @@
 #include "HoudiniTerrain.h"
 
 #include <EditorCoreAPI.h>
-//#include <Heightmap.h> //O3DECONVERT
-//#include <TerrainManager.h> //O3DECONVERT
 
 namespace HoudiniEngine
 {

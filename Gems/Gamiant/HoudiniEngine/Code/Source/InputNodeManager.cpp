@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ *
+ */
 
 #include <HoudiniCommon.h>
 #include "InputNodeManager.h"
@@ -9,9 +16,7 @@
 #include <Atom/RPI.Public/ViewportContext.h>
 #include <Atom/RPI.Public/ViewportContextBus.h>
 #include <Atom/RPI.Public/Model/ModelLodUtils.h>
-// FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
 #include <AzToolsFramework/Entity/EditorEntityHelpers.h>
-//#include <LmbrCentral/Rendering/MeshComponentBus.h> //ATOMCONVERT
 #include <IIndexedMesh.h>
 
 namespace HoudiniEngine

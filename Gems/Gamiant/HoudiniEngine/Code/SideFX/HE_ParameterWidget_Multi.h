@@ -1,5 +1,12 @@
-#ifndef H_ENGINE_PARAMETERWIDGET_MULTI
-#define H_ENGINE_PARAMETERWIDGET_MULTI
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ *
+ */
+
+#pragma once
 
 #if !defined(Q_MOC_RUN)
 #include "HE_ParameterWidget.h"
@@ -50,5 +57,3 @@ namespace HoudiniEngine
         void ClearButton_clicked();
     };
 }
-
-#endif

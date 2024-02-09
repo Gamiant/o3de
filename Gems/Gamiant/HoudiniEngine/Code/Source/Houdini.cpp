@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ *
+ */
 
 #ifdef AZ_PLATFORM_WINDOWS
 #include <Shlobj.h>
@@ -27,10 +34,6 @@ if ( (result) != HAPI_RESULT_SUCCESS ) \
 #include "Util/EditorUtils.h"
 
 #include <AzFramework/IO/LocalFileIO.h>
-
-#if defined(AZ_PLATFORM_WINDOWS)
-#include <ShlObj.h>
-#endif
 
 namespace HoudiniEngine
 {

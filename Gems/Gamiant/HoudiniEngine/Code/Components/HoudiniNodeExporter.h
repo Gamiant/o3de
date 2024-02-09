@@ -1,16 +1,20 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ *
+ */
+ 
 #pragma once
 
 #include <HAPI/HAPI.h>
 #include <HAPI/HAPI_Common.h>
 
-//Cry Includes:
 #include <IIndexedMesh.h>
 #include <ISystem.h>
 #include <ILevelSystem.h>
-//#include <IGame.h> //O3DECONVERT
-//#include <IGameFramework.h>
 
-//Houdini Includes:
 #include <HoudiniEngine/HoudiniApi.h>
 #include <Game/HoudiniMeshComponent.h>
 #include <Game/HoudiniRenderMesh.h>
@@ -19,7 +23,6 @@
 #include <AzFramework/Asset/AssetCatalogBus.h>
 #include <AzFramework/Visibility/BoundsBus.h>
 #include <AzToolsFramework/API/ComponentEntitySelectionBus.h>
-//#include <IEntityRenderState.h>
 
 namespace HoudiniEngine
 {

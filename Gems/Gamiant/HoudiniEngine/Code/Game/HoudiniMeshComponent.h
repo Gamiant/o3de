@@ -1,7 +1,15 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ *
+ */
+
 #pragma once
+
 #include <AzCore/Component/Component.h>
 #include <AzFramework/Asset/SimpleAsset.h>
-// #include <LmbrCentral/Rendering/MaterialAsset.h>
 
 #include <Game/HoudiniMeshData.h>
 #include <HoudiniEngine/HoudiniEngineBus.h>
@@ -9,10 +17,8 @@
 namespace HoudiniEngine
 {
     class HoudiniMeshComponent : public AZ::Component
-        //, public HoudiniMeshRequestBus::Handler
     {
         public:
-            // AZStd::vector<_smart_ptr<IMaterial>> m_materials;
             AZStd::vector<HoudiniMaterialSettings> m_materialNames;            
             AZStd::vector<HoudiniMeshData> m_meshData;
 
@@ -24,8 +30,6 @@ namespace HoudiniEngine
             
             void Activate() override;
             void Deactivate() override;
-
-            //AZStd::vector<HoudiniMeshStatObject> GetStatObjects() override;
 
     };
 }

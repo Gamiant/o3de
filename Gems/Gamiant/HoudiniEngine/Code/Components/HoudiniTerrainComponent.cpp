@@ -1,13 +1,14 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ *
+ */
 
 #include <EditorDefs.h>
 
 #include "Util/Image.h"
-
-//O3DECONVERT
-//#include "RGBLayer.h"
-//#include "Heightmap.h"
-//#include "LayerWeight.h"
-//#include "TerrainManager.h"
 
 #include <HoudiniEngine/HoudiniEngineBus.h>
 #include "HoudiniTerrainComponent.h"

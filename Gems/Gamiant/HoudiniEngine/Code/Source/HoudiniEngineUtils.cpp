@@ -1,9 +1,18 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ *
+ */
+
 #include "HoudiniEngineUtils.h"
 #include "HoudiniEngineString.h"
 #include <HAPI/HAPI.h>
 #include <HoudiniEngine/HoudiniApi.h>
 #include <HoudiniEngine/HoudiniEngineBus.h>
 #include <AzCore/StringFunc/StringFunc.h>
+
 namespace HoudiniEngine
 {
     HAPI_CookOptions HoudiniEngineUtils::GetDefaultCookOptions()
