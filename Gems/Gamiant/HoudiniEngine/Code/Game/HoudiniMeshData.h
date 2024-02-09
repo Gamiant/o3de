@@ -244,17 +244,124 @@ namespace HoudiniEngine
             void SetIndexOffset(AZ::u64 offset);
             void SetIndexCount(AZ::u64 count);
 
-            template<AttributeType AttributeTypeT>
-            AZ::u32 GetCount() const;
-            template<AttributeType AttributeTypeT>
-            AZ::u32 GetOffset() const;
-            template<AttributeType AttributeTypeT>
-            void SetCount(AZ::u64 count);
-            template<AttributeType AttributeTypeT>
-            void SetOffset(AZ::u64 offset);
-
             const U32Vector& GetIndices() const;
             void SetIndices(const U32Vector& indices);
+
+            template<AttributeType AttributeTypeT>
+            void SetOffset(AZ::u64 offset)
+            {
+                if constexpr (AttributeTypeT == AttributeType::Position)
+                {
+                    m_positionsRange.offset = aznumeric_cast<AZ::u32>(offset);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Normal)
+                {
+                    m_normalsRange.offset = aznumeric_cast<AZ::u32>(offset);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Tangent)
+                {
+                    m_tangentsRange.offset = aznumeric_cast<AZ::u32>(offset);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Bitangent)
+                {
+                    m_bitangentsRange.offset = aznumeric_cast<AZ::u32>(offset);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::UV)
+                {
+                    m_uvsRange.offset = aznumeric_cast<AZ::u32>(offset);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Color)
+                {
+                    m_colorsRange.offset = aznumeric_cast<AZ::u32>(offset);
+                }
+            }
+
+            template<AttributeType AttributeTypeT>
+            void SetCount(AZ::u64 count)
+            {
+                if constexpr (AttributeTypeT == AttributeType::Position)
+                {
+                    m_positionsRange.count = aznumeric_cast<AZ::u32>(count);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Normal)
+                {
+                    m_normalsRange.count = aznumeric_cast<AZ::u32>(count);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Tangent)
+                {
+                    m_tangentsRange.count = aznumeric_cast<AZ::u32>(count);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Bitangent)
+                {
+                    m_bitangentsRange.count = aznumeric_cast<AZ::u32>(count);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::UV)
+                {
+                    m_uvsRange.count = aznumeric_cast<AZ::u32>(count);
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Color)
+                {
+                    m_colorsRange.count = aznumeric_cast<AZ::u32>(count);
+                }
+            }
+
+            template<AttributeType AttributeTypeT>
+            AZ::u32 GetCount() const
+            {
+                if constexpr (AttributeTypeT == AttributeType::Position)
+                {
+                    return m_positionsRange.count;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Normal)
+                {
+                    return m_normalsRange.count;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Tangent)
+                {
+                    return m_tangentsRange.count;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Bitangent)
+                {
+                    return m_bitangentsRange.count;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::UV)
+                {
+                    return m_uvsRange.count;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Color)
+                {
+                    return m_colorsRange.count;
+                }
+            }
+
+            template<AttributeType AttributeTypeT>
+            AZ::u32 GetOffset() const
+            {
+                if constexpr (AttributeTypeT == AttributeType::Position)
+                {
+                    return m_positionsRange.offset;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Normal)
+                {
+                    return m_normalsRange.offset;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Tangent)
+                {
+                    return m_tangentsRange.offset;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Bitangent)
+                {
+                    return m_bitangentsRange.offset;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::UV)
+                {
+                    return m_uvsRange.offset;
+                }
+                else if constexpr (AttributeTypeT == AttributeType::Color)
+                {
+                    return m_colorsRange.offset;
+                }
+            }
 
             template<AttributeType AttributeTypeT>
             const auto& GetDataBuffer() const

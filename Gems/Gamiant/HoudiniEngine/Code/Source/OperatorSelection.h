@@ -5,6 +5,7 @@
 
 #include <QDialog>
 #include <QMainWindow>
+#include <QListWidgetItem>
 #endif
 
 class QString;

@@ -7,6 +7,9 @@
 
 #include <AzCore/Utils/Utils.h>
 #include <AzCore/Serialization/Json/JsonUtils.h>
+#include <AzCore/Asset/AssetManagerBus.h>
+
+
 namespace HoudiniEngine
 {
     bool HoudiniMaterialTranslator::CreateHoudiniMaterials(const HAPI_NodeId& InAssetId, const AZStd::vector<AZ::s32>& InUniqueMaterialIds, const AZStd::vector<HAPI_MaterialInfo>& InUniqueMaterialInfos, const AZStd::string& HoudiniAssetName,
@@ -318,7 +321,7 @@ namespace HoudiniEngine
         {
             // We found a valid "use" parameter, check if it is disabled
             // Get the param value
-            int32 UseValue = 0;
+            int UseValue = 0;
             if (HAPI_RESULT_SUCCESS == HAPI_GetParmIntValues(&hou->GetSession(), InNodeId, &UseValue, FoundUseParmInfo.intValuesIndex, 1))
             {
                 if (UseValue == 0)

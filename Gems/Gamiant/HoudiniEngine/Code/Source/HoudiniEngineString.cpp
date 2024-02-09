@@ -127,7 +127,7 @@ namespace HoudiniEngine
         AZStd::vector<AZ::s32> UniqueSHArray(UniqueSH.begin(), UniqueSH.end());
 
         AZ::s32 BufferSize = 0;
-        if (HAPI_RESULT_SUCCESS != HAPI_GetStringBatchSize(&hou->GetSession(), UniqueSHArray.data(), UniqueSHArray.size(), &BufferSize))
+        if (HAPI_RESULT_SUCCESS != HAPI_GetStringBatchSize(&hou->GetSession(), UniqueSHArray.data(), aznumeric_cast<int>(UniqueSHArray.size()), &BufferSize))
             return false;
 
         if (BufferSize <= 0)

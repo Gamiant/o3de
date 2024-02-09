@@ -31,8 +31,10 @@
 
 namespace HoudiniEngine
 {
+#if defined (AZ_PLATFORM_WINDOWS)
 #pragma warning(push)
 #pragma warning(disable: 4541)
+#endif
 
     HE_Viewer::HE_Viewer()
     {
@@ -694,7 +696,9 @@ namespace HoudiniEngine
     {
 
     }
+#if defined (AZ_PLATFORM_WINDOWS)
 #pragma warning(pop)
+#endif
 
 }
 

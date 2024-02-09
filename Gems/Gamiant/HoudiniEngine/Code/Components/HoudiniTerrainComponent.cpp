@@ -22,6 +22,7 @@
 #endif
 
 #include <AzCore/Component/TickBus.h>
+#include <AzFramework/Viewport/ViewportBus.h>
 #include <AzToolsFramework/Entity/EditorEntityInfoBus.h>
 
 

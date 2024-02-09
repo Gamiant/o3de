@@ -1,6 +1,8 @@
 #include <EditorDefs.h>
 #include "HoudiniScatterComponent.h"
 
+#include <AzCore/Serialization/SerializeContext.h>
+
 #include <AzToolsFramework/API/ToolsApplicationAPI.h>
 #include <AzToolsFramework/Entity/EditorEntityAPIBus.h>
 #include <AzToolsFramework/Entity/EditorEntityInfoBus.h>
@@ -17,6 +19,8 @@
 #include <Windows.h>
 #endif
 
+#include <AzCore/Slice/SliceAsset.h>
+
 namespace HoudiniEngine
 {
     /*static*/ void HoudiniScatterElement::Reflect(AZ::ReflectContext* context)
@@ -25,7 +29,8 @@ namespace HoudiniEngine
         {
             serialize->Class<HoudiniScatterElement>()
                 ->Version(1)
-                ->Field("Asset", &HoudiniScatterElement::m_asset)
+                
+                //->Field("Asset", &HoudiniScatterElement::m_asset)
                 ->Field("Weight", &HoudiniScatterElement::m_weight)
                 ->Field("Radius", &HoudiniScatterElement::m_radius);
 

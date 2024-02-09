@@ -3,6 +3,9 @@
 #include <HoudiniEngine/HoudiniCommonForwards.h>
 #include <Components/HoudiniNodeComponentConfig.h>
 
+#include <AzToolsFramework/Entity/EditorEntityInfoBus.h>
+#include <AzFramework/Entity/EntityDebugDisplayBus.h>
+
 //O3DECONVERT
 //#include <Terrain/Bus/LegacyTerrainBus.h>
 

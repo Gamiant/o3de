@@ -5,6 +5,8 @@
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/Component/Entity.h>
 
+#include <HAPI/HAPI_Common.h>
+
 namespace HoudiniEngine
 {
     struct HoudiniSplineTranslator
@@ -16,7 +18,7 @@ namespace HoudiniEngine
         static bool UpdateHoudiniCurveLegacy(AZ::EntityId entityId, const AZ::s32& GeoId);
 
         // Indicates if the node is a valid curve input node
-        static bool IsCurveInputNodeValid(const HAPI_NodeId& InNodeId, const bool& bLegacyNode = false);
+        static bool IsCurveInputNodeValid(const HAPI_NodeId& InNodeId, const bool bLegacyNode = false);
 
         // Upload Houdini spline component data to the curve node, and then sync the Houdini Spline Component with the curve node.
         static bool HapiUpdateNodeForHoudiniSplineComponent(AZ::EntityId entityId, HAPI_NodeId& CurveNodeId, bool bInSetRotAndScaleAttributes);

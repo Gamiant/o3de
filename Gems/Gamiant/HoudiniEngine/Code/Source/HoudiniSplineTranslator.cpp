@@ -109,7 +109,7 @@ namespace HoudiniEngine
         return true;
     }
 
-    bool HoudiniSplineTranslator::IsCurveInputNodeValid(const HAPI_NodeId& InNodeId, const bool& bLegacyNode)
+    bool HoudiniSplineTranslator::IsCurveInputNodeValid(const HAPI_NodeId& InNodeId, const bool bLegacyNode)
     {
         // Check if connected asset id is valid, if it is not, we need to create an input asset.
         if (InNodeId < 0)
@@ -212,7 +212,7 @@ namespace HoudiniEngine
         AZ::s32 InCurveMethod, bool InClosed, bool InReversed, bool InForceClose)
     {
         // We also need a valid host asset and 2 points to make a curve
-        int32 NumberOfCVs = Positions->size();
+        AZ::u64 NumberOfCVs = Positions->size();
         if (NumberOfCVs < 2)
             return false;
 

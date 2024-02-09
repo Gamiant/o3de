@@ -1,10 +1,12 @@
-﻿#pragma once
+#pragma once
 
 #include <HoudiniEngine/HoudiniEngineBus.h>
 #include <HoudiniEngine/HoudiniCommonForwards.h>
 #include <Components/HoudiniNodeComponentConfig.h>
 
 #include <LmbrCentral/Shape/SplineAttribute.h>
+
+#include <AzFramework/Entity/EntityDebugDisplayBus.h>
 
 namespace HoudiniEngine
 {
