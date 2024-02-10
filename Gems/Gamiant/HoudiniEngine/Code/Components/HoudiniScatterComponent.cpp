@@ -50,8 +50,8 @@ namespace HoudiniEngine
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("Game", 0x232b318c))
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
 
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniScatterElement::m_asset, "Slice", "The slice that you want to instance at every point")
-                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC("RefreshAttributesAndValues", 0xcbc2147c))
+                    //->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniScatterElement::m_asset, "Slice", "The slice that you want to instance at every point")
+                    //->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC("RefreshAttributesAndValues", 0xcbc2147c))
 
                     //This is in the asset at the moment, in case we change our minds:
                     //->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniScatterElement::m_weight, "Distribution weight", "The Sum is added up and this number becomes a percentage of the total.")

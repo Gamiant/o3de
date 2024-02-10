@@ -64,10 +64,9 @@ ly_add_target(
             3rdParty::houdini
             Legacy::EditorCore
         PUBLIC
-            Legacy::CryCommon    
+            Legacy::CryCommon
             AZ::AzCore
             AZ::AzToolsFramework
-            #AZ::GFxFramework
             AZ::SceneCore
             AZ::SceneData
             Gem::LmbrCentral
@@ -155,10 +154,9 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
                 3rdParty::Qt::Widgets
                 Legacy::EditorCore
             PUBLIC
-                Legacy::CryCommon    
+                Legacy::CryCommon
                 AZ::AzCore
                 AZ::AzToolsFramework
-                #AZ::GFxFramework
                 AZ::SceneCore
                 AZ::SceneData
                 Gem::LmbrCentral
