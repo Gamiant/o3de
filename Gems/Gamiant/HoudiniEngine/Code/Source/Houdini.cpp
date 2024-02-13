@@ -76,12 +76,72 @@ namespace HoudiniEngine
             m_workerThread[0]->detach();
         }
 
+        //HAPI_Initialize();
+
         CreateNewSession();
     }
 
+    // GMT: Get this working
     void Houdini::CreateNewSession()
     {
         AZ_PROFILE_FUNCTION(Editor);
+
+
+        // HARS server options
+        HAPI_ThriftServerOptions serverOptions{ 0 };
+        serverOptions.autoClose = true;
+        serverOptions.timeoutMs = 3000.0f;
+        serverOptions.verbosity = HAPI_STATUSVERBOSITY_ALL;
+        // Start our HARS server using the "hapi" named pipe
+        // This call can be ignored if you have launched HARS manually before
+        if (auto result = HAPI_StartThriftNamedPipeServer(&serverOptions, HOUDINI_NAMED_PIPE, nullptr, nullptr); result != HAPI_RESULT_SUCCESS)
+        {
+            AZStd::string codeString;
+            HoudiniEngineRequestBus::BroadcastResult(codeString, &HoudiniEngineRequests::GetHoudiniResultByCode, result);
+
+            // error
+            AZ_Error("Houdini", false, "HAPI_StartThriftNamedPipeServer failed: %s", codeString.c_str());
+            return;
+        }
+            
+        // Create a new HAPI session to use with that server
+        HAPI_Session session;
+        if (HAPI_RESULT_SUCCESS != HAPI_CreateThriftNamedPipeSession(&session, "hapi"))
+        {
+            AZ_Error("Houdini", false, "HAPI_CreateThriftNamedPipeSession failed");
+            return;
+        }
+
+        // Initialize HAPI
+        HAPI_CookOptions cookOptions = HAPI_CookOptions_Create();
+        if (HAPI_RESULT_SUCCESS != HAPI_Initialize(
+            &session,           // session
+            &cookOptions,       // cook options
+            true,                       // use_cooking_thread
+            -1,                         // cooking_thread_stack_size
+            "",                         // houdini_environment_files
+            nullptr,            // otl_search_path
+            nullptr,            // dso_search_path
+            nullptr,            // image_dso_search_path
+            nullptr))              // audio_dso_search_path
+        {
+            AZ_Error("Houdini", false, "HAPI_Initialize failed");
+            return;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         HAPI_Session newSession;
         newSession.type = HAPI_SESSION_MAX;

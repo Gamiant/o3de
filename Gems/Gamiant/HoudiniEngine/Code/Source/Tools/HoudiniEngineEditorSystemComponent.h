@@ -18,10 +18,25 @@
 #include <ISystem.h>
 #include <AzCore/Component/EntityBus.h>
 
+#include <ActionManager/Action/ActionManagerInterface.h>
+#include <ActionManager/Menu/MenuManagerInterface.h>
+#include <ActionManager/ToolBar/ToolBarManagerInterface.h>
+#include <AzToolsFramework/ActionManager/ActionManagerRegistrationNotificationBus.h>
+
+namespace AzToolsFramework
+{
+    class ActionManagerInterface;
+    class MenuManagerInterface;
+    class ToolBarManagerInterface;
+
+}
+
 namespace HoudiniEngine
 {
     class Houdini;
     class HoudiniStatusPanel;
+    class HoudiniConfiguration;
+    class HoudiniSessionControls;
 
     /// System component for HoudiniEngine editor
     class HoudiniEngineEditorSystemComponent
@@ -33,6 +48,7 @@ namespace HoudiniEngine
         , public AZ::TickBus::Handler
         , public AzToolsFramework::EditorEvents::Bus::Handler
         , public AZ::EntitySystemBus::Handler
+        , AzToolsFramework::ActionManagerRegistrationNotificationBus::Handler
     {
     public:
         AZ_COMPONENT(HoudiniEngineEditorSystemComponent, "{EA171C26-65F3-4CBF-88A8-7198442A3ED1}");
@@ -51,7 +67,12 @@ namespace HoudiniEngine
         virtual AZStd::string GetHoudiniResultByCode(int code) override;  // FL[FD-10714] Houdini integration to 1.21
 
         HoudiniPtr m_houdiniInstance;
+
         HoudiniStatusPanel* m_houdiniStatusPanel;
+
+        HoudiniConfiguration* m_configuration;
+        HoudiniSessionControls* m_sessionControls;
+
     protected:
         ////////////////////////////////////////////////////////////////////////
         // HoudiniEngineRequestBus interface implementation        
@@ -61,6 +82,11 @@ namespace HoudiniEngine
         // AzToolsFramework::EditorEvents
         void PopulateEditorGlobalContextMenu_SliceSection(QMenu* menu, const AZ::Vector2& point, int flags) override;
         void NotifyRegisterViews() override;
+        //////////////////////////////////////////////////////////////////////////
+
+        //////////////////////////////////////////////////////////////////////////
+        // AzToolsFramework::ActionManagerRegistrationNotificationBus...
+        void OnMenuRegistrationHook() override;
         //////////////////////////////////////////////////////////////////////////
 
         // Entity System Bus:
@@ -100,5 +126,13 @@ namespace HoudiniEngine
         void AddDynamicContextMenus(QMenu* menu, const AzToolsFramework::EntityIdList& selectedEntityList);
         void AddDynamicContextMenu(QMenu* menu, const AzToolsFramework::EntityIdList& selectedEntityList, AZStd::shared_ptr<XmlData> xml, AZ::rapidxml::xml_node<>* contextMenuNode);
         AZ::Entity* CreateNewHoudiniDigitalAsset(const AZStd::string& name, const AZ::EntityId& parent);
+
+
+        AzToolsFramework::ActionManagerInterface* m_actionManagerInterface = nullptr;
+        AzToolsFramework::MenuManagerInterface* m_menuManagerInterface = nullptr;
+        AzToolsFramework::ToolBarManagerInterface* m_toolBarManagerInterface = nullptr;
+
+        void ConfigureEditorActions();
+
     };
 } // namespace HoudiniEngine

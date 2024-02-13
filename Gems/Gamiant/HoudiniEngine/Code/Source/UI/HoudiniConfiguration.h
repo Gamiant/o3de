@@ -21,30 +21,25 @@ class QStringListModel;
 
 namespace Ui 
 {
-    class HoudiniStatusPanel;
+    class HoudiniConfiguration;
 }
 
 namespace HoudiniEngine
 {
-    class HoudiniStatusPanel
+    class HoudiniConfiguration
         : public QWidget
     {
         Q_OBJECT
+
     public:
 
-        HoudiniStatusPanel();
-        virtual ~HoudiniStatusPanel();
-        
-        void UpdatePercent(AZStd::string text, int percent, int assetsInQueue, bool asyncMode);
+        HoudiniConfiguration();
+        ~HoudiniConfiguration() override;
 
-        AZStd::function<void()> OnInterrupt = {};
+    private Q_SLOTS:
 
-    private slots:
-        
+    private:
 
-    private:        
-        void OnClickInterrupt();
-
-        Ui::HoudiniStatusPanel* m_ui;
+        Ui::HoudiniConfiguration* m_ui;
     };
 }

@@ -7,7 +7,7 @@
  */
 
 
-#include <Source/ui_HoudiniStatusPanel.h>
+#include <Source/UI/ui_HoudiniStatusPanel.h>
 #include "HoudiniStatusPanel.h"
 
 #include <HoudiniEngine/HoudiniApi.h>
@@ -101,4 +101,4 @@ namespace HoudiniEngine
     }
 }
 
-#include <moc_HoudiniStatusPanel.cpp>
+#include <UI/moc_HoudiniStatusPanel.cpp>

@@ -9,9 +9,20 @@ set(FILES
     Source/OperatorSelection.h
     Source/OperatorSelection.cpp
     Source/OperatorSelection.ui
-    Source/HoudiniStatusPanel.h
-    Source/HoudiniStatusPanel.cpp
-    Source/HoudiniStatusPanel.ui
+
+# UI
+    Source/UI/HoudiniStatusPanel.h
+    Source/UI/HoudiniStatusPanel.cpp
+    Source/UI/HoudiniStatusPanel.ui
+    Source/UI/HoudiniConfiguration.h
+    Source/UI/HoudiniConfiguration.cpp
+    Source/UI/HoudiniConfiguration.ui
+    Source/UI/HoudiniSessionControls.h
+    Source/UI/HoudiniSessionControls.cpp
+    Source/UI/HoudiniSessionControls.ui
+
+
+# SideFX
     SideFX/HE_ParameterWidget.cpp
     SideFX/HE_ParameterWidget.h
     SideFX/HE_ParameterWidget_Button.cpp
