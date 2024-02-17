@@ -704,6 +704,120 @@ HAPI_DECL HAPI_GetComposedNodeCookResult( const HAPI_Session * session,
                                           char * string_value,
                                           int length );
 
+/// @brief  Gets the length of the cook result string (errors and warnings) of
+///         a specific node.
+///
+///         Unlike ::HAPI_ComposeNodeCookResult(), this node does not parse
+///         inside the node network. Only errors, warnings, and messages that
+///         appear on the specified node will be a part of the cook result
+///         string.
+///
+///         You MUST call ::HAPI_GetNodeCookResultLength() before calling
+///         ::HAPI_GetNodeCookResult() because ::HAPI_GetNodeCookResult() will
+///         not return the real result and instead returns a cached version of
+///         the string that was created during the call to
+///         ::HAPI_GetNodeCookResultLength(). The reason for this is that the
+///         length of the real status string may change between the call to
+///         ::HAPI_GetNodeCookResultLength() and ::HAPI_GetNodeCookResult().
+///
+/// @ingroup Status
+///
+/// @param[in]  session
+///             The session of Houdini you are interacting with.
+///             See @ref HAPI_Sessions for more on sessions.
+///             Pass NULL to just use the default in-process session.
+///             <!-- default NULL -->
+///
+/// @param[in]  node_id
+///             The node id.
+///
+/// @param[in]  verbosity
+///             Preferred verbosity level.
+///
+/// @param[out] buffer_length
+///             Lenght of buffer char array ready to be filled.
+///
+HAPI_DECL HAPI_GetNodeCookResultLength( const HAPI_Session * session,
+                                        HAPI_NodeId node_id,
+                                        HAPI_StatusVerbosity verbosity,
+                                        int * buffer_length );
+
+/// @brief  Return the cook result string that was composed during a call to
+///         ::HAPI_GetNodeCookResultLength().
+///
+///         You MUST call ::HAPI_GetNodeCookResultLength() before calling
+///         ::HAPI_GetNodeCookResult() because ::HAPI_GetNodeCookResult() will
+///         not return the real result and instead returns a cached version of
+///         the string that was created during the call to
+///         ::HAPI_GetNodeCookResultLength(). The reason for this is that the
+///         length of the real status string may change between the call to
+///         ::HAPI_GetNodeCookResultLength() and ::HAPI_GetNodeCookResult().
+///
+/// @ingroup Status
+///
+/// @param[in]  session
+///             The session of Houdini you are interacting with.
+///             See @ref HAPI_Sessions for more on sessions.
+///             Pass NULL to just use the default in-process session.
+///             <!-- default NULL -->
+///
+/// @param[out] string_value
+///             Buffer char array that will be filled with the cook result
+///             string.
+///
+/// @param[in]  length
+///             Length of the char buffer (must match size of
+///             @p string_value - so include NULL terminator).
+///             <!-- source ::HAPI_GetNodeCookResultLength -->
+///
+HAPI_DECL HAPI_GetNodeCookResult( const HAPI_Session * session,
+                                  char * string_value,
+                                  int length );
+
+/// @brief  Get the number of message nodes set in "Type Properties".
+///
+/// @ingroup Status
+///
+/// @param[in]      session
+///                 The session of Houdini you are interacting with.
+///                 See @ref HAPI_Sessions for more on sessions.
+///                 Pass NULL to just use the default in-process session.
+///                 <!-- default NULL -->
+///
+/// @param[in]      node_id
+///                 The node id.
+///
+/// @param[out]     count
+///                 The number of message nodes.
+///         
+HAPI_DECL HAPI_GetMessageNodeCount( const HAPI_Session * session,
+                                    HAPI_NodeId node_id,
+                                    int * count );
+
+/// @brief  Get the ids of message nodes set in the "Type Properties".
+///            
+/// @ingroup Status
+///
+/// @param[in]      session
+///                 The session of Houdini you are interacting with.
+///                 See @ref HAPI_Sessions for more on sessions.
+///                 Pass NULL to just use the default in-process session.
+///                 <!-- default NULL -->
+///
+/// @param[in]      node_id
+///                 The node id.
+///
+/// @param[out]     message_node_ids_array
+///                 The array of node IDs to be filled.
+///
+/// @param[in]      count
+///                 The number of message nodes.
+///
+HAPI_DECL HAPI_GetMessageNodeIds( const HAPI_Session * session, 
+                                   HAPI_NodeId node_id, 
+                                   HAPI_NodeId * message_node_ids_array, 
+                                   int count );
+
 /// @brief  Recursively check for specific errors by error code on a node.
 ///
 ///         Note that checking for errors can be expensive because it checks
@@ -1751,7 +1865,7 @@ HAPI_DECL HAPI_GetLoadedAssetLibraryCount(
     const HAPI_Session * session,
     int * count);
 
-/// @brief  Gets the HAPI_AssetLibraryIds for HDAs that are loaded in Houdini.
+/// @brief  Gets the HAPI_AssetLibraryId's for HDAs that are loaded in Houdini.
 ///
 /// @ingroup Assets
 ///
@@ -1762,7 +1876,7 @@ HAPI_DECL HAPI_GetLoadedAssetLibraryCount(
 ///                 <!-- default NULL -->
 ///
 /// @param[out]     asset_library_ids_array
-///                 Array of HAPI_AssetLibraryIds at least the size of length.
+///                 Array of HAPI_AssetLibraryId's at least the size of length.
 ///
 /// @param[in]      start
 ///                 First index from the list of HAPI_AssetLibraryId's to
@@ -5573,6 +5687,127 @@ HAPI_DECL HAPI_GetAttributeStringArrayData( const HAPI_Session * session,
                                             int * sizes_fixed_array,
                                             int start, int sizes_fixed_length );
 
+/// @brief  Get attribute dictionary data.
+/// 
+///         Dictionary data is serialized as JSON-encoded strings.
+///         Note that the string handles returned are only valid until the next 
+///         time this function is called.   
+///
+/// @ingroup GeometryGetters Attributes
+///
+/// @param[in]      session
+///                 The session of Houdini you are interacting with.
+///                 See @ref HAPI_Sessions for more on sessions.
+///                 Pass NULL to just use the default in-process session.
+///                 <!-- default NULL -->
+///
+/// @param[in]      node_id
+///                 The node id.
+///
+/// @param[in]      part_id
+///                 The part id.
+///
+/// @param[in]      name
+///                 Attribute name.
+///
+/// @param[in]      attr_info
+///                 ::HAPI_AttributeInfo used as input for what tuple size.
+///                 you want. Also contains some sanity checks like
+///                 data type. Generally should be the same struct
+///                 returned by ::HAPI_GetAttributeInfo().
+///
+/// @param[out]     data_array
+///                 An ::HAPI_StringHandle array at least the size of
+///                 <tt>length * ::HAPI_AttributeInfo::tupleSize</tt>.
+///
+/// @param[in]      start
+///                 First index of range. Must be at least 0 and at
+///                 most ::HAPI_AttributeInfo::count - 1.
+///                 <!-- default 0 -->
+///
+/// @param[in]      length
+///                 Must be at least 0 and at most
+///                 ::HAPI_AttributeInfo::count - @p start.
+///                 Note, if 0 is passed for length, the function will just
+///                 do nothing and return ::HAPI_RESULT_SUCCESS.
+///                 <!-- source ::HAPI_AttributeInfo::count - start -->
+///
+HAPI_DECL HAPI_GetAttributeDictionaryData( const HAPI_Session* session,
+                                           HAPI_NodeId node_id,
+                                           HAPI_PartId part_id,
+                                           const char* name,
+                                           HAPI_AttributeInfo* attr_info,
+                                           HAPI_StringHandle* data_array,
+                                           int start,
+                                           int length );
+
+/// @brief  Get array attribute dictionary data.
+///         Each entry in an array attribute can have varying array lengths.
+///         Therefore the array values are returned as a flat array, with
+///         another sizes array containing the lengths of each array entry.
+/// 
+///         Dictionary data is serialized as JSON-encoded strings.
+///         Note that the string handles returned are only valid until
+///         the next time this function is called.
+///
+/// @ingroup GeometryGetters Attributes
+///
+/// @param[in]      session
+///                 The session of Houdini you are interacting with.
+///                 See @ref HAPI_Sessions for more on sessions.
+///                 Pass NULL to just use the default in-process session.
+///                 <!-- default NULL -->
+///
+/// @param[in]      node_id
+///                 The node id.
+///
+/// @param[in]      part_id
+///                 The part id.
+///
+/// @param[in]      name
+///                 Attribute name.
+///
+/// @param[in]      attr_info
+///                 ::HAPI_AttributeInfo used as input for the.
+///                 totalArrayElements. Also contains some sanity checks like
+///                 data type. Generally should be the same struct
+///                 returned by ::HAPI_GetAttributeInfo().
+///
+/// @param[out]     data_fixed_array
+///                 An ::HAPI_StringHandle array at least the size of
+///                 <tt>::HAPI_AttributeInfo::totalArrayElements</tt>.
+///
+/// @param[in]      data_fixed_length
+///                 Must be <tt>::HAPI_AttributeInfo::totalArrayElements</tt>.
+///                 <!-- source ::HAPI_AttributeInfo::totalArrayElements -->
+///
+/// @param[out]     sizes_fixed_array
+///                 An integer array at least the size of
+///                 <tt>sizes_fixed_length</tt> to hold the size of each entry.
+///
+/// @param[in]      start
+///                 First index of range. Must be at least 0 and at
+///                 most ::HAPI_AttributeInfo::count - 1.
+///                 <!-- default 0 -->
+///
+/// @param[in]      sizes_fixed_length
+///                 Must be at least 0 and at most
+///                 ::HAPI_AttributeInfo::count - @p start.
+///                 Note, if 0 is passed for length, the function will just
+///                 do nothing and return ::HAPI_RESULT_SUCCESS.
+///                 <!-- source ::HAPI_AttributeInfo::count - start -->
+///
+HAPI_DECL HAPI_GetAttributeDictionaryArrayData( const HAPI_Session* session,
+                                                HAPI_NodeId node_id,
+                                                HAPI_PartId part_id,
+                                                const char* name,
+                                                HAPI_AttributeInfo* attr_info,
+                                                HAPI_StringHandle* data_fixed_array,
+                                                int data_fixed_length,
+                                                int* sizes_fixed_array,
+                                                int start,
+                                                int sizes_fixed_length );
+
 /// @brief  Get group names for an entire geo. Please note that this
 ///         function is NOT per-part, but it is per-geo. The companion
 ///         function ::HAPI_GetGroupMembership() IS per-part. Also keep
@@ -6384,7 +6619,7 @@ HAPI_DECL HAPI_SetAttributeFloat64Data( const HAPI_Session * session,
 ///                 Attribute name.
 ///
 /// @param[in]      attr_info
-///                 ::HAPI_AttributeInfo used as input for what tuple size.
+///                 ::HAPI_AttributeInfo used as input for what tuple size
 ///                 you want. Also contains some sanity checks like
 ///                 data type. Generally should be the same struct
 ///                 returned by ::HAPI_GetAttributeInfo().
@@ -6900,6 +7135,54 @@ HAPI_DECL HAPI_SetAttributeFloat64UniqueData(
         int start_index,
         int num_indices);
 
+/// @brief  Set attribute dictionary data. The dictionary data should 
+///         be provided as JSON-encoded strings.
+/// 
+/// @ingroup GeometrySetters Attributes
+///
+/// @param[in]      session
+///                 The session of Houdini you are interacting with.
+///                 See @ref HAPI_Sessions for more on sessions.
+///                 Pass NULL to just use the default in-process session.
+///                 <!-- default NULL -->
+///
+/// @param[in]      node_id
+///                 The SOP node id.
+///
+/// @param[in]      part_id
+///                 Currently not used. Just pass 0.
+///
+/// @param[in]      name
+///                 Attribute name.
+///
+/// @param[in]      attr_info
+///                 ::HAPI_AttributeInfo used as input for what tuple size
+///                 you want. Also contains some sanity checks like
+///                 data type. Generally should be the same struct
+///                 returned by ::HAPI_GetAttributeInfo().
+///
+/// @param[in]      data_array
+///                 An ::HAPI_StringHandle array at least the size of
+///                 <tt>length * ::HAPI_AttributeInfo::tupleSize</tt>.
+///
+/// @param[in]      start
+///                 First index of range. Must be at least 0 and at
+///                 most ::HAPI_AttributeInfo::count - 1.
+///                 <!-- default 0 -->
+///
+/// @param[in]      length
+///                 Must be at least 0 and at most
+///                 ::HAPI_AttributeInfo::count - @p start.
+///                 <!-- source ::HAPI_AttributeInfo::count - start -->
+///
+HAPI_DECL HAPI_SetAttributeDictionaryData( const HAPI_Session* session,
+                                           HAPI_NodeId node_id,
+                                           HAPI_PartId part_id,
+                                           const char* name,
+                                           const HAPI_AttributeInfo* attr_info,
+                                           const char** data_array,
+                                           int start, int length );
+
 /// @brief  
 ///
 /// @ingroup GeometrySetters Attributes
@@ -7299,7 +7582,7 @@ HAPI_DECL HAPI_SetAttributeFloat64ArrayData( const HAPI_Session * session,
                                              int start,
                                              int sizes_fixed_length );
 
-/// @brief  
+/// @brief  Set attribute string array data.
 ///
 /// @ingroup GeometrySetters Attributes
 ///
@@ -7355,6 +7638,64 @@ HAPI_DECL HAPI_SetAttributeStringArrayData( const HAPI_Session * session,
                                             const int * sizes_fixed_array,
                                             int start,
                                             int sizes_fixed_length );
+
+/// @brief  Set attribute dictionary array data. The dictionary data should 
+///         be provided as JSON-encoded strings.
+///
+/// @ingroup GeometrySetters Attributes
+///
+/// @param[in]      session
+///                 The session of Houdini you are interacting with.
+///                 See @ref HAPI_Sessions for more on sessions.
+///                 Pass NULL to just use the default in-process session.
+///                 <!-- default NULL -->
+///
+/// @param[in]      node_id
+///                 The SOP node id.
+///
+/// @param[in]      part_id
+///                 Currently not used. Just pass 0.
+///
+/// @param[in]      name
+///                 Attribute name.
+///
+/// @param[in]      attr_info
+///                 ::HAPI_AttributeInfo that contains the description for the
+///                 attribute that is being set.
+///
+/// @param[in]      data_fixed_array
+///                 An array containing the dictionary values of the attribute.
+///
+/// @param[in]      data_fixed_length
+///                 The total size of the data array. The size can be no greater
+///                 than the <tt>::HAPI_AttributeInfo::totalArrayElements</tt>
+///                 of the attribute.
+///                 <!-- source ::HAPI_AttributeInfo::totalArrayElements -->
+///
+/// @param[in]      sizes_fixed_array
+///                 An array of integers that contains the sizes of each
+///                 attribute array. This is required because the attribute
+///                 array for each geometry component can be of variable size.
+///
+/// @param[in]      start
+///                 First index of range. Must be at least 0 and at most
+///                 ::HAPI_AttributeInfo::count - 1.
+///                 <!-- default 0 -->
+///
+/// @param[in]      sizes_fixed_length
+///                 Must be at least 0 and at most
+///                 ::HAPI_AttributeInfo::count - @p start.
+///                 <!-- source ::HAPI_AttributeInfo::count - start -->
+HAPI_DECL HAPI_SetAttributeDictionaryArrayData( const HAPI_Session* session,
+                                                HAPI_NodeId node_id,
+                                                HAPI_PartId part_id,
+                                                const char* name,
+                                                const HAPI_AttributeInfo* attr_info,
+                                                const char** data_fixed_array,
+                                                int data_fixed_length,
+                                                const int* sizes_fixed_array,
+                                                int start,
+                                                int sizes_fixed_length);
 
 /// @brief  Add a group to the input geo with the given type and name.
 ///
