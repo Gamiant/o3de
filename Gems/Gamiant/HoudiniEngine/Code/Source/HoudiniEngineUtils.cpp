@@ -13,6 +13,10 @@
 #include <HoudiniEngine/HoudiniEngineBus.h>
 #include <AzCore/StringFunc/StringFunc.h>
 
+#if defined (AZ_PLATFORM_WINDOWS)
+#include <processenv.h>
+#endif
+
 namespace HoudiniEngine
 {
     HAPI_CookOptions HoudiniEngineUtils::GetDefaultCookOptions()
@@ -355,5 +359,90 @@ namespace HoudiniEngine
         HAPI_GetParmInfo(&hou->GetSession(), InNodeId, ParmId, &OutFoundParmInfo);
 
         return ParmId;
+    }
+
+    const char* HoudiniEngineUtils::GetPathVarDelimiter()
+    {
+#if defined(_WIN32)
+        return ";";
+#else
+        return ":";
+#endif
+    }
+
+    AZStd::string HoudiniEngineUtils::GetEnvironmentVariable(const AZStd::string& variableName) {
+#ifdef _WIN32
+        DWORD bufferSize = GetEnvironmentVariableA(variableName.c_str(), nullptr, 0);
+
+        if (bufferSize == 0)
+        {
+            // Failed to get the size
+            return "";
+        }
+
+        AZStd::string buffer(bufferSize, '\0');
+        DWORD result = GetEnvironmentVariableA(variableName.c_str(), &buffer[0], bufferSize);
+
+        if (result == 0 || result > bufferSize)
+        {
+            // Failed to get the environment variable value
+            return "";
+        }
+
+        buffer.resize(result - 1);  // Exclude the null terminator
+        return buffer;
+
+#else
+        // Unix-based systems implementation
+        char* value = getenv(variableName.c_str());
+
+        if (value == nullptr)
+        {
+            // Environment variable not found
+            return "";
+        }
+
+        return value;
+#endif
+    }
+
+    bool HoudiniEngineUtils::SetEnvironmentVariable(const AZStd::string& variableName, const AZStd::string& variableValue)
+    {
+#if defined(_WIN32)
+        return SetEnvironmentVariableA(variableName.c_str(), variableValue.c_str()) != 0;
+#else
+        return setenv(variableName.c_str(), variableValue.c_str(), 1) == 0;
+#endif
+    }
+
+    AZStd::string HoudiniEngineUtils::GetConnectionError()
+    {
+        int errorLength = 0;
+        HAPI_GetConnectionErrorLength(&errorLength);
+
+        if (errorLength > 0)
+        {
+            char* error = new char[errorLength];
+            HAPI_GetConnectionError(error, errorLength, true);
+
+            return error;
+        }
+
+        return {};
+    }
+
+    AZStd::string HoudiniEngineUtils::GetLastError()
+    {
+        int buffer_length = 0;
+        HAPI_GetStatusStringBufLength(nullptr, HAPI_STATUS_CALL_RESULT, HAPI_STATUSVERBOSITY_ALL, &buffer_length);
+        if (buffer_length > 0)
+        {
+            char* buf = new char[buffer_length];
+            HAPI_GetStatusString(nullptr, HAPI_STATUS_CALL_RESULT, buf, buffer_length);
+            AZStd::string result(buf);
+            delete[] buf;
+            return result;
+        }
+        return {};
     }
 }

@@ -13,7 +13,7 @@
 #       i.e. It could here in our gem : Gems/HoudiniEngine/Code/Platform/<platorm_name>  or
 #            <restricted_folder>/<platform_name>/Gems/HoudiniEngine/Code
 o3de_pal_dir(pal_dir ${CMAKE_CURRENT_LIST_DIR}/Platform/${PAL_PLATFORM_NAME} "${gem_restricted_path}" "${gem_path}" "${gem_parent_relative_path}")
-set(houdini_dir ${CMAKE_CURRENT_LIST_DIR}/External/19.5.612/include)
+set(houdini_dir ${CMAKE_CURRENT_LIST_DIR}/External/${HOUDINI_CUR_VER}/include)
 
 # Now that we have the platform abstraction layer (PAL) folder for this folder, thats where we will find the
 # traits for this platform. Traits for a platform are defines for things like whether or not something in this gem
@@ -25,6 +25,12 @@ if(NOT PAL_TRAIT_HOUDINIENGINE_SUPPORTED)
     message("Houdini is not supported on " ${PAL_PLATFORM_NAME_LOWERCASE})
     return()
 endif()
+
+# Generate a file that holds the houdini version defined in ${HOUDINI_CUR_VER}
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/HoudiniVersion.h.in
+    ${CMAKE_CURRENT_LIST_DIR}/Include/HoudiniEngine/HoudiniVersion.h
+)
 
 # The ${gem_name}.API target declares the common interface that users of this gem should depend on in their targets
 ly_add_target(
@@ -110,6 +116,7 @@ ly_create_alias(NAME ${gem_name}.Clients.API NAMESPACE Gem TARGETS Gem::${gem_na
 ly_create_alias(NAME ${gem_name}.Servers.API NAMESPACE Gem TARGETS Gem::${gem_name}.API)
 ly_create_alias(NAME ${gem_name}.Unified.API NAMESPACE Gem TARGETS Gem::${gem_name}.API)
 
+
 # If we are on a host platform, we want to add the host tools targets like the ${gem_name}.Editor MODULE target
 if(PAL_TRAIT_BUILD_HOST_TOOLS)
     # The ${gem_name}.Editor.API target can be used by other gems that want to interact with the ${gem_name}.Editor module
@@ -141,7 +148,7 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
             PUBLIC
                 HOUDINI_EDITOR
                 HOUDINI_ENGINE_EDITOR
-                HOUDINI_VERSION="19.5.0.605"
+                HOUDINI_VERSION="${HOUDINI_CUR_VER}"
         INCLUDE_DIRECTORIES
             PUBLIC
                 .

@@ -47,7 +47,7 @@
      <string>Server Host</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit">
+   <widget class="QPlainTextEdit" name="pteServerHost">
     <property name="geometry">
      <rect>
       <x>90</x>
@@ -86,7 +86,7 @@
      <string>Server Port</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_3">
+   <widget class="QPlainTextEdit" name="pteServerPort">
     <property name="geometry">
      <rect>
       <x>90</x>
@@ -131,7 +131,7 @@
      <string>Pipe Name</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_4">
+   <widget class="QPlainTextEdit" name="ptePipeName">
     <property name="geometry">
      <rect>
       <x>90</x>
@@ -170,7 +170,7 @@
      <string>Session Type</string>
     </property>
    </widget>
-   <widget class="QComboBox" name="comboBox">
+   <widget class="QComboBox" name="cbSessionType">
     <property name="geometry">
      <rect>
       <x>90</x>
@@ -181,7 +181,7 @@
     </property>
    </widget>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="pbApply">
    <property name="geometry">
     <rect>
      <x>320</x>
@@ -194,7 +194,7 @@
     <string>Apply</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
+  <widget class="QPushButton" name="pbReset">
    <property name="geometry">
     <rect>
      <x>240</x>

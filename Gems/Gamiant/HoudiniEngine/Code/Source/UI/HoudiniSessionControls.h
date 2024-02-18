@@ -34,11 +34,13 @@ namespace HoudiniEngine
     public:
 
         HoudiniSessionControls();
-        ~HoudiniSessionControls() override;
-        
 
     private Q_SLOTS:
-        
+
+        void OnOpenHoudini();
+        void OnStartSession();
+        void OnStopSession();
+        void OnRestartSession();
 
     private:
 

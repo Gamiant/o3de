@@ -12,6 +12,7 @@
 
 #include <Clients/HoudiniEngineSystemComponent.h>
 
+#include <HoudiniSettings.h>
 #include <HoudiniEngine/HoudiniEngineBus.h>
 
 #include <AzCore/XML/rapidxml.h>
@@ -21,6 +22,7 @@
 #include <ActionManager/Action/ActionManagerInterface.h>
 #include <ActionManager/Menu/MenuManagerInterface.h>
 #include <ActionManager/ToolBar/ToolBarManagerInterface.h>
+
 #include <AzToolsFramework/ActionManager/ActionManagerRegistrationNotificationBus.h>
 
 namespace AzToolsFramework
@@ -28,7 +30,6 @@ namespace AzToolsFramework
     class ActionManagerInterface;
     class MenuManagerInterface;
     class ToolBarManagerInterface;
-
 }
 
 namespace HoudiniEngine
@@ -41,69 +42,62 @@ namespace HoudiniEngine
     /// System component for HoudiniEngine editor
     class HoudiniEngineEditorSystemComponent
         : public AZ::Component
-        //, protected AzToolsFramework::EditorEvents::Bus::Handler
-        , protected HoudiniEngineRequestBus::Handler
-        , public CrySystemEventBus::Handler
-        , public ISystemEventListener
-        , public AZ::TickBus::Handler
-        , public AzToolsFramework::EditorEvents::Bus::Handler
-        , public AZ::EntitySystemBus::Handler
+        , HoudiniEngineRequestBus::Handler
+        , SettingsBus::Handler
+        , AZ::EntitySystemBus::Handler
+        , AZ::TickBus::Handler
+        , AzToolsFramework::EditorEvents::Bus::Handler
         , AzToolsFramework::ActionManagerRegistrationNotificationBus::Handler
     {
+
     public:
+
         AZ_COMPONENT(HoudiniEngineEditorSystemComponent, "{EA171C26-65F3-4CBF-88A8-7198442A3ED1}");
         static void Reflect(AZ::ReflectContext* context);
 
         static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
         static void GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible);
-        static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
-        static void GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent);
+        static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType&) {}
+        static void GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType&) {}
+
+        ~HoudiniEngineEditorSystemComponent() override;
 
         bool IsActive() override;
         HoudiniPtr GetHoudiniEngine() override;
         void CancelProcessorThread() override;
         void CancelProcessorJob(AZ::EntityId entityToRemove) override;
         void JoinProcessorThread() override;
-        virtual AZStd::string GetHoudiniResultByCode(int code) override;  // FL[FD-10714] Houdini integration to 1.21
+
+        AZStd::string GetHoudiniResultByCode(int code) override;
+
+    protected:
 
         HoudiniPtr m_houdiniInstance;
 
-        HoudiniStatusPanel* m_houdiniStatusPanel;
+        SessionSettings m_sessionSettings;
+        SessionSettings* GetSessionSettings() override
+        {
+            return &m_sessionSettings;
+        }
 
-        HoudiniConfiguration* m_configuration;
-        HoudiniSessionControls* m_sessionControls;
-
-    protected:
-        ////////////////////////////////////////////////////////////////////////
-        // HoudiniEngineRequestBus interface implementation        
-        ////////////////////////////////////////////////////////////////////////
-
-        //////////////////////////////////////////////////////////////////////////
-        // AzToolsFramework::EditorEvents
+        // AzToolsFramework::EditorEvents...
         void PopulateEditorGlobalContextMenu_SliceSection(QMenu* menu, const AZ::Vector2& point, int flags) override;
         void NotifyRegisterViews() override;
-        //////////////////////////////////////////////////////////////////////////
+        ///
 
-        //////////////////////////////////////////////////////////////////////////
         // AzToolsFramework::ActionManagerRegistrationNotificationBus...
         void OnMenuRegistrationHook() override;
-        //////////////////////////////////////////////////////////////////////////
+        ///
 
-        // Entity System Bus:
+        // EntitySystemBus...
         void OnEntityActivated(const AZ::EntityId&) override;
         void OnEntityDeactivated(const AZ::EntityId&) override;
 
-        ////////////////////////////////////////////////////////////////////////
-        // AZ::Component interface implementation
+        // AZ::Component...
         void Init() override;
         void Activate() override;
         void Deactivate() override;
-        ////////////////////////////////////////////////////////////////////////
-
-        bool LoadHoudiniEngine();
-        void OnSystemEvent(ESystemEvent /*event*/, UINT_PTR /*wparam*/, UINT_PTR /*lparam*/) override;
-        void OnCrySystemInitialized(ISystem& system, const SSystemInitParams& systemInitParams) override;
-        void OnCrySystemShutdown(ISystem&) override;
+        ///
 
         void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
 
@@ -134,5 +128,13 @@ namespace HoudiniEngine
 
         void ConfigureEditorActions();
 
+    private:
+
+        HoudiniStatusPanel* m_houdiniStatusPanel;
+        HoudiniConfiguration* m_configuration;
+        HoudiniSessionControls* m_sessionControls;
+
+
     };
+
 } // namespace HoudiniEngine

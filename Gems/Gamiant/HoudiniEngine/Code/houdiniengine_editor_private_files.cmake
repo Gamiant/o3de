@@ -1,5 +1,7 @@
 
 set(FILES
+    HoudiniVersion.h.in
+
     Source/Tools/HoudiniEngineEditorSystemComponent.cpp
     Source/Tools/HoudiniEngineEditorSystemComponent.h
     Source/AssetContainer.h
@@ -9,6 +11,9 @@ set(FILES
     Source/OperatorSelection.h
     Source/OperatorSelection.cpp
     Source/OperatorSelection.ui
+
+    Source/HoudiniSettings.h
+    Source/HoudiniSettings.cpp
 
 # UI
     Source/UI/HoudiniStatusPanel.h

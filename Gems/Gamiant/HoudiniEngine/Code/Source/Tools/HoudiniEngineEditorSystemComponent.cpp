@@ -35,9 +35,6 @@
 #include "GameEngine.h"
 #include <QtViewPaneManager.h>
 
-//Houdini API is version specific
-#define HOUDINI_REGISTRY_KEY "SOFTWARE\\Side Effects Software\\Houdini" 
-
 namespace HoudiniEngine
 {
 
@@ -61,33 +58,34 @@ namespace HoudiniEngine
 
     void HoudiniEngineEditorSystemComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
     {
-        provided.push_back(AZ_CRC("HoudiniEngineService", 0x27635107));
+        provided.push_back(AZ_CRC_CE("HoudiniEngineService"));
     }
 
     void HoudiniEngineEditorSystemComponent::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible)
     {
-        incompatible.push_back(AZ_CRC("HoudiniEngineService", 0x27635107));
-    }
-
-    void HoudiniEngineEditorSystemComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
-    {
-        (void)required;
-    }
-
-    void HoudiniEngineEditorSystemComponent::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)
-    {
-        (void)dependent;
+        incompatible.push_back(AZ_CRC_CE("HoudiniEngineService"));
     }
 
     void HoudiniEngineEditorSystemComponent::Init()
     {
+        SettingsBus::Handler::BusConnect();
+        HoudiniEngineRequestBus::Handler::BusConnect();
+
+        m_houdiniInstance = HoudiniPtr(new Houdini());
+    }
+
+    HoudiniEngineEditorSystemComponent::~HoudiniEngineEditorSystemComponent()
+    {
+        m_houdiniInstance->Shutdown();
+
+        delete m_houdiniStatusPanel;
+        delete m_configuration;
+        delete m_sessionControls;
     }
 
     void HoudiniEngineEditorSystemComponent::Activate()
     {
         AzToolsFramework::ActionManagerRegistrationNotificationBus::Handler::BusConnect();
-        HoudiniEngineRequestBus::Handler::BusConnect();
-        CrySystemEventBus::Handler::BusConnect();
         AzToolsFramework::EditorEvents::Bus::Handler::BusConnect();
         AZ::TickBus::Handler::BusConnect();
         AZ::EntitySystemBus::Handler::BusConnect();
@@ -95,31 +93,25 @@ namespace HoudiniEngine
         //TODO: maybe call this in a system or manager class if we have one later.
         PropertyFolderListHandler::Register();
 
-
-
         m_actionManagerInterface = AZ::Interface<AzToolsFramework::ActionManagerInterface>::Get();
         m_menuManagerInterface = AZ::Interface<AzToolsFramework::MenuManagerInterface>::Get();
-        //m_toolBarManagerInterface = AZ::Interface<AzToolsFramework::ToolBarManagerInterface>::Get();
+        m_toolBarManagerInterface = AZ::Interface<AzToolsFramework::ToolBarManagerInterface>::Get();
 
     }
 
     void HoudiniEngineEditorSystemComponent::Deactivate()
     {
+        SettingsBus::Handler::BusDisconnect();
         AzToolsFramework::ActionManagerRegistrationNotificationBus::Handler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
         HoudiniEngineRequestBus::Handler::BusDisconnect();
         AzToolsFramework::EditorEvents::Bus::Handler::BusDisconnect();
         AZ::EntitySystemBus::Handler::BusDisconnect();
         m_houdiniInstance.reset();
-
-        delete m_houdiniStatusPanel;
-        delete m_configuration;
-        delete m_sessionControls;
     }
 
     void HoudiniEngineEditorSystemComponent::ConfigureEditorActions()
     {
-
         static constexpr const char* houdiniMenuIdentifier = "o3de.menu.editor.houdini";
 
         static constexpr const char* houdiniStatusActionIdentifier = "o3de.menu.editor.houdini.status";
@@ -143,11 +135,7 @@ namespace HoudiniEngine
             actionProperties,
             []
             {
-                AZ::SystemTickBus::QueueFunction([] {
-                    AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniConfiguration");
-                });
-                //AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniConfiguration");
-                
+                AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniConfiguration");
             }
         );
 
@@ -204,11 +192,11 @@ namespace HoudiniEngine
     void HoudiniEngineEditorSystemComponent::NotifyRegisterViews()
     {
         AzToolsFramework::ViewPaneOptions viewOptions;
-        viewOptions.isPreview = true;
-        viewOptions.showInMenu = true;
+        viewOptions.isPreview = false;
+        viewOptions.showInMenu = false;
         viewOptions.isStandard = true;
         viewOptions.isDeletable = false;
-        viewOptions.preferedDockingArea = Qt::DockWidgetArea::BottomDockWidgetArea;
+        viewOptions.preferedDockingArea = Qt::DockWidgetArea::RightDockWidgetArea;
 
         m_houdiniStatusPanel = new HoudiniStatusPanel();
         m_houdiniStatusPanel->OnInterrupt = [this]()
@@ -242,79 +230,6 @@ namespace HoudiniEngine
         if (m_houdiniInstance)
         {
             m_houdiniInstance->RemoveLookupId(id);
-        }
-    }
-
-    bool HoudiniEngineEditorSystemComponent::LoadHoudiniEngine()
-    {
-
-#if defined(AZ_PLATFORM_WINDOWS)
-        //char houdiniInstallDir[AZ_MAX_PATH_LEN] = { 0 };
-        AZStd::string houdiniPath = "C:\\Program Files\\Side Effects Software\\Houdini 20.0.506\\bin\\";
-
-        HMODULE hPlugin = nullptr;
-        SetDllDirectoryA(houdiniPath.c_str());
-        hPlugin = ::LoadLibraryEx(L"libhapi.dll", 0, 0);
-        return hPlugin != nullptr;
-#else
-        return false;
-#endif
-
-#if 0
-        HKEY key;
-        long ret;
-        HMODULE hPlugin = nullptr;
-
-        //Find Houdini:
-        ret = ::RegOpenKeyExA(HKEY_LOCAL_MACHINE, HOUDINI_REGISTRY_KEY, 0, KEY_QUERY_VALUE, &key);
-        if (ret == ERROR_SUCCESS)
-        {
-            DWORD dataType = REG_SZ;
-            DWORD dataSize = sizeof(houdiniInstallDir);
-            ret = ::RegQueryValueExA(key, HOUDINI_VERSION, 0, &dataType, (LPBYTE)houdiniInstallDir, &dataSize);
-            ::RegCloseKey(key);
-
-            houdiniPath = AZStd::string(houdiniInstallDir) + "\\bin\\";
-
-            char dllDir[AZ_MAX_PATH_LEN] = { 0 };
-            GetDllDirectoryA(AZ_MAX_PATH_LEN, dllDir);
-
-            SetDllDirectoryA(houdiniPath.c_str());
-            hPlugin = ::LoadLibraryEx(L"libhapi.dll", 0, 0);
-
-            if (strlen(dllDir) > 0)
-            {
-                SetDllDirectoryA(dllDir);
-            }
-            else
-            {
-                SetDllDirectoryA(nullptr);
-            }
-
-            return hPlugin != nullptr;
-        }
-        else
-        {
-            AZ_TracePrintf("Houdini", "Failed to open " HOUDINI_REGISTRY_KEY);  // FL[FD-8458] Failed to open Houdini
-        }
-#endif
-
-       // return false;
-    }
-
-    void HoudiniEngineEditorSystemComponent::OnCrySystemInitialized(ISystem& system, const SSystemInitParams& systemInitParams)
-    {
-        (void)systemInitParams;
-        system.GetISystemEventDispatcher()->RegisterListener(this);
-    }
-
-    //O3DECONVERT
-    void HoudiniEngineEditorSystemComponent::OnCrySystemShutdown(ISystem& /*system*/)
-    {
-        if (m_houdiniInstance != nullptr)
-        {
-            m_houdiniInstance->Shutdown();
-            m_houdiniInstance = nullptr;
         }
     }
 
@@ -382,60 +297,6 @@ namespace HoudiniEngine
         return nullptr;
     }
 
-    void HoudiniEngineEditorSystemComponent::OnSystemEvent(ESystemEvent event, UINT_PTR /*wparam*/, UINT_PTR /*lparam*/)
-    {
-        switch (event)
-        {
-        case ESYSTEM_EVENT_LEVEL_UNLOAD:
-            if (m_houdiniInstance != nullptr)
-            {
-                m_houdiniInstance->ResetSession();
-            }
-            break;
-
-            /*
-               case ESYSTEM_EVENT_FLOW_SYSTEM_REGISTER_EXTERNAL_NODES:
-                break;
-             */
-
-        case ESYSTEM_EVENT_EDITOR_ON_INIT:
-            //TODO: Load and unload w/ levels instead
-            // FL[FD-8467] [Warning] Unknown command: hou_otl_path
-            REGISTER_INT("hou_multi_threaded", 0, 0, "Out of process version of Houdini running on its own thread");
-            REGISTER_INT("hou_state", 1, 0, "Houdini Enabled State");
-            REGISTER_STRING("hou_otl_path", "@projectroot@/Assets/hda", 0, "Location to search for HDAs - semicolon separated, Example: @devassets@/../../techart/houdini/DigitalAssets");
-            REGISTER_STRING("hou_named_pipe", "HOUDINI_O3DE", 0, "used for debug connections");
-            // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
-            REGISTER_FLOAT("hou_update_period", 0.25, 0, "Time between Houdini digital asset updates (valid range: 0.01 - 1.0 seconds, default = 0.25s)");
-
-            m_houdiniInstance = HoudiniPtr(new Houdini());
-
-            //if (LoadHoudiniEngine())
-            //{
-            //    m_houdiniInstance = HoudiniPtr(new Houdini());
-            //}
-            //else
-            //{
-            //    m_houdiniInstance = HoudiniPtr(nullptr);
-            //    AZ_TracePrintf("Houdini", "Houdini Engine not found.  Please add it to the path.");  // FL[FD-8458] Failed to open Houdini
-            //}
-
-            break;
-        case ESYSTEM_EVENT_FULL_SHUTDOWN:
-        case ESYSTEM_EVENT_FAST_SHUTDOWN:
-
-            if (m_houdiniInstance != nullptr)
-            {
-                m_houdiniInstance->Shutdown();
-                m_houdiniInstance = nullptr;
-            }
-
-            // Put your shutdown code here
-            // Other Gems may have been shutdown already, but none will have destructed
-            break;
-        }
-    }
-
     bool HoudiniEngineEditorSystemComponent::IsActive()
     {
         if (m_houdiniInstance != nullptr)
@@ -445,7 +306,6 @@ namespace HoudiniEngine
 
         return false;
     }
-
 
     HoudiniPtr HoudiniEngineEditorSystemComponent::GetHoudiniEngine()
     {
@@ -476,7 +336,6 @@ namespace HoudiniEngine
         }
     }
 
-    // FL[FD-10714] Houdini integration to 1.21
     AZStd::string HoudiniEngineEditorSystemComponent::GetHoudiniResultByCode(int code)
     {
         static AZStd::map<HAPI_Result, AZStd::string> codeMapping = {

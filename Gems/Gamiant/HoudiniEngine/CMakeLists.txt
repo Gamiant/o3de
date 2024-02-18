@@ -20,7 +20,7 @@ endif()
 
 set(gem_json ${gem_path}/gem.json)
 
-set(HOUDINI_CUR_VER "19.5.612")
+set(HOUDINI_CUR_VER "20.0.590")
 
 o3de_restricted_path(${gem_json} gem_restricted_path gem_parent_relative_path)
 

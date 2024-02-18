@@ -100,9 +100,6 @@ namespace HoudiniEngine
 
             virtual InputNodeManagerPtr GetInputNodeManager() = 0;
             virtual void Shutdown() = 0;
-            
-            virtual void CreateNewSession() = 0;
-            virtual void ResetSession() = 0;
     };
 
     template <typename T>

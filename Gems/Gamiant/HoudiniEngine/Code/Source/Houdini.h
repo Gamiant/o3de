@@ -11,21 +11,45 @@
 #include <HAPI/HAPI.h>
 #include <HoudiniEngine/HoudiniApi.h>
 #include <HoudiniEngine/HoudiniCommonForwards.h>
+#include <HoudiniEngine/HoudiniEngineBus.h>
 
 #include <IConsole.h>
 #include <IEditor.h>
 
 #include <AzCore/Debug/Profiler.h>
 
+#include <HoudiniSettings.h>
+
 #define HOUDINI_INVALID_ID -1
 #define HOUDINI_ROOT_NODE_ID -1
+
+namespace AzFramework
+{
+    class ProcessWatcher;
+}
 
 namespace HoudiniEngine 
 {
     class Houdini : public IHoudini
         , public IEditorNotifyListener
+        , SessionRequestBus::Handler
+        , AZ::SystemTickBus::Handler
     {
     protected:
+
+
+        SessionSettings::ESessionType m_sessionType = SessionSettings::ESessionType::TCPSocket;
+        AZStd::string m_namedPipe;
+        AZStd::string m_serverHost;
+        AZ::u32 m_serverPort;
+        AZStd::string m_houdiniPath;
+        HAPI_Session m_session;
+        AZStd::string m_HAPIlibPath; // Path to the HAPI dynamic library
+        AZ::u32 m_licenseType;
+        bool m_environmentSet = false;
+
+
+
         bool m_isActive;
         bool m_initialized;
 
@@ -34,9 +58,7 @@ namespace HoudiniEngine
         ICVar * cVar_THRIFT = nullptr;
         ICVar * cVar_T = nullptr;
 
-        AZStd::string m_namedPipe;
-        HAPI_Session m_session;
-        HAPI_CookOptions m_cookOptions;    
+        HAPI_CookOptions m_cookOptions;
 
         HAPI_ProcessId m_thriftServerProcId;
         HAPI_ThriftServerOptions m_thriftServerOptions;
@@ -58,7 +80,9 @@ namespace HoudiniEngine
         AZStd::map<AZ::EntityId, HoudiniEntityContext> m_lookups;
 
         AZStd::string FindHda(const AZStd::string& hdaFile);
+
     public:
+
         Houdini();
         ~Houdini();
 
@@ -111,7 +135,7 @@ namespace HoudiniEngine
         void LoadAllAssets() override;
         void ReloadAllAssets() override;  // FL[FD-10790] Houdini Digital Asset List Hot Reload
         HoudiniAssetPtr LoadHoudiniDigitalAsset(const AZStd::string& hdaName) override;
-        
+
         void RemoveNode(const AZStd::string& oldNodeName, IHoudiniNode* node) override;
         void RenameNode(const AZStd::string& nodeName, IHoudiniNode* node) override;
         HoudiniNodePtr CreateNode(const AZStd::string& operatorName, const AZStd::string& nodeName, IHoudiniNode* parent = nullptr ) override;
@@ -125,14 +149,7 @@ namespace HoudiniEngine
         AZStd::vector<HoudiniAssetPtr> GetAvailableAssets() override;
         HoudiniAssetPtr GetAsset(const AZStd::string& assetName) override;
 
-        void SaveDebugFile() override;        
-
-        void CreateNewSession() override;
-        void ResetSession() override
-        {
-            Shutdown();
-            CreateNewSession();
-        }   
+        void SaveDebugFile() override;
 
         void DeleteAllObjects();
 
@@ -197,6 +214,10 @@ namespace HoudiniEngine
             m_initialized = false;
         }
 
+        bool StartSession(SessionSettings::ESessionType, const AZStd::string& namedPipe, const AZStd::string& serverHost, AZ::u32 serverPort);
+        bool ConnectSession(SessionSettings::ESessionType, const AZStd::string& namedPipe, const AZStd::string& serverHost, AZ::u32 serverPort);
+
+
         void Log(const AZStd::string& msg)
         {            
             AZStd::unique_lock<AZStd::mutex> theLock(m_logLock);
@@ -245,6 +266,29 @@ namespace HoudiniEngine
         {
             return m_inputNodeManager;
         }
+
+        protected:
+
+            AZStd::unique_ptr<AzFramework::ProcessWatcher> m_houdiniProcessWatcher;
+
+            std::chrono::steady_clock::time_point m_startSyncTime;
+
+            // SessionRequestBus...
+            void OpenHoudini() override;
+            void StartSession() override;
+            void StopSession() override;
+            void RestartSession() override;
+            ///
+
+            // SystemTickBus...
+            void OnSystemTick() override;
+            ///
+
+            void ComputeSearchPaths();
+            void SetupEnvironment();
+
+            bool InitializeHAPISession();
+            void ConfigureSession();
     };
 
 

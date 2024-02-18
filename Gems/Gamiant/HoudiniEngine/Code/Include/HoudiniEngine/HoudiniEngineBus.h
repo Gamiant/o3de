@@ -13,6 +13,20 @@
 
 namespace HoudiniEngine
 {
+
+    struct SessionRequests : public AZ::EBusTraits
+    {
+        virtual void OpenHoudini() = 0;
+        virtual void StartSession() = 0;
+        virtual void StopSession() = 0;
+        virtual void RestartSession() = 0;
+    };
+    using SessionRequestBus = AZ::EBus<SessionRequests>;
+
+
+
+
+
     #define HOUDINI_CONFIG_GUID                     "{6DF7BB00-AF41-41DC-862E-B29B87D1CECC}"        
     #define HOUDINI_ASSET_COMPONENT_GUID            "{6DF7BB00-AF41-41DC-862E-B29B87D1CECE}"
     #define HOUDINI_SCATTER_COMPONENT_GUID          "{6DF7BB00-AF41-41DC-862E-B29B87D1CECD}"

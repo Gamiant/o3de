@@ -25,12 +25,15 @@ if ( (result) != HAPI_RESULT_SUCCESS ) \
 #define HOUDINI_MODE_EMBEDDED 0 
 #define HOUDINI_MODE_ASYNC 1 
 
-#define HOUDINI_NAMED_PIPE "HOUDINI_O3DE"
-
 #include <HoudiniCommon.h>
-#include "Util/EditorUtils.h"
+#include <HoudiniEngine/HoudiniVersion.h>
+#include <HoudiniSettings.h>
 
+#include <Util/EditorUtils.h>
+
+#include <AzCore/IO/FileIO.h>
 #include <AzFramework/IO/LocalFileIO.h>
+#include <AzFramework/Process/ProcessWatcher.h>
 
 #if defined (AZ_PLATFORM_WINDOWS)
 #include <Shlobj.h>
@@ -38,23 +41,106 @@ if ( (result) != HAPI_RESULT_SUCCESS ) \
 
 namespace HoudiniEngine
 {
+
     Houdini::Houdini() 
         : m_isActive(false)
         , m_initialized(false)
     {
-        GetIEditor()->RegisterNotifyListener(this);
-        // FL[FD-8467] [Warning] Unknown command: hou_otl_path
-        cVar_THRIFT = gEnv->pConsole->GetCVar("hou_multi_threaded");
-        m_globalStateVar = gEnv->pConsole->GetCVar("hou_state");
-        ICVar * cVar_OTL = gEnv->pConsole->GetCVar("hou_otl_path");
-        ICVar * cVar_PIPE = gEnv->pConsole->GetCVar("hou_named_pipe");
-        // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
-        //ICVar * cVar_UpdatePeriod = gEnv->pConsole->GetCVar("hou_update_period");
-        
-        m_inputNodeManager = InputNodeManagerPtr(new InputNodeManager(this));
-        m_namedPipe = cVar_PIPE->GetString();
-        
-        std::string otl = std::string(cVar_OTL->GetString());
+        SessionRequestBus::Handler::BusConnect();
+
+        AZ_Info("Houdini", "Houdini Engine Sync Init ------------------------------------------------------------------------------------\n");
+
+        HAPI_Result result = HAPI_RESULT_FAILURE;
+
+        m_houdiniPath = AZStd::string::format("C:\\Program Files\\Side Effects Software\\Houdini %s\\bin\\", HoudiniVersionString.data());
+        AZ_Info("Houdini", "Houdini Path: %s\n", m_houdiniPath.c_str());
+
+        const auto gemAlias = AZ::StringFunc::Path::FixedString::format("@gemroot:HoudiniEngine@/External/%s/bin", HoudiniVersionString.data());
+
+        char resolvedLevelPath[AZ_MAX_PATH_LEN] = { 0 };
+        AZ::IO::FileIOBase::GetDirectInstance()->ResolvePath(gemAlias.c_str(), resolvedLevelPath, AZ_MAX_PATH_LEN);
+        m_HAPIlibPath = resolvedLevelPath;
+        AZ_Info("Houdini", "HAPI Lib Path: %s\n", m_HAPIlibPath.c_str());
+
+        int houdiniVersionMajor = -1, houdiniVersionMinor = -1, houdiniVersionBuild = -1, houdiniVersionPatch = -1;
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_MAJOR, &houdiniVersionMajor);
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_MINOR, &houdiniVersionMinor);
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_BUILD, &houdiniVersionBuild);
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_PATCH, &houdiniVersionPatch);
+        AZ_Info("Houdini", "Houdini Version: %d.%d.%d.%d\n", houdiniVersionMajor, houdiniVersionMinor, houdiniVersionBuild, houdiniVersionPatch);
+
+        int engineMajor = -1, engineMinor = -1;
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_ENGINE_MAJOR, &engineMajor);
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_ENGINE_MINOR, &engineMinor);
+        AZ_Info("Houdini", "Houdini Engine Version: %d.%d\n", engineMajor, engineMinor);
+
+        result = HAPI_IsInitialized(nullptr);
+        if (result == HAPI_RESULT_NOT_INITIALIZED || result != HAPI_RESULT_SUCCESS)
+        {
+            AZ_Info("Houdini", "HAPI needs to be initialized\n");
+        }
+
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        m_namedPipe = settings->GetNamedPipe();
+        m_sessionType = settings->GetSessionType();
+        m_serverHost = settings->GetServerHost();
+        m_serverPort = settings->GetServerPort();
+
+        AZ_Info("Houdini", "Session Type: %s\n", (m_sessionType == SessionSettings::ESessionType::TCPSocket) ? "TCP Socket" : "Named Pipe");
+        AZ_Info("Houdini", "Server Host: %s\n", m_serverHost.c_str());
+        AZ_Info("Houdini", "Server Port: %d\n", m_serverPort);
+        AZ_Info("Houdini", "Named Pipe: %s\n", m_namedPipe.c_str());
+
+        ComputeSearchPaths();
+
+        for (auto& path : m_searchPaths)
+        {
+            AZ_Info("Houdini", "Search Path: %s\n", path.c_str());
+        }
+
+        AZ_Info("Houdini", "---------------------------------------------------------------------------------------------------------------\n");
+
+    }
+
+    Houdini::~Houdini()
+    {
+        //Unload all assets and cleanup, destroy session.
+        Shutdown();
+        m_rootNode.reset();
+    }
+
+    void Houdini::SetupEnvironment()
+    {
+        HoudiniEngineUtils::SetEnvironmentVariable("HAPI_CLIENT_NAME", "o3de");
+
+        if (!m_environmentSet)
+        {
+            const char* pathDelimiter = HoudiniEngineUtils::GetPathVarDelimiter();
+            AZStd::string sourcePath = HoudiniEngineUtils::GetEnvironmentVariable("PATH");
+            AZStd::string updatedPath = m_houdiniPath + pathDelimiter + sourcePath;
+            HoudiniEngineUtils::SetEnvironmentVariable("PATH", updatedPath);
+            m_environmentSet = true;
+        }
+
+        // The HFS environment variable is requiredfor a connection
+        AZStd::string HFSSourcePath = HoudiniEngineUtils::GetEnvironmentVariable("HFS");
+        if (HFSSourcePath.empty())
+        {
+            HFSSourcePath = m_houdiniPath;
+            HoudiniEngineUtils::SetEnvironmentVariable("HFS", HFSSourcePath);
+        }
+    }
+
+    void Houdini::ComputeSearchPaths()
+    {
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        std::string otl = std::string(settings->GetOTLPath().c_str());
         auto start = 0U;
         auto end = otl.find(';');
         while (end != std::string::npos)
@@ -65,110 +151,78 @@ namespace HoudiniEngine
         }
 
         m_searchPaths.push_back(AZStd::string(otl.substr(start, end).c_str()));
-        
-        if (cVar_THRIFT->GetIVal() != 0)
-        {
-            m_workerThreadDesc.m_name = "Houdini Processor";
-            //TODO:
-            /*m_workerThread.push_back(
-                new AZStd::thread([this]() { this->ThreadProcessor(); }, &m_workerThreadDesc)
-            );*/
-            m_workerThread[0]->detach();
-        }
-
-        //HAPI_Initialize();
-
-        CreateNewSession();
     }
 
-    // GMT: Get this working
-    void Houdini::CreateNewSession()
+    bool Houdini::ConnectSession(SessionSettings::ESessionType sessionType, const AZStd::string& namedPipe, const AZStd::string& serverHost, AZ::u32 serverPort)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        // If we have a session, we're connected
+        if (HAPI_IsSessionValid(&m_session) == HAPI_RESULT_SUCCESS)
+        {
+            AZ_Info("Houdini", "Houdini::ConnectSession valid session");
+            return true;
+        }
 
+        SetupEnvironment();
 
-        // HARS server options
-        HAPI_ThriftServerOptions serverOptions{ 0 };
-        serverOptions.autoClose = true;
-        serverOptions.timeoutMs = 3000.0f;
-        serverOptions.verbosity = HAPI_STATUSVERBOSITY_ALL;
-        // Start our HARS server using the "hapi" named pipe
-        // This call can be ignored if you have launched HARS manually before
-        if (auto result = HAPI_StartThriftNamedPipeServer(&serverOptions, HOUDINI_NAMED_PIPE, nullptr, nullptr); result != HAPI_RESULT_SUCCESS)
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        HAPI_ThriftServerOptions ServerOptions = {};
+        ServerOptions.autoClose = true;
+        ServerOptions.timeoutMs = settings->GetAutoCloseTimeOut();
+
+        HAPI_ClearConnectionError();
+
+        HAPI_Result sessionResult = HAPI_RESULT_FAILURE;
+
+        switch (sessionType)
+        {
+        case SessionSettings::ESessionType::TCPSocket:
+
+            // Try to connect to an existing socket session first
+            sessionResult = HAPI_CreateThriftSocketSession(&m_session, serverHost.c_str(), serverPort);
+            break;
+
+        case SessionSettings::ESessionType::NamedPipe:
+
+            // Try to connect to an existing socket session first
+            sessionResult = HAPI_CreateThriftNamedPipeSession(&m_session, namedPipe.c_str());
+            break;
+
+        default:
+            AZ_Error("Houdini", false, "Invalid Session Type");
+            break;
+        }
+
+        if (sessionResult != HAPI_RESULT_SUCCESS)
+        {
+            // This may happen is Houdini has not yet loaded, we'll keep trying
+            return false;
+        }
+
+        sessionResult = HAPI_GetSessionEnvInt(&m_session, HAPI_SESSIONENVINT_LICENSE, (int*)&m_licenseType);
+        if (sessionResult != HAPI_RESULT_SUCCESS)
         {
             AZStd::string codeString;
-            HoudiniEngineRequestBus::BroadcastResult(codeString, &HoudiniEngineRequests::GetHoudiniResultByCode, result);
-
-            // error
-            AZ_Error("Houdini", false, "HAPI_StartThriftNamedPipeServer failed: %s", codeString.c_str());
-            return;
+            HoudiniEngineRequestBus::BroadcastResult(codeString, &HoudiniEngineRequests::GetHoudiniResultByCode, sessionResult);
+            AZ_Error("Houdini", false, "License verification failed: %s - %s", codeString.c_str(), HoudiniEngineUtils::GetLastError().c_str());
+            return false;
         }
-            
-        // Create a new HAPI session to use with that server
-        HAPI_Session session;
-        if (HAPI_RESULT_SUCCESS != HAPI_CreateThriftNamedPipeSession(&session, "hapi"))
+
+        // Update viewport settings
+
+        return true;
+    }
+
+    bool Houdini::InitializeHAPISession()
+    {
+        // If we have a session, we're connected
+        if (HAPI_IsSessionValid(&m_session) != HAPI_RESULT_SUCCESS)
         {
-            AZ_Error("Houdini", false, "HAPI_CreateThriftNamedPipeSession failed");
-            return;
+            AZ_Info("Houdini", "HAPI session is invalid");
+            return false;
         }
-
-        // Initialize HAPI
-        HAPI_CookOptions cookOptions = HAPI_CookOptions_Create();
-        if (HAPI_RESULT_SUCCESS != HAPI_Initialize(
-            &session,           // session
-            &cookOptions,       // cook options
-            true,                       // use_cooking_thread
-            -1,                         // cooking_thread_stack_size
-            "",                         // houdini_environment_files
-            nullptr,            // otl_search_path
-            nullptr,            // dso_search_path
-            nullptr,            // image_dso_search_path
-            nullptr))              // audio_dso_search_path
-        {
-            AZ_Error("Houdini", false, "HAPI_Initialize failed");
-            return;
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        HAPI_Session newSession;
-        newSession.type = HAPI_SESSION_MAX;
-        newSession.id = 0;
-        
-        if (cVar_THRIFT->GetIVal() != 0)
-        {
-            m_thriftServerOptions = HAPI_ThriftServerOptions();
-            m_thriftServerOptions.autoClose = true;
-            m_thriftServerOptions.timeoutMs = 10.0f * 1000.0f;
-            m_thriftServerProcId = 0;
-
-            HAPI_StartThriftNamedPipeServer(&m_thriftServerOptions, HOUDINI_NAMED_PIPE, &m_thriftServerProcId, "");
-            HAPI_CreateThriftNamedPipeSession(&newSession, HOUDINI_NAMED_PIPE);
-        }
-        else if(m_namedPipe.size() != 0)
-        {
-            HAPI_CreateThriftNamedPipeSession(&newSession, m_namedPipe.c_str());
-        }
-        
-        //No custom sessions, create in session:
-        if ( newSession.type == HAPI_SESSION_MAX)
-        {
-            HAPI_CreateInProcessSession(&newSession);
-        }
-
-        m_session = newSession;
 
         m_cookOptions = HAPI_CookOptions_Create();
         m_cookOptions.curveRefineLOD = 8.0f;
@@ -182,94 +236,247 @@ namespace HoudiniEngine
         m_cookOptions.packedPrimInstancingMode = HAPI_PACKEDPRIM_INSTANCING_MODE_DISABLED;
         m_cookOptions.clearErrorsAndWarnings = true;
 
-        if (m_initialized == false)
+        bool useCookingThread = true;
+        int cookingThreadStackSize = -1;
+
+        HAPI_Result result = HAPI_RESULT_FAILURE;
+        result = HAPI_Initialize(&m_session, &m_cookOptions, useCookingThread, cookingThreadStackSize, nullptr, nullptr, nullptr, nullptr, nullptr);
+        if (result == HAPI_RESULT_SUCCESS)
         {
-            HAPI_Initialize(
-                &m_session, // session
-                &m_cookOptions,
-                true, // use_cooking_thread
-                -1, // cooking_thread_stack_size
-                NULL, // environment files
-                NULL, // otl_search_path
-                NULL, // dso_search_path
-                NULL, // image_dso_search_path
-                NULL); // audio_dso_search_path
-            m_initialized = true;
-        }
-        m_rootNode = HoudiniNodePtr(new HoudiniNode(this, nullptr, -1, "null", "root"));
-        
-        HAPI_NodeId initNode;
-        HAPI_Result createResult = HAPI_CreateNode(&m_session, -1, "sop/null", "INITIALIZE_NODE", true, &initNode);
-        HAPI_Result cookResult = HAPI_CookNode(&m_session, initNode, &m_cookOptions);
-        
-        AZ_TracePrintf("HOUDINI", "Initializing Houdini");
-        if (CheckForErrors())
-        {
-            // FL[FD-10714] Houdini integration to 1.21
-            AZStd::string codeString;
-            EBUS_EVENT_RESULT(codeString, HoudiniEngineRequestBus, GetHoudiniResultByCode, createResult);
-            AZ_Warning("HOUDINI", false, (AZStd::string("Failed to initialize Houdini Engine with error: ") + codeString).c_str());
-            return;
+            AZ_Info("Houdini", "Successfully initialized Houdini Engine");
         }
 
-        if (createResult == HAPI_RESULT_NO_LICENSE_FOUND
-            || createResult == HAPI_RESULT_DISALLOWED_NC_LICENSE_FOUND
-            || createResult == HAPI_RESULT_DISALLOWED_NC_ASSET_WITH_C_LICENSE
-            || createResult == HAPI_RESULT_DISALLOWED_NC_ASSET_WITH_LC_LICENSE
-            || createResult == HAPI_RESULT_DISALLOWED_LC_ASSET_WITH_C_LICENSE
-            || createResult == HAPI_RESULT_DISALLOWED_HENGINEINDIE_W_3PARTY_PLUGIN
-            || cookResult == HAPI_RESULT_NO_LICENSE_FOUND
-            || cookResult == HAPI_RESULT_DISALLOWED_NC_LICENSE_FOUND
-            || cookResult == HAPI_RESULT_DISALLOWED_NC_ASSET_WITH_C_LICENSE
-            || cookResult == HAPI_RESULT_DISALLOWED_NC_ASSET_WITH_LC_LICENSE
-            || cookResult == HAPI_RESULT_DISALLOWED_LC_ASSET_WITH_C_LICENSE
-            || cookResult == HAPI_RESULT_DISALLOWED_HENGINEINDIE_W_3PARTY_PLUGIN)
-        {
-            return;
-        }
+        HAPI_SetServerEnvString(&m_session, "HAPI_CLIENT_NAME", "o3de");
 
-        m_isActive = true;
-        LoadAllAssets();
+        ConfigureSession();
+
+        return true;
     }
 
-    void Houdini::DeleteAllObjects()
+    void Houdini::ConfigureSession()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
 
-        int childCount = 0;
-        HAPI_NodeId rootId;
-        
-        *this << "Delete ALL NODES: " << HAPI_NODETYPE_OBJ << "";
+        // Set the Session Sync settings to Houdini
+        HAPI_SessionSyncInfo sessionSyncInfo;
+        sessionSyncInfo.cookUsingHoudiniTime = settings->GetCookUsingHoudiniTime();
+        sessionSyncInfo.syncViewport = settings->GetSyncViewports();
 
-        HAPI_GetManagerNodeId(&m_session, HAPI_NODETYPE_OBJ, &rootId);
-        HAPI_ComposeChildNodeList(&m_session, rootId, HAPI_NODETYPE_OBJ, HAPI_NODEFLAGS_ANY, false, &childCount);
-
-        AZStd::vector<HAPI_NodeId> finalChildList(childCount);
-        if (childCount > 0)
+        if (HAPI_SetSessionSyncInfo(&m_session, &sessionSyncInfo) != HAPI_RESULT_SUCCESS)
         {
-            *this << "HAPI_GetComposedChildNodeList: " << rootId << " Reading: " << childCount << " into buffer sized: " << finalChildList.size() << "";
-            HAPI_GetComposedChildNodeList(&m_session, rootId, &finalChildList.front(), childCount);
+            AZ_Warning("Houdini", false, "Failed to configure Houdini Engine Session");
+        }
+        else
+        {
+            AZ_Info("Houdini", "Houdini Engine Session Configured");
+        }
+    }
 
-            for (auto child : finalChildList)
+    bool Houdini::StartSession(SessionSettings::ESessionType sessionType, const AZStd::string& namedPipe, const AZStd::string& serverHost, AZ::u32 serverPort)
+    {
+        // If we have a session, we're connected
+        if (HAPI_IsSessionValid(&m_session) == HAPI_RESULT_SUCCESS)
+        {
+            AZ_Info("Houdini", "Houdini::ConnectSession valid session");
+            return true;
+        }
+
+        HAPI_Result SessionResult = HAPI_RESULT_FAILURE;
+
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        HAPI_ThriftServerOptions ServerOptions = {};
+        ServerOptions.autoClose = true;
+        ServerOptions.timeoutMs = settings->GetAutoCloseTimeOut();
+
+        switch (sessionType)
+        {
+            case SessionSettings::ESessionType::TCPSocket:
             {
-                HAPI_NodeInfo childInfo;
-                HAPI_GetNodeInfo(&m_session, child, &childInfo);                
-                
-                *this << "Delete ALL NODES: " << HAPI_NODETYPE_OBJ << "";
+                SessionResult = HAPI_CreateThriftSocketSession(&m_session, serverHost.c_str(), serverPort);
 
-                if (childInfo.isValid)
+                // Start a session and try to connect to it if we failed
+                if (SessionResult != HAPI_RESULT_SUCCESS)
                 {
-                    HAPI_DeleteNode(&m_session, child);
+                    SetupEnvironment();
+                    HAPI_StartThriftSocketServer(&ServerOptions, serverPort, nullptr, nullptr);
+
+                    SessionResult = HAPI_CreateThriftSocketSession(&m_session, serverHost.c_str(), serverPort);
                 }
             }
+                break;
+
+            case SessionSettings::ESessionType::NamedPipe:
+            {
+                SessionResult = HAPI_CreateThriftNamedPipeSession(&m_session, namedPipe.c_str());
+
+                // Start a session and try to connect to it if we failed
+                if (SessionResult != HAPI_RESULT_SUCCESS)
+                {
+                    SetupEnvironment();
+                    HAPI_StartThriftNamedPipeServer(&ServerOptions, namedPipe.c_str(), nullptr, nullptr);
+
+                    SessionResult = HAPI_CreateThriftNamedPipeSession(&m_session, namedPipe.c_str());
+                }
+            }
+            break;
+
+            default:
+                AZ_Error("Houdini", false, "Invalid Session Type");
+                break;
+        }
+
+        HAPI_Session* sessionPtr = &m_session;
+        if (SessionResult != HAPI_RESULT_SUCCESS || !sessionPtr)
+        {
+            AZ_Error("Houdini", false, HoudiniEngineUtils::GetConnectionError().c_str());
+
+            return false;
+        }
+
+        SessionResult = HAPI_GetSessionEnvInt(&m_session, HAPI_SESSIONENVINT_LICENSE, (int*)&m_licenseType);
+        if (SessionResult != HAPI_RESULT_SUCCESS)
+        {
+            AZStd::string codeString;
+            HoudiniEngineRequestBus::BroadcastResult(codeString, &HoudiniEngineRequests::GetHoudiniResultByCode, SessionResult);
+            AZ_Error("Houdini", false, "HAPI_SESSIONENVINT_LICENSE failed: %s - %s", codeString.c_str(), HoudiniEngineUtils::GetLastError().c_str());
+            return false;
+        }
+
+        return true;
+    }
+
+    void Houdini::OpenHoudini()
+    {
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        AZStd::string sessionArgs = "-hess=";
+        SessionSettings::ESessionType sessionType = settings->GetSessionType();
+        if (sessionType == SessionSettings::ESessionType::TCPSocket)
+        {
+            sessionArgs += AZStd::string::format("port:%d", settings->GetServerPort());
+        }
+        else
+        if (sessionType == SessionSettings::ESessionType::NamedPipe)
+        {
+            sessionArgs += AZStd::string::format("pipe:%s", settings->GetNamedPipe().c_str());
+        }
+        else
+        {
+            AZ_Error("Houdini", false, "Houdini - Invalid Session Type");
+            return;
+        }
+
+        AzFramework::ProcessLauncher::ProcessLaunchInfo processLaunchInfo;
+        processLaunchInfo.m_commandlineParameters = AZStd::string::format("%shoudini %s", m_houdiniPath.c_str(), sessionArgs.c_str());
+        processLaunchInfo.m_showWindow = true;
+        processLaunchInfo.m_tetherLifetime = true;
+        m_houdiniProcessWatcher = AZStd::unique_ptr<AzFramework::ProcessWatcher>(AzFramework::ProcessWatcher::LaunchProcess(processLaunchInfo, AzFramework::ProcessCommunicationType::COMMUNICATOR_TYPE_NONE));
+
+        // We'll connect to the system tick bus where we'll try to create a session while Houdini loads
+        m_startSyncTime = std::chrono::steady_clock::now();
+        AZ::SystemTickBus::Handler::BusConnect();
+
+    }
+
+    void Houdini::OnSystemTick()
+    {
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        SessionSettings::ESessionType sessionType = settings->GetSessionType();
+
+        if (!ConnectSession(sessionType, settings->GetNamedPipe(), settings->GetServerHost(), settings->GetServerPort()))
+        {
+            // Update timeout, Houdini may not be done loading
+            auto elapsedMs = AZStd::chrono::duration_cast<AZStd::chrono::milliseconds>(AZStd::chrono::steady_clock::now() - m_startSyncTime);
+            if (elapsedMs.count() >= settings->GetAutoCloseTimeOut())
+            {
+                AZ::SystemTickBus::Handler::BusDisconnect();
+                AZ_Error("Houdini", false, "Houdini Engine Sync Session connection timed out\n");
+                return;
+            }
+        }
+        else
+        {
+            AZ_Info("Houdini", "Houdini Session Estabished ------------------------\n");
+            AZ_Info("Houdini", "Session Type: %s\n", sessionType == SessionSettings::ESessionType::TCPSocket ? "TCP Socket" : "Named Pipe");
+            if (sessionType == SessionSettings::ESessionType::TCPSocket)
+            {
+                AZ_Info("Houdini", "Server Host: %s\n", settings->GetServerHost().c_str());
+                AZ_Info("Houdini", "Server Port: %d\n", settings->GetServerPort());
+            }
+            else
+            {
+                AZ_Info("Houdini", "Named Pipe %s\n", settings->GetNamedPipe().c_str());
+            }
+            AZ_Info("Houdini", "----------------------------------------------------\n");
+
+            ConfigureSession();
+
+            AZ::SystemTickBus::Handler::BusDisconnect();
         }
     }
 
-    Houdini::~Houdini()
+    void Houdini::StartSession()
     {
-        //Unload all assets and cleanup, destroy session.
-        Shutdown();
-        m_rootNode.reset();
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        if (!StartSession(settings->GetSessionType(), settings->GetNamedPipe(), settings->GetServerHost(), settings->GetServerPort()))
+        {
+            AZ_Error("Houdini", false, "Failed to start Houdini Engine session");
+        }
+
+        if (!InitializeHAPISession())
+        {
+            AZ_Error("Houdini", false, "Failed to initialize Houdini Engine");
+        }
+    }
+
+    void Houdini::StopSession()
+    {
+        if (HAPI_IsSessionValid(&m_session) == HAPI_RESULT_SUCCESS)
+        {
+            HAPI_Cleanup(&m_session);
+            HAPI_CloseSession(&m_session);
+        }
+
+        m_session.id = -1;
+        m_session.type = HAPI_SESSION_MAX;
+
+        AZ_Info("Houdini", "Houdini Engine Session Stopped\n");
+    }
+
+    void Houdini::RestartSession()
+    {
+        AZ_Info("Houdini", "Restarting Houdini Engine Session\n");
+
+        // Stop the current session
+        StopSession();
+
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        if (!StartSession(settings->GetSessionType(), settings->GetNamedPipe(), settings->GetServerHost(), settings->GetServerPort()))
+        {
+            AZ_Error("Houdini", false, "Failed to restart Houdini Engine session");
+            return;
+        }
+
+        if (!InitializeHAPISession())
+        {
+            AZ_Error("Houdini", false, "Failed to initialize Houdini Engine");
+        }
     }
 
     void Houdini::ExecuteCommand(AZ::EntityId newId, AZStd::function<bool()> functionToCall)
@@ -740,7 +947,6 @@ namespace HoudiniEngine
         }
     }
 
-    // FL[FD-10790] Houdini Digital Asset List Hot Reload
     void Houdini::ReloadAllAssets()
     {
         m_assetCache.clear();

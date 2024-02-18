@@ -87,6 +87,14 @@ namespace HoudiniEngine
             const AZStd::string assetPath = levelName + AZStd::string("/HoudiniCache/");
             return assetPath;
         }
+
+        static const char* GetPathVarDelimiter();
+
+        static AZStd::string GetEnvironmentVariable(const AZStd::string& variableName);
+        static bool SetEnvironmentVariable(const AZStd::string& variableName, const AZStd::string& variableValue);
+
+        static AZStd::string GetConnectionError();
+        static AZStd::string GetLastError();
     };
     
 }
