@@ -21,9 +21,6 @@ namespace HoudiniEngine
 
     protected:
 
-        bool IsViewportSyncEnabled() const;
-
-
         AZ::Vector3 m_syncedO3DEViewportPosition;
         AZ::Quaternion m_syncedO3DEViewportRotation;
         AZ::Vector3 m_syncedO3DEViewportLookatPosition;

@@ -16,18 +16,12 @@
 
 namespace HoudiniEngine
 {
-    enum class SessionType
-    {
-        None,
-        Socket,
-        NamedPipe
-    };
-
-
     constexpr AZStd::string_view ServerHost = "/Houdini/Settings/Session/ServerHost";
     constexpr AZStd::string_view ServerPort = "/Houdini/Settings/Session/ServerPort";
     constexpr AZStd::string_view NamedPipe = "/Houdini/Settings/Session/NamedPipe";
     constexpr AZStd::string_view SessionType = "/Houdini/Settings/Session/SessionType";
+    constexpr AZStd::string_view SyncHoudiniViewport = "/Houdini/Settings/Session/SyncHoudiniViewport";
+    constexpr AZStd::string_view SyncO3DEViewport = "/Houdini/Settings/Session/SyncO3DEViewport";
 
     constexpr AZStd::string_view AutoClose = "/Houdini/Settings/Session/AutoClose";
     constexpr AZStd::string_view AutoCloseTimeOut = "/Houdini/Settings/Session/AutoCloseTimeOut";
@@ -38,9 +32,6 @@ namespace HoudiniEngine
     constexpr AZStd::string_view AutomaticServerTimeout = "/Houdini/Settings/Session/AutomaticServerTimeout";
     constexpr AZStd::string_view SyncWithHoudiniCook = "/Houdini/Settings/Session/SyncWithHoudiniCook";
     constexpr AZStd::string_view CookUsingHoudiniTime = "/Houdini/Settings/Session/CookUsingHoudiniTime";
-    constexpr AZStd::string_view SyncViewport = "/Houdini/Settings/Session/SyncViewport";
-    constexpr AZStd::string_view SyncHoudiniViewport = "/Houdini/Settings/Session/SyncHoudiniViewport";
-    constexpr AZStd::string_view SyncO3DEViewport = "/Houdini/Settings/Session/SyncO3DEViewport";
 
     constexpr AZStd::string_view SearchPath = "/Houdini/Settings/Tools/SearchPath";
     constexpr AZStd::string_view UseCustomHoudiniLocation = "/Houdini/Settings/Location/UseCustomHoudiniLocation";
@@ -79,11 +70,17 @@ namespace HoudiniEngine
             Both
         };
 
+        enum class ESessionStatus : AZ::u8
+        {
+            Offline,
+            Connecting,
+            Ready
+        };
+
         SessionSettings();
 
         void SetServerHost(const AZStd::string& host);
         AZStd::string GetServerHost() const;
-        //void SetServerHostChangedEvent(StringPropertyEvent::Handler& handler);
 
         void SetServerPort(AZ::u64 port);
         AZ::u32 GetServerPort() const;
@@ -106,8 +103,11 @@ namespace HoudiniEngine
         void SetCookUsingHoudiniTime(bool cookUsingHoudiniTime);
         bool GetCookUsingHoudiniTime() const;
 
-        void SetSyncViewports(bool sync);
-        bool GetSyncViewports() const;
+        void SetSyncO3DEViewport(bool sync);
+        bool GetSyncO3DEViewport() const;
+
+        void SetSyncHoudiniViewport(bool sync);
+        bool GetSyncHoudiniViewport() const;
 
     protected:
 
@@ -145,5 +145,42 @@ namespace HoudiniEngine
         virtual SessionSettings* GetSessionSettings() = 0;
     };
     using SettingsBus = AZ::EBus<SettingsBusRequests>;
+
+
+    // Node Sync Settings
+    constexpr AZStd::string_view KeepWorldTransform = "/Houdini/Settings/NodeSync/KeepWorldTransform";
+    constexpr AZStd::string_view PackGeometryBeforeMerge = "/Houdini/Settings/NodeSync/PackGeometryBeforeMerge";
+    constexpr AZStd::string_view ExportInputAsReferences = "/Houdini/Settings/NodeSync/ExportInputAsReferences";
+    constexpr AZStd::string_view ExportLODs = "/Houdini/Settings/NodeSync/ExportLODs";
+    constexpr AZStd::string_view ExportSockets = "/Houdini/Settings/NodeSync/ExportSockets";
+    constexpr AZStd::string_view ExportColliders = "/Houdini/Settings/NodeSync/ExportColliders";
+    constexpr AZStd::string_view ExportMaterialParams = "/Houdini/Settings/NodeSync/ExportMaterialParams";
+    constexpr AZStd::string_view MergeSplineMeshComponents = "/Houdini/Settings/NodeSync/MergeSplineMeshComponents";
+    constexpr AZStd::string_view ExportLevelInstanceContent = "/Houdini/Settings/NodeSync/ExportLevelInstanceContent";
+    constexpr AZStd::string_view DirectlyConnectHDAsAsInHoudini = "/Houdini/Settings/NodeSync/DirectlyConnectHDAsAsInHoudini";
+    constexpr AZStd::string_view SplineResolution = "/Houdini/Settings/NodeSync/SplineResolution";
+
+    class NodeSyncSettings
+    {
+    public:
+
+
+    protected:
+
+        bool m_keepWorldTransform;
+        bool m_packGeometryBeforeMerge;
+        bool m_exportInputAsReferences;
+        bool m_exportLODs;
+        bool m_exportSockets;
+        bool m_exportColliders;
+        bool m_exportMaterialParams;
+        bool m_mergeSplineMeshComponents;
+        bool m_exportLevelInstanceContent;
+        bool m_directlyConnectHDAsInHoudini;
+        bool m_useLegacyInputCurves;
+        float m_splineResolution;
+
+        // TODO: terrain
+    };
 
 }

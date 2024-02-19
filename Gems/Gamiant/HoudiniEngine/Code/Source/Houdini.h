@@ -43,6 +43,7 @@ namespace HoudiniEngine
 
         SessionSettings::ESessionType m_sessionType = SessionSettings::ESessionType::TCPSocket;
         SessionSettings::EViewportSync m_viewportSync = SessionSettings::EViewportSync::Disabled;
+        SessionSettings::ESessionStatus m_sessionStatus = SessionSettings::ESessionStatus::Offline;
 
         AZStd::string m_namedPipe;
         AZStd::string m_serverHost;

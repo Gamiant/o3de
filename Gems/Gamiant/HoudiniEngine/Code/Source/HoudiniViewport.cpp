@@ -26,19 +26,13 @@ namespace HoudiniEngine
         , m_clearOffset(false)
     {}
 
-    bool Viewport::IsViewportSyncEnabled() const
+    void Viewport::SyncToO3DE()
     {
         SessionSettings* settings = nullptr;
         SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
         AZ_Assert(settings, "Settings cannot be null");
 
-        return settings->GetSyncViewports();
-
-    }
-
-    void Viewport::SyncToO3DE()
-    {
-        if (!IsViewportSyncEnabled())
+        if (!settings->GetSyncO3DEViewport())
         {
             return;
         }
@@ -119,7 +113,11 @@ namespace HoudiniEngine
 
     void Viewport::SyncToHoudini()
     {
-        if (!IsViewportSyncEnabled())
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        if (!settings->GetSyncHoudiniViewport())
         {
             return;
         }

@@ -37,14 +37,6 @@ namespace HoudiniEngine
     {
         m_ui->setupUi(this);
 
-        SessionSettings* settings = nullptr;
-        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
-        AZ_Assert(settings, "Settings cannot be null");
-
-        m_ui->pteServerHost->setPlainText(settings->GetServerHost().c_str());
-        m_ui->ptePipeName->setPlainText(settings->GetNamedPipe().c_str());
-        m_ui->pteServerPort->setPlainText(AZStd::string::format("%d", settings->GetServerPort()).c_str());
-
         m_ui->cbSessionType->addItem(QString("Named Pipe"));
         m_ui->cbSessionType->addItem(QString("TCP Socket"));
 

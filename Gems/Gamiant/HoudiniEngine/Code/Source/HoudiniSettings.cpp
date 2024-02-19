@@ -98,7 +98,7 @@ namespace HoudiniEngine
 
     AZStd::string SessionSettings::GetOTLPath() const
     {
-        return AzToolsFramework::GetRegistry<AZStd::string>(NamedPipe, "@projectroot@/assets/hda");
+        return AzToolsFramework::GetRegistry<AZStd::string>(OTLPath, "@projectroot@/assets/hda");
     }
 
     void SessionSettings::SetAutoClose(bool autoClose)
@@ -140,18 +140,32 @@ namespace HoudiniEngine
         return AzToolsFramework::GetRegistry<bool>(CookUsingHoudiniTime, true);
     }
 
-    void SessionSettings::SetSyncViewports(bool sync)
+    void SessionSettings::SetSyncO3DEViewport(bool sync)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
-            registry->Set(SyncViewport, sync);
+            registry->Set(SyncO3DEViewport, sync);
         }
     }
 
-    bool SessionSettings::GetSyncViewports() const
+    bool SessionSettings::GetSyncO3DEViewport() const
     {
-        return AzToolsFramework::GetRegistry<bool>(SyncViewport, true);
+        return AzToolsFramework::GetRegistry<bool>(SyncO3DEViewport, true);
     }
+
+    void SessionSettings::SetSyncHoudiniViewport(bool sync)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(SyncHoudiniViewport, sync);
+        }
+    }
+
+    bool SessionSettings::GetSyncHoudiniViewport() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(SyncHoudiniViewport, true);
+    }
+
 
 
 }

@@ -40,6 +40,33 @@ namespace HoudiniEngine
         m_ui->cbSyncViewport->addItem(QString("Houdini to O3DE"));
         m_ui->cbSyncViewport->addItem(QString("O3DE to Houdini"));
         m_ui->cbSyncViewport->addItem(QString("Both"));
+
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        bool syncHoudiniViewport = settings->GetSyncHoudiniViewport();
+        bool syncO3DEViewport = settings->GetSyncO3DEViewport();
+
+        int index = 0;
+        if (syncHoudiniViewport && syncO3DEViewport)
+        {
+            index = static_cast<int>(SessionSettings::EViewportSync::Both);
+        }
+        else
+        if (syncHoudiniViewport)
+        {
+            index = static_cast<int>(SessionSettings::EViewportSync::HoudiniToO3DE);
+        }
+        else
+        if (syncO3DEViewport)
+        {
+            index = static_cast<int>(SessionSettings::EViewportSync::O3DEToHoudini);
+        }
+
+        SessionRequestBus::Broadcast(&SessionRequests::SetViewportSync, index);
+        m_ui->cbSyncViewport->setCurrentIndex(index);
+
         connect(m_ui->cbSyncViewport, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &HoudiniSessionControls::OnSyncViewportChanged);
 
         connect(m_ui->pbStartSession, &QPushButton::clicked, this, &HoudiniSessionControls::OnStartSession);

@@ -268,7 +268,7 @@ namespace HoudiniEngine
         // Set the Session Sync settings to Houdini
         HAPI_SessionSyncInfo sessionSyncInfo;
         sessionSyncInfo.cookUsingHoudiniTime = settings->GetCookUsingHoudiniTime();
-        sessionSyncInfo.syncViewport = settings->GetSyncViewports();
+        sessionSyncInfo.syncViewport = settings->GetSyncHoudiniViewport();
 
         if (HAPI_SetSessionSyncInfo(&m_session, &sessionSyncInfo) != HAPI_RESULT_SUCCESS)
         {
@@ -388,6 +388,7 @@ namespace HoudiniEngine
         // We'll connect to the system tick bus where we'll try to create a session while Houdini loads
         m_startSyncTime = std::chrono::steady_clock::now();
         m_startingSession = true;
+        m_sessionStatus = SessionSettings::ESessionStatus::Connecting;
     }
 
     void Houdini::OnSystemTick()
@@ -444,6 +445,8 @@ namespace HoudiniEngine
 
                 ConfigureSession();
 
+                m_sessionStatus = SessionSettings::ESessionStatus::Ready;
+
                 m_startingSession = false;
             }
         }
@@ -477,6 +480,8 @@ namespace HoudiniEngine
 
         m_session.id = -1;
         m_session.type = HAPI_SESSION_MAX;
+
+        m_sessionStatus = SessionSettings::ESessionStatus::Offline;
 
         AZ_Info("Houdini", "Houdini Engine Session Stopped\n");
     }
