@@ -56,6 +56,8 @@ set(FILES
     SideFX/HE_ParameterWidget_Toggle.h
     SideFX/HE_Viewer.cpp
     SideFX/HE_Viewer.h
+
+# Components
     Components/HoudiniAssetComponent.h
     Components/HoudiniAssetComponent.cpp
     Components/HoudiniCurveAttributeComponent.h
@@ -68,6 +70,10 @@ set(FILES
     Components/HoudiniTerrainComponent.cpp
     Components/HoudiniScatterComponent.h
     Components/HoudiniScatterComponent.cpp
+    Components/HoudiniNodeComponentConfig.h
+    Components/HoudiniNodeComponentConfig.cpp
+
+# Core
     Source/HoudiniCommon.h
     Source/Houdini.h
     Source/Houdini.cpp
@@ -97,7 +103,6 @@ set(FILES
     Source/InputNodeManager.cpp
     Source/HoudiniMaterialTranslator.h
     Source/HoudiniMaterialTranslator.cpp
-    Components/HoudiniNodeComponentConfig.h
-    Components/HoudiniNodeComponentConfig.cpp
-    
+    Source/HoudiniViewport.h
+    Source/HoudiniViewport.cpp
 )

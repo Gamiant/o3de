@@ -41,6 +41,7 @@ namespace HoudiniEngine
         void OnStartSession();
         void OnStopSession();
         void OnRestartSession();
+        void OnSyncViewportChanged(int index);
 
     private:
 

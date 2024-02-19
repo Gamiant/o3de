@@ -19,6 +19,7 @@
 #include <AzCore/Debug/Profiler.h>
 
 #include <HoudiniSettings.h>
+#include <HoudiniViewport.h>
 
 #define HOUDINI_INVALID_ID -1
 #define HOUDINI_ROOT_NODE_ID -1
@@ -30,15 +31,19 @@ namespace AzFramework
 
 namespace HoudiniEngine 
 {
-    class Houdini : public IHoudini
+    class Houdini
+        : public IHoudini
         , public IEditorNotifyListener
         , SessionRequestBus::Handler
         , AZ::SystemTickBus::Handler
+        , AZ::TickBus::Handler
     {
     protected:
 
 
         SessionSettings::ESessionType m_sessionType = SessionSettings::ESessionType::TCPSocket;
+        SessionSettings::EViewportSync m_viewportSync = SessionSettings::EViewportSync::Disabled;
+
         AZStd::string m_namedPipe;
         AZStd::string m_serverHost;
         AZ::u32 m_serverPort;
@@ -47,7 +52,9 @@ namespace HoudiniEngine
         AZStd::string m_HAPIlibPath; // Path to the HAPI dynamic library
         AZ::u32 m_licenseType;
         bool m_environmentSet = false;
-
+        Viewport m_viewport;
+        bool m_startingSession = false;
+        ///
 
 
         bool m_isActive;
@@ -86,6 +93,8 @@ namespace HoudiniEngine
         Houdini();
         ~Houdini();
 
+        const HAPI_Session& GetSession() override { return m_session; }
+
         void Test();
 
         int m_maxSliceCount = 500;
@@ -116,7 +125,9 @@ namespace HoudiniEngine
         void GetProgress(AZStd::string& statusText, int & statusPercent, int & assetsInQueue) override;
         void SetProgress(const AZStd::string& statusText, int statusPercent) override;
 
+        // AZ::TickBus::Handler...
         void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
+        ///
         
         //Lookups: (Updated per tick)
         void RemoveLookupId(const AZ::EntityId& id) override;
@@ -152,26 +163,6 @@ namespace HoudiniEngine
         void SaveDebugFile() override;
 
         void DeleteAllObjects();
-
-        // IEditorNotifyListener
-        void OnEditorNotifyEvent(EEditorNotifyEvent event) override
-        {
-            switch (event)
-            {
-                case eNotify_OnBeginGameMode:
-                case eNotify_OnBeginLayerExport:
-                case eNotify_OnBeginSceneSave:
-                {
-                    JoinProcessorThread();
-                    break;
-                }
-                case eNotify_OnCloseScene:
-                {
-                    CancelProcessorThread();
-                    break;
-                }
-            }
-        }
 
         void Shutdown() 
         {
@@ -252,11 +243,6 @@ namespace HoudiniEngine
             return m_rootNode;
         }
         
-        const HAPI_Session& GetSession() override
-        {
-            return m_session;
-        }                
-
         bool IsActive() override
         { 
             return m_isActive && m_globalStateVar->GetIVal() == 1;
@@ -278,14 +264,21 @@ namespace HoudiniEngine
             void StartSession() override;
             void StopSession() override;
             void RestartSession() override;
+            void SetViewportSync(int index) override;
+            HAPI_Session* GetSessionPtr() override;
             ///
 
             // SystemTickBus...
             void OnSystemTick() override;
             ///
 
+            // IEditorNotifyListener...
+            void OnEditorNotifyEvent(EEditorNotifyEvent event) override;
+            ///
+
             void ComputeSearchPaths();
             void SetupEnvironment();
+            void SessionSync();
 
             bool InitializeHAPISession();
             void ConfigureSession();

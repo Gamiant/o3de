@@ -252,7 +252,7 @@ namespace HoudiniEngine
         if (m_houdiniInstance != nullptr && m_houdiniInstance->GetInputNodeManager() != nullptr && GetIEditor()->IsInGameMode() == false)
         {
             m_houdiniInstance->GetInputNodeManager()->OnTick(deltaTime, time);
-            m_houdiniInstance->OnTick(deltaTime, time);
+            //m_houdiniInstance->OnTick(deltaTime, time);
 
             int percent, assetsInQueue = 0;
             AZStd::string text;

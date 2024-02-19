@@ -6,6 +6,23 @@
  *
  */
 
+#include <HoudiniCommon.h>
+#include <HoudiniEngine/HoudiniVersion.h>
+#include <HoudiniSettings.h>
+
+#include <Util/EditorUtils.h>
+
+#include <AzCore/IO/FileIO.h>
+#include <AzFramework/IO/LocalFileIO.h>
+#include <AzFramework/Process/ProcessWatcher.h>
+
+#include <AzCore/Component/TickBus.h>
+
+#if defined (AZ_PLATFORM_WINDOWS)
+#include <Shlobj.h>
+#endif
+
+
 #if defined(AZ_PLATFORM_WINDOWS)
 
 //AZ_Warning("HOUDINI-COOK", false, (AZStd::string(__FILE__)+ AZStd::string(": ") + QString::number(__LINE__)).c_str());\
@@ -25,19 +42,6 @@ if ( (result) != HAPI_RESULT_SUCCESS ) \
 #define HOUDINI_MODE_EMBEDDED 0 
 #define HOUDINI_MODE_ASYNC 1 
 
-#include <HoudiniCommon.h>
-#include <HoudiniEngine/HoudiniVersion.h>
-#include <HoudiniSettings.h>
-
-#include <Util/EditorUtils.h>
-
-#include <AzCore/IO/FileIO.h>
-#include <AzFramework/IO/LocalFileIO.h>
-#include <AzFramework/Process/ProcessWatcher.h>
-
-#if defined (AZ_PLATFORM_WINDOWS)
-#include <Shlobj.h>
-#endif
 
 namespace HoudiniEngine
 {
@@ -103,10 +107,14 @@ namespace HoudiniEngine
 
         AZ_Info("Houdini", "---------------------------------------------------------------------------------------------------------------\n");
 
+        AZ::TickBus::Handler::BusConnect();
+        AZ::SystemTickBus::Handler::BusConnect();
+
     }
 
     Houdini::~Houdini()
     {
+        AZ::TickBus::Handler::BusDisconnect();
         //Unload all assets and cleanup, destroy session.
         Shutdown();
         m_rootNode.reset();
@@ -209,8 +217,6 @@ namespace HoudiniEngine
             AZ_Error("Houdini", false, "License verification failed: %s - %s", codeString.c_str(), HoudiniEngineUtils::GetLastError().c_str());
             return false;
         }
-
-        // Update viewport settings
 
         return true;
     }
@@ -381,48 +387,67 @@ namespace HoudiniEngine
 
         // We'll connect to the system tick bus where we'll try to create a session while Houdini loads
         m_startSyncTime = std::chrono::steady_clock::now();
-        AZ::SystemTickBus::Handler::BusConnect();
-
+        m_startingSession = true;
     }
 
     void Houdini::OnSystemTick()
     {
-        SessionSettings* settings = nullptr;
-        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
-        AZ_Assert(settings, "Settings cannot be null");
+        SessionSync(); // Used during loading to connect the Houdini session
 
-        SessionSettings::ESessionType sessionType = settings->GetSessionType();
-
-        if (!ConnectSession(sessionType, settings->GetNamedPipe(), settings->GetServerHost(), settings->GetServerPort()))
+        if (m_viewportSync == SessionSettings::EViewportSync::Both || m_viewportSync == SessionSettings::EViewportSync::HoudiniToO3DE)
         {
-            // Update timeout, Houdini may not be done loading
-            auto elapsedMs = AZStd::chrono::duration_cast<AZStd::chrono::milliseconds>(AZStd::chrono::steady_clock::now() - m_startSyncTime);
-            if (elapsedMs.count() >= settings->GetAutoCloseTimeOut())
-            {
-                AZ::SystemTickBus::Handler::BusDisconnect();
-                AZ_Error("Houdini", false, "Houdini Engine Sync Session connection timed out\n");
-                return;
-            }
+            m_viewport.SyncToO3DE();
         }
-        else
+
+        if (m_viewportSync == SessionSettings::EViewportSync::Both || m_viewportSync == SessionSettings::EViewportSync::O3DEToHoudini)
         {
-            AZ_Info("Houdini", "Houdini Session Estabished ------------------------\n");
-            AZ_Info("Houdini", "Session Type: %s\n", sessionType == SessionSettings::ESessionType::TCPSocket ? "TCP Socket" : "Named Pipe");
-            if (sessionType == SessionSettings::ESessionType::TCPSocket)
+            m_viewport.SyncToHoudini();
+        }
+
+    }
+
+    void Houdini::SessionSync()
+    {
+        if (m_startingSession)
+        {
+            SessionSettings* settings = nullptr;
+            SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+            AZ_Assert(settings, "Settings cannot be null");
+
+            SessionSettings::ESessionType sessionType = settings->GetSessionType();
+
+            if (!ConnectSession(sessionType, settings->GetNamedPipe(), settings->GetServerHost(), settings->GetServerPort()))
             {
-                AZ_Info("Houdini", "Server Host: %s\n", settings->GetServerHost().c_str());
-                AZ_Info("Houdini", "Server Port: %d\n", settings->GetServerPort());
+                // Update timeout, Houdini may not be done loading
+                auto elapsedMs = AZStd::chrono::duration_cast<AZStd::chrono::milliseconds>(AZStd::chrono::steady_clock::now() - m_startSyncTime);
+                if (elapsedMs.count() >= settings->GetAutoCloseTimeOut())
+                {
+                    AZ::SystemTickBus::Handler::BusDisconnect();
+                    AZ_Error("Houdini", false, "Houdini Engine Sync Session connection timed out\n");
+                    return;
+                }
             }
             else
             {
-                AZ_Info("Houdini", "Named Pipe %s\n", settings->GetNamedPipe().c_str());
+                AZ_Info("Houdini", "Houdini Session Estabished ------------------------\n");
+                AZ_Info("Houdini", "Session Type: %s\n", sessionType == SessionSettings::ESessionType::TCPSocket ? "TCP Socket" : "Named Pipe");
+                if (sessionType == SessionSettings::ESessionType::TCPSocket)
+                {
+                    AZ_Info("Houdini", "Server Host: %s\n", settings->GetServerHost().c_str());
+                    AZ_Info("Houdini", "Server Port: %d\n", settings->GetServerPort());
+                }
+                else
+                {
+                    AZ_Info("Houdini", "Named Pipe %s\n", settings->GetNamedPipe().c_str());
+                }
+                AZ_Info("Houdini", "----------------------------------------------------\n");
+
+                ConfigureSession();
+
+                m_startingSession = false;
             }
-            AZ_Info("Houdini", "----------------------------------------------------\n");
-
-            ConfigureSession();
-
-            AZ::SystemTickBus::Handler::BusDisconnect();
         }
+
     }
 
     void Houdini::StartSession()
@@ -477,6 +502,16 @@ namespace HoudiniEngine
         {
             AZ_Error("Houdini", false, "Failed to initialize Houdini Engine");
         }
+    }
+
+    void Houdini::SetViewportSync(int index)
+    {
+        m_viewportSync = static_cast<SessionSettings::EViewportSync>(index);
+    }
+
+    HAPI_Session* Houdini::GetSessionPtr()
+    {
+        return &m_session;
     }
 
     void Houdini::ExecuteCommand(AZ::EntityId newId, AZStd::function<bool()> functionToCall)
@@ -701,6 +736,8 @@ namespace HoudiniEngine
                 }
             }
         }
+
+        
     }
 
     //Collects data that might be needed by update systems or creation systems. This is required to ensure thread safety.
@@ -1234,6 +1271,25 @@ namespace HoudiniEngine
 
         *this << " HAPI_SaveHIPFile to " << desktopPath << "\\DebugAsset.hip" << "";
         HAPI_SaveHIPFile(&m_session, (AZStd::string(desktopPath) + "\\DebugAsset.hip").c_str(), false);
+    }
+
+    void Houdini::OnEditorNotifyEvent(EEditorNotifyEvent event)
+    {
+        switch (event)
+        {
+        case eNotify_OnBeginGameMode:
+        case eNotify_OnBeginLayerExport:
+        case eNotify_OnBeginSceneSave:
+        {
+            JoinProcessorThread();
+            break;
+        }
+        case eNotify_OnCloseScene:
+        {
+            CancelProcessorThread();
+            break;
+        }
+        }
     }
 
     void Houdini::Test()

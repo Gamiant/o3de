@@ -41,10 +41,12 @@ ly_add_target(
         ${pal_dir}/houdiniengine_api_files.cmake
     INCLUDE_DIRECTORIES
         INTERFACE
+            .
             Include
     BUILD_DEPENDENCIES
         INTERFACE
            AZ::AzCore
+           3rdParty::houdini
 )
 
 # The ${gem_name}.Private.Object target is an internal target
@@ -67,7 +69,6 @@ ly_add_target(
             3rdParty::Qt::Core
             3rdParty::Qt::Gui
             3rdParty::Qt::Widgets
-            3rdParty::houdini
             Legacy::EditorCore
         PUBLIC
             Legacy::CryCommon
@@ -81,6 +82,7 @@ ly_add_target(
             Gem::Atom_RPI.Public
             Gem::Atom_Feature_Common.Static
             Gem::AtomLyIntegration_CommonFeatures.Static
+            3rdParty::houdini
 )
 
 # Here add ${gem_name} target, it depends on the Private Object library and Public API interface

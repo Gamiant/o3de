@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>200</width>
-    <height>283</height>
+    <width>201</width>
+    <height>216</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -19,13 +19,13 @@
   <property name="windowTitle">
    <string>Houdini Status</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>-10</y>
      <width>181</width>
-     <height>131</height>
+     <height>176</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -63,6 +63,16 @@
        <string>Restart Session</string>
       </property>
      </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Sync Viewport</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="cbSyncViewport"/>
     </item>
    </layout>
   </widget>

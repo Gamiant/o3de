@@ -71,6 +71,14 @@ namespace HoudiniEngine
             NamedPipe
         };
 
+        enum class EViewportSync : AZ::u8
+        {
+            Disabled,
+            HoudiniToO3DE,
+            O3DEToHoudini,
+            Both
+        };
+
         SessionSettings();
 
         void SetServerHost(const AZStd::string& host);

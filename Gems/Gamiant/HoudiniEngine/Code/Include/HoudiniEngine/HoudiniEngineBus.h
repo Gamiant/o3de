@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <HAPI/HAPI.h>
+
 #include <HoudiniEngine/HoudiniCommonForwards.h>
 #include <LmbrCentral/Shape/SplineAttribute.h>
 
@@ -20,6 +22,9 @@ namespace HoudiniEngine
         virtual void StartSession() = 0;
         virtual void StopSession() = 0;
         virtual void RestartSession() = 0;
+        virtual void SetViewportSync(int selection) = 0;
+
+        virtual HAPI_Session* GetSessionPtr() = 0;
     };
     using SessionRequestBus = AZ::EBus<SessionRequests>;
 

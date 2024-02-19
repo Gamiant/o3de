@@ -85,7 +85,6 @@ namespace HoudiniEngine
             virtual HAPI_NodeId FindNode(HAPI_NodeType networkType, const AZStd::string& path) = 0;
             virtual HoudiniNodePtr GetRootNode() = 0;
             virtual void CookNode(HAPI_NodeId node, const AZStd::string& entityName) = 0;
-            virtual void OnTick(float deltaTime, AZ::ScriptTimePoint time) = 0;
 
             virtual AZStd::string GetString(HAPI_StringHandle string_handle) = 0;
             virtual AZStd::string GetLastHoudiniError() = 0;

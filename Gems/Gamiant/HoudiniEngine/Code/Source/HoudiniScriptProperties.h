@@ -97,9 +97,12 @@ namespace HoudiniEngine
 
             void SetParameter(HoudiniParameterPtr parm)
             {
+                HAPI_Session* session = nullptr;
+                SessionRequestBus::BroadcastResult(session, &SessionRequests::GetSessionPtr);
+
                 m_hou = parm->GetHou();
                 m_parameter = parm;
-                m_session = const_cast<HAPI_Session*>(&m_hou->GetSession());
+                m_session = session;
                 m_name = parm->GetName();
                 m_help = parm->GetHelp();
                 m_desc = m_name + ": " + m_help;

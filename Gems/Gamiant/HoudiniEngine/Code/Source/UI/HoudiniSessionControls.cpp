@@ -25,27 +25,10 @@
 
 #include <QPushButton>
 #include <QStringListModel>
-
+#include <QComboBox>
 
 namespace HoudiniEngine
 {
-    /*static std::string get_last_error()
-    {
-        int buffer_length;
-        HAPI_GetStatusStringBufLength(
-            nullptr, HAPI_STATUS_CALL_RESULT, HAPI_STATUSVERBOSITY_ERRORS, &buffer_length);
-        if (buffer_length > 0)
-        {
-            char* buf = new char[buffer_length];
-            HAPI_GetStatusString(nullptr, HAPI_STATUS_CALL_RESULT, buf, buffer_length);
-            std::string result(buf);
-            delete[] buf;
-            return result;
-        }
-        return {};
-    }*/
-
-
     //////////////////////////////////////////////////////////////////////////
     HoudiniSessionControls::HoudiniSessionControls()
         : QWidget(nullptr)
@@ -53,6 +36,11 @@ namespace HoudiniEngine
     {
         m_ui->setupUi(this);
 
+        m_ui->cbSyncViewport->addItem(QString("Disabled"));
+        m_ui->cbSyncViewport->addItem(QString("Houdini to O3DE"));
+        m_ui->cbSyncViewport->addItem(QString("O3DE to Houdini"));
+        m_ui->cbSyncViewport->addItem(QString("Both"));
+        connect(m_ui->cbSyncViewport, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &HoudiniSessionControls::OnSyncViewportChanged);
 
         connect(m_ui->pbStartSession, &QPushButton::clicked, this, &HoudiniSessionControls::OnStartSession);
         connect(m_ui->pbStopSession, &QPushButton::clicked, this, &HoudiniSessionControls::OnStopSession);
@@ -78,6 +66,11 @@ namespace HoudiniEngine
     void HoudiniSessionControls::OnRestartSession()
     {
         SessionRequestBus::Broadcast(&SessionRequests::RestartSession);
+    }
+
+    void HoudiniSessionControls::OnSyncViewportChanged(int index)
+    {
+        SessionRequestBus::Broadcast(&SessionRequests::SetViewportSync, index);
     }
 
 }
