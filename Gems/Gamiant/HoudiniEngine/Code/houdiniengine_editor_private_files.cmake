@@ -26,6 +26,8 @@ set(FILES
     Source/UI/HoudiniSessionControls.cpp
     Source/UI/HoudiniSessionControls.ui
 
+# Widgets
+    Source/UI/Widgets/ViewportSyncWidget.h
 
 # SideFX
     SideFX/HE_ParameterWidget.cpp
@@ -105,4 +107,6 @@ set(FILES
     Source/HoudiniMaterialTranslator.cpp
     Source/HoudiniViewport.h
     Source/HoudiniViewport.cpp
+    Source/HoudiniResources.qrc
+
 )

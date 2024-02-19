@@ -146,6 +146,12 @@ namespace HoudiniEngine
     };
     using SettingsBus = AZ::EBus<SettingsBusRequests>;
 
+    struct SessionNotifications : public AZ::EBusTraits
+    {
+        virtual void OnSessionStatusChange(SessionSettings::ESessionStatus sessionStatus) = 0;
+    };
+    using SessionNotificationBus = AZ::EBus<SessionNotifications>;
+
 
     // Node Sync Settings
     constexpr AZStd::string_view KeepWorldTransform = "/Houdini/Settings/NodeSync/KeepWorldTransform";
@@ -158,12 +164,48 @@ namespace HoudiniEngine
     constexpr AZStd::string_view MergeSplineMeshComponents = "/Houdini/Settings/NodeSync/MergeSplineMeshComponents";
     constexpr AZStd::string_view ExportLevelInstanceContent = "/Houdini/Settings/NodeSync/ExportLevelInstanceContent";
     constexpr AZStd::string_view DirectlyConnectHDAsAsInHoudini = "/Houdini/Settings/NodeSync/DirectlyConnectHDAsAsInHoudini";
+    constexpr AZStd::string_view UseLegacyInputCurves = "/Houdini/Settings/NodeSync/UseLegacyInputCurves";
     constexpr AZStd::string_view SplineResolution = "/Houdini/Settings/NodeSync/SplineResolution";
 
     class NodeSyncSettings
     {
     public:
 
+        void SetKeepWorldTransform(bool keepWorldTransform);
+        bool GetKeepWorldTransform() const;
+
+        void SetPackGeometryBeforeMerge(bool pack);
+        bool GetPackGeometryBeforeMerge() const;
+
+        void SetExportInputAsReferences(bool exportValue);
+        bool GetExportInputAsReferences() const;
+
+        void SetExportLODs(bool exportValue);
+        bool GetExportLODs() const;
+
+        void SetExportSockets(bool exportValue);
+        bool GetExportSockets() const;
+
+        void SetExportColliders(bool exportValue);
+        bool GetExportColliders() const;
+
+        void SetExportMaterialParams(bool exportValue);
+        bool GetExportMaterialParams() const;
+
+        void SetMergeSplineMeshComponents(bool merge);
+        bool GetMergeSplineMeshComponents() const;
+
+        void SetExportLevelInstanceContent(bool exportValue);
+        bool GetExportLevelInstanceContent() const;
+
+        void SetDirectlyConnectHDAsInHoudini(bool directlyConnect);
+        bool GetDirectlyConnectHDAsInHoudini() const;
+
+        void SetUseLegacyInputCurves(bool useLegacyInputCurves);
+        bool GetUseLegacyInputCurves() const;
+
+        void SetSplineResolution(float splineResolution);
+        float GetSplineResolution() const;
 
     protected:
 

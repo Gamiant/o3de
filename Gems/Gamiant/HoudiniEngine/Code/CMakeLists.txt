@@ -144,6 +144,7 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
         NAMESPACE Gem
         AUTOMOC
         AUTOUIC
+        AUTORCC
         FILES_CMAKE
             houdiniengine_editor_private_files.cmake
         COMPILE_DEFINITIONS
@@ -182,6 +183,7 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
         NAME ${gem_name}.Editor GEM_MODULE
         NAMESPACE Gem
         AUTOMOC
+        AUTORCC
         FILES_CMAKE
             houdiniengine_editor_shared_files.cmake
         INCLUDE_DIRECTORIES

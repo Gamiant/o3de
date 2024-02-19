@@ -107,6 +107,8 @@ namespace HoudiniEngine
 
         AZ_Info("Houdini", "---------------------------------------------------------------------------------------------------------------\n");
 
+        SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+
         AZ::TickBus::Handler::BusConnect();
         AZ::SystemTickBus::Handler::BusConnect();
 
@@ -256,6 +258,9 @@ namespace HoudiniEngine
 
         ConfigureSession();
 
+        m_sessionStatus = SessionSettings::ESessionStatus::Ready;
+        SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+
         return true;
     }
 
@@ -389,6 +394,7 @@ namespace HoudiniEngine
         m_startSyncTime = std::chrono::steady_clock::now();
         m_startingSession = true;
         m_sessionStatus = SessionSettings::ESessionStatus::Connecting;
+        SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
     }
 
     void Houdini::OnSystemTick()
@@ -446,6 +452,7 @@ namespace HoudiniEngine
                 ConfigureSession();
 
                 m_sessionStatus = SessionSettings::ESessionStatus::Ready;
+                SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
 
                 m_startingSession = false;
             }
@@ -482,6 +489,7 @@ namespace HoudiniEngine
         m_session.type = HAPI_SESSION_MAX;
 
         m_sessionStatus = SessionSettings::ESessionStatus::Offline;
+        SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
 
         AZ_Info("Houdini", "Houdini Engine Session Stopped\n");
     }
@@ -512,6 +520,27 @@ namespace HoudiniEngine
     void Houdini::SetViewportSync(int index)
     {
         m_viewportSync = static_cast<SessionSettings::EViewportSync>(index);
+
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        if (m_viewportSync == SessionSettings::EViewportSync::Both || m_viewportSync == SessionSettings::EViewportSync::HoudiniToO3DE)
+        {
+            settings->SetSyncHoudiniViewport(true);
+        }
+
+        if (m_viewportSync == SessionSettings::EViewportSync::Both || m_viewportSync == SessionSettings::EViewportSync::O3DEToHoudini)
+        {
+            settings->SetSyncO3DEViewport(true);
+        }
+
+        if (m_viewportSync == SessionSettings::EViewportSync::Disabled)
+        {
+            settings->SetSyncO3DEViewport(false);
+            settings->SetSyncHoudiniViewport(false);
+        }
+
     }
 
     HAPI_Session* Houdini::GetSessionPtr()

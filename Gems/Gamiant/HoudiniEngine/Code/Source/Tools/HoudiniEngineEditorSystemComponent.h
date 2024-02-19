@@ -24,6 +24,7 @@
 #include <ActionManager/ToolBar/ToolBarManagerInterface.h>
 
 #include <AzToolsFramework/ActionManager/ActionManagerRegistrationNotificationBus.h>
+#include <ActionManager/Action/ActionManagerInternalInterface.h>
 
 namespace AzToolsFramework
 {
@@ -39,11 +40,14 @@ namespace HoudiniEngine
     class HoudiniConfiguration;
     class HoudiniSessionControls;
 
+    static constexpr const char* houdiniToolbarIdentifier = "o3de.toolbar.editor.houdini";
+
     /// System component for HoudiniEngine editor
     class HoudiniEngineEditorSystemComponent
         : public AZ::Component
         , HoudiniEngineRequestBus::Handler
         , SettingsBus::Handler
+        , SessionNotificationBus::Handler
         , AZ::EntitySystemBus::Handler
         , AZ::TickBus::Handler
         , AzToolsFramework::EditorEvents::Bus::Handler
@@ -87,6 +91,9 @@ namespace HoudiniEngine
 
         // AzToolsFramework::ActionManagerRegistrationNotificationBus...
         void OnMenuRegistrationHook() override;
+        void OnToolBarRegistrationHook() override;
+        void OnToolBarBindingHook() override;
+        void OnActionRegistrationHook() override;
         ///
 
         // EntitySystemBus...
@@ -98,6 +105,11 @@ namespace HoudiniEngine
         void Activate() override;
         void Deactivate() override;
         ///
+
+        // SessionNotificationBus...
+        void OnSessionStatusChange(SessionSettings::ESessionStatus sessionStatus) override;
+        ///
+
 
         void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
 
@@ -123,6 +135,7 @@ namespace HoudiniEngine
 
 
         AzToolsFramework::ActionManagerInterface* m_actionManagerInterface = nullptr;
+        AzToolsFramework::ActionManagerInternalInterface* m_actionManagerInternalInterface = nullptr;
         AzToolsFramework::MenuManagerInterface* m_menuManagerInterface = nullptr;
         AzToolsFramework::ToolBarManagerInterface* m_toolBarManagerInterface = nullptr;
 
@@ -134,6 +147,7 @@ namespace HoudiniEngine
         HoudiniConfiguration* m_configuration;
         HoudiniSessionControls* m_sessionControls;
 
+        void RegisterAction(const AZStd::string& actionIdentifier, const AZStd::string& contextIdentifier, const AZStd::string& name, const AZStd::string& description, const AZStd::string& category, const AZStd::string& iconPath, AzToolsFramework::ActionVisibility visibility, AZStd::function<void()> lambda);
 
     };
 

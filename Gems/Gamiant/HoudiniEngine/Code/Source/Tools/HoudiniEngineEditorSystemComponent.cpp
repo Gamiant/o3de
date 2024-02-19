@@ -23,6 +23,7 @@
 #include <UI/HoudiniStatusPanel.h>
 #include <UI/HoudiniConfiguration.h>
 #include <UI/HoudiniSessionControls.h>
+#include <UI/Widgets/ViewportSyncWidget.h>
 
 #if defined(AZ_PLATFORM_WINDOWS)
 #define WIN32_LEAN_AND_MEAN
@@ -34,6 +35,7 @@
 
 #include "GameEngine.h"
 #include <QtViewPaneManager.h>
+#include <Editor/ActionManagerIdentifiers/EditorToolBarIdentifiers.h>
 
 namespace HoudiniEngine
 {
@@ -96,7 +98,7 @@ namespace HoudiniEngine
         m_actionManagerInterface = AZ::Interface<AzToolsFramework::ActionManagerInterface>::Get();
         m_menuManagerInterface = AZ::Interface<AzToolsFramework::MenuManagerInterface>::Get();
         m_toolBarManagerInterface = AZ::Interface<AzToolsFramework::ToolBarManagerInterface>::Get();
-
+        m_actionManagerInternalInterface = AZ::Interface<AzToolsFramework::ActionManagerInternalInterface>::Get();
     }
 
     void HoudiniEngineEditorSystemComponent::Deactivate()
@@ -108,6 +110,14 @@ namespace HoudiniEngine
         AzToolsFramework::EditorEvents::Bus::Handler::BusDisconnect();
         AZ::EntitySystemBus::Handler::BusDisconnect();
         m_houdiniInstance.reset();
+    }
+
+    void HoudiniEngineEditorSystemComponent::OnSessionStatusChange(SessionSettings::ESessionStatus sessionStatus)
+    {
+        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.open")->setEnabled(sessionStatus == SessionSettings::ESessionStatus::Offline);
+        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.start")->setEnabled(sessionStatus == SessionSettings::ESessionStatus::Offline);
+        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.stop")->setEnabled(sessionStatus == SessionSettings::ESessionStatus::Ready);
+        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.restart")->setEnabled(sessionStatus == SessionSettings::ESessionStatus::Ready);
     }
 
     void HoudiniEngineEditorSystemComponent::ConfigureEditorActions()
@@ -178,8 +188,6 @@ namespace HoudiniEngine
         outcome = m_menuManagerInterface->AddActionToMenu(houdiniMenuIdentifier, houdiniStatusActionIdentifier, 200);
         AZ_Assert(outcome.IsSuccess(), "Failed to register '%s' Menu", houdiniStatusActionIdentifier);
 
-
-
         m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, houdiniMenuIdentifier, 560);
 
     }
@@ -187,6 +195,150 @@ namespace HoudiniEngine
     void HoudiniEngineEditorSystemComponent::OnMenuRegistrationHook()
     {
         ConfigureEditorActions();
+    }
+
+    void HoudiniEngineEditorSystemComponent::OnToolBarRegistrationHook()
+    {
+        // Setup Toolbar
+        AzToolsFramework::ToolBarProperties toolBarProperties;
+        toolBarProperties.m_name = "Houdini ToolBar";
+        m_toolBarManagerInterface->RegisterToolBar(houdiniToolbarIdentifier, toolBarProperties);
+    }
+
+    void HoudiniEngineEditorSystemComponent::RegisterAction(const AZStd::string& actionIdentifier, const AZStd::string& contextIdentifier, const AZStd::string& name, const AZStd::string& description, const AZStd::string& category, const AZStd::string& iconPath, AzToolsFramework::ActionVisibility visibility, AZStd::function<void()> lambda)
+    {
+        AzToolsFramework::ActionProperties actionProperties;
+        actionProperties.m_name = name;
+        actionProperties.m_description = description;
+        actionProperties.m_category = category;
+        actionProperties.m_iconPath = iconPath;
+        actionProperties.m_menuVisibility = visibility;
+
+        m_actionManagerInterface->RegisterAction(
+            contextIdentifier,
+            actionIdentifier,
+            actionProperties,
+            lambda
+        );
+    }
+
+    void HoudiniEngineEditorSystemComponent::OnActionRegistrationHook()
+    {
+        {
+            AzToolsFramework::WidgetActionProperties widgetActionProperties;
+            widgetActionProperties.m_name = "Houdini Engine";
+            widgetActionProperties.m_category = "Game";
+
+            m_actionManagerInterface->RegisterWidgetAction(
+                "o3de.houdini.houdiniEngineLabel",
+                widgetActionProperties,
+                [&]
+                {
+                    QLabel* label = new QLabel();
+                    label->setText("Houdini Engine");
+                    return label;
+                }
+            );
+
+            RegisterAction("o3de.houdini.nodesync.send",
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                "Send",
+                "Send selection to Houdini",
+                "Game",
+                ":/houdini/load.svg",
+                AzToolsFramework::ActionVisibility::AlwaysShow,
+                [] {
+                    // EBus to send node sync
+                });
+
+            RegisterAction("o3de.houdini.session.open",
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                "Open Houdini",
+                "Opens Houdini and establishes a Session Sync",
+                "Game",
+                ":/houdini/open.svg",
+                AzToolsFramework::ActionVisibility::HideWhenDisabled,
+                [] {
+                    SessionRequestBus::Broadcast(&SessionRequests::OpenHoudini);
+                });
+
+            RegisterAction("o3de.houdini.session.start",
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                "Start Session",
+                "Starts a session with Houdini",
+                "Game",
+                ":/houdini/play.svg",
+                AzToolsFramework::ActionVisibility::HideWhenDisabled,
+                [] {
+                    SessionRequestBus::Broadcast(&SessionRequests::StartSession);
+                });
+
+            RegisterAction("o3de.houdini.session.stop",
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                "Stop Session",
+                "Stops the Houdini session",
+                "Game",
+                ":/houdini/stop.svg",
+                AzToolsFramework::ActionVisibility::HideWhenDisabled,
+                [] {
+                    SessionRequestBus::Broadcast(&SessionRequests::StopSession);
+                });
+
+            RegisterAction("o3de.houdini.session.restart",
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                "Restart Session",
+                "Restarts the Houdini session",
+                "Game",
+                ":/houdini/reset.svg",
+                AzToolsFramework::ActionVisibility::HideWhenDisabled,
+                [] {
+                    SessionRequestBus::Broadcast(&SessionRequests::RestartSession);
+                });
+
+            // Viewport Widget
+            {
+                widgetActionProperties.m_name = "Sync Viewport";
+                widgetActionProperties.m_category = "Game";
+
+                auto outcome = m_actionManagerInterface->RegisterWidgetAction(
+                    "o3de.houdini.session.viewportSync",
+                    widgetActionProperties,
+                    []() -> QWidget*
+                    {
+                        return new ViewportSyncWidget();
+                    }
+                );
+            }
+
+            SessionNotificationBus::Handler::BusConnect();
+            OnSessionStatusChange(SessionSettings::ESessionStatus::Offline);
+
+        }
+    }
+
+    void HoudiniEngineEditorSystemComponent::OnToolBarBindingHook()
+    {
+        m_toolBarManagerInterface->AddToolBarToToolBarArea(
+            EditorIdentifiers::MainWindowTopToolBarAreaIdentifier, houdiniToolbarIdentifier, 100);
+
+        // Play Controls
+        {
+            m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.widgetAction.expander", 100);
+            m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 200);
+            m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.houdiniEngineLabel", 300);
+            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.nodesync.send", 400);
+            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.open", 500);
+            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.start", 600);
+            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.stop", 700);
+            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.restart", 800);
+            m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.viewportSync", 900);
+
+
+            //m_toolBarManagerInterface->AddActionWithSubMenuToToolBar(houdiniToolbarIdentifier, "o3de.houdini.nodesync.send", EditorIdentifiers::PlayGameMenuIdentifier, 400);
+            //m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 500);
+            //m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.action.game.simulate", 600);
+        }
+
     }
 
     void HoudiniEngineEditorSystemComponent::NotifyRegisterViews()
@@ -252,7 +404,6 @@ namespace HoudiniEngine
         if (m_houdiniInstance != nullptr && m_houdiniInstance->GetInputNodeManager() != nullptr && GetIEditor()->IsInGameMode() == false)
         {
             m_houdiniInstance->GetInputNodeManager()->OnTick(deltaTime, time);
-            //m_houdiniInstance->OnTick(deltaTime, time);
 
             int percent, assetsInQueue = 0;
             AZStd::string text;

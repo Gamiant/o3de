@@ -77,6 +77,8 @@
    </layout>
   </widget>
  </widget>
- <resources/>
+  <resources>
+    <include location="HoudiniResources.qrc"/>
+  </resources>
  <connections/>
 </ui>

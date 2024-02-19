@@ -13,6 +13,11 @@
 #include <Components/HoudiniTerrainComponent.h>
 #include <Components/HoudiniCurveAttributeComponent.h>
 
+void InitHoudiniEngineResources()
+{
+    Q_INIT_RESOURCE(HoudiniResources);
+}
+
 namespace HoudiniEngine
 {
     class HoudiniEngineEditorModule
@@ -24,6 +29,8 @@ namespace HoudiniEngine
 
         HoudiniEngineEditorModule()
         {
+            InitHoudiniEngineResources();
+
             // Push results of [MyComponent]::CreateDescriptor() into m_descriptors here.
             // Add ALL components descriptors associated with this gem to m_descriptors.
             // This will associate the AzTypeInfo information for the components with the the SerializeContext, BehaviorContext and EditContext.

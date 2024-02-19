@@ -166,6 +166,162 @@ namespace HoudiniEngine
         return AzToolsFramework::GetRegistry<bool>(SyncHoudiniViewport, true);
     }
 
+    // NodeSyncSettings ////////////////////////////////////////////////////////////////
 
+    void NodeSyncSettings::SetKeepWorldTransform(bool keepWorldTransform)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(KeepWorldTransform, keepWorldTransform);
+        }
+    }
+
+    bool NodeSyncSettings::GetKeepWorldTransform() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(KeepWorldTransform, true);
+    }
+
+    void NodeSyncSettings::SetPackGeometryBeforeMerge(bool pack)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(PackGeometryBeforeMerge, pack);
+        }
+    }
+
+    bool NodeSyncSettings::GetPackGeometryBeforeMerge() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(PackGeometryBeforeMerge, false);
+    }
+
+    void NodeSyncSettings::SetExportInputAsReferences(bool exportValue)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(ExportInputAsReferences, exportValue);
+        }
+    }
+
+    bool NodeSyncSettings::GetExportInputAsReferences() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(ExportInputAsReferences, false);
+    }
+
+    void NodeSyncSettings::SetExportLODs(bool exportValue)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(ExportLODs, exportValue);
+        }
+    }
+
+    bool NodeSyncSettings::GetExportLODs() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(ExportLODs, false);
+    }
+
+    void NodeSyncSettings::SetExportSockets(bool exportValue)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(ExportSockets, exportValue);
+        }
+    }
+
+    bool NodeSyncSettings::GetExportSockets() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(ExportSockets, false);
+    }
+
+    void NodeSyncSettings::SetExportColliders(bool exportValue)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(ExportColliders, exportValue);
+        }
+    }
+
+    bool NodeSyncSettings::GetExportColliders() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(ExportColliders, false);
+    }
+
+    void NodeSyncSettings::SetExportMaterialParams(bool exportValue)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(ExportMaterialParams, exportValue);
+        }
+    }
+
+    bool NodeSyncSettings::GetExportMaterialParams() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(ExportMaterialParams, false);
+    }
+
+    void NodeSyncSettings::SetMergeSplineMeshComponents(bool merge)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(MergeSplineMeshComponents, merge);
+        }
+    }
+
+    bool NodeSyncSettings::GetMergeSplineMeshComponents() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(MergeSplineMeshComponents, true);
+    }
+
+    void NodeSyncSettings::SetExportLevelInstanceContent(bool exportValue)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(ExportLevelInstanceContent, exportValue);
+        }
+    }
+
+    bool NodeSyncSettings::GetExportLevelInstanceContent() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(ExportLevelInstanceContent, true);
+    }
+
+    void NodeSyncSettings::SetDirectlyConnectHDAsInHoudini(bool directlyConnect)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(DirectlyConnectHDAsAsInHoudini, directlyConnect);
+        }
+    }
+
+    bool NodeSyncSettings::GetDirectlyConnectHDAsInHoudini() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(DirectlyConnectHDAsAsInHoudini, true);
+    }
+
+    void NodeSyncSettings::SetUseLegacyInputCurves(bool useLegacyInputCurves)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(UseLegacyInputCurves, useLegacyInputCurves);
+        }
+    }
+
+    bool NodeSyncSettings::GetUseLegacyInputCurves() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(UseLegacyInputCurves, true);
+    }
+
+    void NodeSyncSettings::SetSplineResolution(float splineResolution)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(SplineResolution, splineResolution);
+        }
+    }
+
+    float NodeSyncSettings::GetSplineResolution() const
+    {
+        return AzToolsFramework::GetRegistry<double>(SplineResolution, 50.0);
+    }
 
 }
