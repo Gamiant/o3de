@@ -16,11 +16,6 @@
 #include <IEditor.h>
 #include <Settings.h>
 
-#if defined(AZ_PLATFORM_WINDOWS)
-#include <Windows.h>
-#endif
-
-
 #include <AzToolsFramework/Entity/EditorEntityInfoBus.h>
 
 #define HDA_MAX_MB_SIZE 20.0

@@ -16,10 +16,6 @@
 
 #include <ISystem.h>
 
-#if defined(AZ_PLATFORM_WINDOWS)
-#include <Windows.h>
-#endif
-
 #include <QApplication>
 #include <QClipboard>
 #include <QMimeData>

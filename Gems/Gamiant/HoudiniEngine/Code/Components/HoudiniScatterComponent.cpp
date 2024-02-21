@@ -23,10 +23,6 @@
 #include <HAPI/HAPI.h>
 #include <ISystem.h>
 
-#if defined(AZ_PLATFORM_WINDOWS)
-#include <Windows.h>
-#endif
-
 #include <AzCore/Slice/SliceAsset.h>
 
 namespace HoudiniEngine

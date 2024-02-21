@@ -13,6 +13,7 @@
 #include <AzCore/Settings/SettingsRegistry.h>
 #include <AzCore/Settings/SettingsRegistryMergeUtils.h>
 #include <AzCore/EBus/EBus.h>
+#include <HoudiniEngine/HoudiniEngineBus.h>
 
 namespace HoudiniEngine
 {
@@ -68,13 +69,6 @@ namespace HoudiniEngine
             HoudiniToO3DE,
             O3DEToHoudini,
             Both
-        };
-
-        enum class ESessionStatus : AZ::u8
-        {
-            Offline,
-            Connecting,
-            Ready
         };
 
         SessionSettings();
@@ -148,7 +142,7 @@ namespace HoudiniEngine
 
     struct SessionNotifications : public AZ::EBusTraits
     {
-        virtual void OnSessionStatusChange(SessionSettings::ESessionStatus sessionStatus) = 0;
+        virtual void OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus) = 0;
     };
     using SessionNotificationBus = AZ::EBus<SessionNotifications>;
 

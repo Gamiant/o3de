@@ -2,6 +2,11 @@
     "Amazon": {
         "AssetProcessor": {
             "Settings": {
+                "RC Houdini Digital Asset": {
+                  "glob": "*.hda",
+                  "params": "copy",
+                  "productAssetType": "{B9776D29-2A0B-46B7-8B27-8F753354AAFA}"
+                },
                 "ScanFolder HoudiniEngine/Assets": {
                     "watch": "@GEMROOT:HoudiniEngine@/Assets",
                     "recursive": 1,

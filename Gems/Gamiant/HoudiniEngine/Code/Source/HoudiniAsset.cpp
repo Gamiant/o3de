@@ -10,6 +10,33 @@
 
 namespace HoudiniEngine
 {
+
+    HoudiniDigitalAssetHandler::HoudiniDigitalAssetHandler()
+        : AzFramework::GenericAssetHandler<HoudiniDigitalAsset>(
+            HoudiniDigitalAsset::DisplayName,
+            HoudiniDigitalAsset::Group,
+            HoudiniDigitalAsset::Extension)
+    {
+    }
+
+    AZ::Data::AssetHandler::LoadResult HoudiniDigitalAssetHandler::LoadAssetData(
+        const AZ::Data::Asset<AZ::Data::AssetData>& asset,
+        AZStd::shared_ptr<AZ::Data::AssetDataStream> stream,
+        [[maybe_unused]] const AZ::Data::AssetFilterCB& assetLoadFilterCB)
+    {
+        HoudiniDigitalAsset* assetData = asset.GetAs<HoudiniDigitalAsset>();
+        if (assetData && stream->GetLength() > 0)
+        {
+            assetData->m_data.resize(stream->GetLength());
+            stream->Read(stream->GetLength(), assetData->m_data.data());
+
+            return AZ::Data::AssetHandler::LoadResult::LoadComplete;
+        }
+
+        return AZ::Data::AssetHandler::LoadResult::Error;
+    }
+
+
     HoudiniAsset::HoudiniAsset(IHoudini* hou, HAPI_AssetLibraryId id, AZStd::string hdaFile, AZStd::string hdaName) :
         m_hou(hou)
         , m_id(id)

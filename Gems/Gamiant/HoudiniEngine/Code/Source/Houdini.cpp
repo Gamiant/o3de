@@ -258,8 +258,10 @@ namespace HoudiniEngine
 
         ConfigureSession();
 
-        m_sessionStatus = SessionSettings::ESessionStatus::Ready;
+        m_sessionStatus = SessionRequests::ESessionStatus::Ready;
         SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+
+        NodeSyncRequestBus::Handler::BusConnect();
 
         return true;
     }
@@ -393,7 +395,7 @@ namespace HoudiniEngine
         // We'll connect to the system tick bus where we'll try to create a session while Houdini loads
         m_startSyncTime = std::chrono::steady_clock::now();
         m_startingSession = true;
-        m_sessionStatus = SessionSettings::ESessionStatus::Connecting;
+        m_sessionStatus = SessionRequests::ESessionStatus::Connecting;
         SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
     }
 
@@ -451,8 +453,15 @@ namespace HoudiniEngine
 
                 ConfigureSession();
 
-                m_sessionStatus = SessionSettings::ESessionStatus::Ready;
+                if (!InitializeHAPISession())
+                {
+                    AZ_Error("Houdini", false, "Failed to initialize Houdini Engine");
+                }
+
+                m_sessionStatus = SessionRequests::ESessionStatus::Ready;
                 SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+
+                NodeSyncRequestBus::Handler::BusConnect();
 
                 m_startingSession = false;
             }
@@ -488,8 +497,10 @@ namespace HoudiniEngine
         m_session.id = -1;
         m_session.type = HAPI_SESSION_MAX;
 
-        m_sessionStatus = SessionSettings::ESessionStatus::Offline;
+        m_sessionStatus = SessionRequests::ESessionStatus::Offline;
         SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+
+        NodeSyncRequestBus::Handler::BusDisconnect();
 
         AZ_Info("Houdini", "Houdini Engine Session Stopped\n");
     }
@@ -546,6 +557,20 @@ namespace HoudiniEngine
     HAPI_Session* Houdini::GetSessionPtr()
     {
         return &m_session;
+    }
+
+    SessionRequests::ESessionStatus Houdini::GetSessionStatus()
+    {
+        return m_sessionStatus;
+    }
+
+    void Houdini::SendToHoudini()
+    {
+        Test();
+    }
+
+    void Houdini::FetchFromHoudini()
+    {
     }
 
     void Houdini::ExecuteCommand(AZ::EntityId newId, AZStd::function<bool()> functionToCall)
@@ -1150,7 +1175,7 @@ namespace HoudiniEngine
         HAPI_NodeId nodeId = -1;
         HAPI_NodeId parentId = -1;
 
-        if (parent != nullptr || parent == m_rootNode.get())
+        if (parent != nullptr && parent == m_rootNode.get())
         {
             parentId = parent->GetId();
         }
@@ -1333,8 +1358,13 @@ namespace HoudiniEngine
         auto err = GetLastHoudiniError();
 
         HoudiniNodePtr paintCanNode = CreateNode("Object/MetalRail", "MyMetalRail");
-        HoudiniNodePtr paintCanNode2 = CreateNode("Object/MetalRail", "MyMetalRail_clone");
+        //HoudiniNodePtr paintCanNode2 = CreateNode("Object/MetalRail", "MyMetalRail_clone");
         HoudiniNodePtr curve = CreateNode("sop/curve", "NURBS");
+
+        if (!curve)
+        {
+            return;
+        }
 
         HAPI_NodeId curveNode = curve->GetId();
 

@@ -7,74 +7,62 @@
  */
 
 
-#include <Source/UI/ui_HoudiniConfiguration.h>
-#include "HoudiniConfiguration.h"
+#include <Source/UI/ui_HoudiniNodeSync.h>
 
-#include <HoudiniEngine/HoudiniApi.h>
+#include "HoudiniNodeSync.h"
+
 #include <HoudiniEngine/HoudiniEngineBus.h>
-#include "Components/HoudiniNodeComponentConfig.h"
-#include <HoudiniCommon.h>
-
-#include <QtUtilWin.h>
-#include <QFile>
-#include <QSpinBox>
-#include <QDoubleSpinBox>
-#include <QPushButton>
-#include <QJsonDocument>
-#include <QSettings>
-
-#include <QPushButton>
-#include <QStringListModel>
-#include <HoudiniSettings.h>
-
 
 namespace HoudiniEngine
 {
     //////////////////////////////////////////////////////////////////////////
-    HoudiniConfiguration::HoudiniConfiguration()
+    HoudiniNodeSync::HoudiniNodeSync()
         : QWidget(nullptr)
-        , m_ui(new Ui::HoudiniConfiguration())
+        , m_ui(new Ui::HoudiniNodeSync())
     {
         m_ui->setupUi(this);
 
-        m_ui->cbSessionType->addItem(QString("Named Pipe"));
-        m_ui->cbSessionType->addItem(QString("TCP Socket"));
+        connect(m_ui->pbSendToHoudini, &QPushButton::clicked, this, &HoudiniNodeSync::SendToHoudini);
+        connect(m_ui->pbFetchFromHoudini, &QPushButton::clicked, this, &HoudiniNodeSync::FetchFromHoudini);
 
-        connect(m_ui->pbApply, &QPushButton::clicked, this, &HoudiniConfiguration::Apply);
-        connect(m_ui->pbReset, &QPushButton::clicked, this, &HoudiniConfiguration::Reset);
+        SessionRequests::ESessionStatus status = SessionRequests::ESessionStatus::Offline;
+        SessionRequestBus::BroadcastResult(status, &SessionRequests::GetSessionStatus);
+        OnSessionStatusChange(status);
+
+        SessionNotificationBus::Handler::BusConnect();
     }
     
-    HoudiniConfiguration::~HoudiniConfiguration()
+    HoudiniNodeSync::~HoudiniNodeSync()
     {
-
+        SessionNotificationBus::Handler::BusDisconnect();
     }
 
-    void HoudiniConfiguration::Apply()
+    void HoudiniNodeSync::OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus)
     {
-        SessionSettings* settings = nullptr;
-        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
-        if (settings)
+        switch (sessionStatus)
         {
-            settings->SetServerHost(m_ui->pteServerHost->toPlainText().toUtf8().data());
-            settings->SetServerPort(m_ui->pteServerPort->toPlainText().toInt());
-            settings->SetNamedPipe(m_ui->ptePipeName->toPlainText().toUtf8().data());
-            settings->SetSessionType(m_ui->cbSessionType->currentIndex());
-        }
-
-    }
-
-    void HoudiniConfiguration::Reset()
-    {
-        SessionSettings* settings = nullptr;
-        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
-        if (settings)
-        {
-            settings->SetServerHost("localhost");
-            settings->SetServerPort(9090);
-            settings->SetNamedPipe("o3de_houdini");
-            settings->SetSessionType(0);
+        case SessionRequests::ESessionStatus::Offline:
+            m_ui->lbStatus->setText("Not Connected to Houdini");
+            break;
+        case SessionRequests::ESessionStatus::Connecting:
+            m_ui->lbStatus->setText("Connection in progress...");
+            break;
+        case SessionRequests::ESessionStatus::Ready:
+            m_ui->lbStatus->setText("Connected to Houdini");
+            break;
         }
     }
+
+    void HoudiniNodeSync::SendToHoudini()
+    {
+        NodeSyncRequestBus::Broadcast(&NodeSyncRequests::SendToHoudini);
+    }
+
+    void HoudiniNodeSync::FetchFromHoudini()
+    {
+        NodeSyncRequestBus::Broadcast(&NodeSyncRequests::FetchFromHoudini);
+    }
+
 }
 
-#include <UI/moc_HoudiniConfiguration.cpp>
+#include <UI/moc_HoudiniNodeSync.cpp>

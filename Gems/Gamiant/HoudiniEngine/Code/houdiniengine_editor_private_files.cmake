@@ -108,5 +108,9 @@ set(FILES
     Source/HoudiniViewport.h
     Source/HoudiniViewport.cpp
     Source/HoudiniResources.qrc
-
+    Source/UI/HoudiniNodeSync.h
+    Source/UI/HoudiniNodeSync.cpp
+    Source/UI/HoudiniNodeSync.ui
 )
+
+

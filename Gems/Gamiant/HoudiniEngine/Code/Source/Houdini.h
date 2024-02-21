@@ -35,6 +35,7 @@ namespace HoudiniEngine
         : public IHoudini
         , public IEditorNotifyListener
         , SessionRequestBus::Handler
+        , NodeSyncRequestBus::Handler
         , AZ::SystemTickBus::Handler
         , AZ::TickBus::Handler
     {
@@ -43,7 +44,7 @@ namespace HoudiniEngine
 
         SessionSettings::ESessionType m_sessionType = SessionSettings::ESessionType::TCPSocket;
         SessionSettings::EViewportSync m_viewportSync = SessionSettings::EViewportSync::Disabled;
-        SessionSettings::ESessionStatus m_sessionStatus = SessionSettings::ESessionStatus::Offline;
+        SessionRequests::ESessionStatus m_sessionStatus = SessionRequests::ESessionStatus::Offline;
 
         AZStd::string m_namedPipe;
         AZStd::string m_serverHost;
@@ -246,7 +247,7 @@ namespace HoudiniEngine
         
         bool IsActive() override
         { 
-            return m_isActive && m_globalStateVar->GetIVal() == 1;
+            return m_sessionStatus == SessionRequests::ESessionStatus::Ready;
         }
 
         InputNodeManagerPtr GetInputNodeManager() override
@@ -267,6 +268,12 @@ namespace HoudiniEngine
             void RestartSession() override;
             void SetViewportSync(int index) override;
             HAPI_Session* GetSessionPtr() override;
+            SessionRequests::ESessionStatus GetSessionStatus() override;
+            ///
+
+            // NodeSyncRequestBus...
+            void SendToHoudini() override;
+            void FetchFromHoudini() override;
             ///
 
             // SystemTickBus...

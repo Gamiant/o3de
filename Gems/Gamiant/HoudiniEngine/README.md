@@ -1,20 +1,12 @@
 # HoudiniEngine
 
-This gem enables the use to use Houdini in O3DE. This is a port from Houdini's HoudiniEngine Unreal plugin. 
+This Gem enables the use of [Houdini](https://www.sidefx.com/products/houdini) with [O3DE](http://www.o3de.org).
 
-# Supports: Tested on Houdini 19.5.0.605, Windows 10/11
+When this gem is enabled in an O3DE project, a menu item named "Houdini" will appear on O3DE's main menu as well as a toolbar that provides shortcuts to some of the most frequently used features.
 
-### **Notes**
-- Make sure to have the necessary Houdini license to be able to run the gem. i.e. Houdini FX license.
-- Currently supports simple loading of HDA files and not all functionalities are ported yet. This is supported via the HoudiniDigitalAsset component.
-- HDAs with Spline/Curve are detected and presented as a Spline Component that user can modify.
-- Has basic Material support.
-- Baking to FBX is supported. An entity with a Mesh component is created upon baking.
+The first step in using Houdini in O3DE is to open a Houdini Session.
 
-### Loading HDAs
-- All HDAs needed to be in a specific folder under HoudiniEngine/DigitalAssets. There are initial work to support loading via the File Browser.
-- Upon gem startup all HDAs are loaded initially. 
-- Create an entity and add a HoudiniDigitalAsset component.
-- Under the operator field choose the HDA object that you want to load.
-- After loading, a model should be rendering on your editor.
+If Houdini is not already running, select "Open Houdini Session Sync" from the Houdini Configuration panel. If Houdini is already running, make sure to enable Houdini Engine, then in O3DE select "Start Session".
 
+
+*Houdini Engine and the Houdini logo are Trademarks of Side Effects Software Inc. registered in the USA and other countries.*

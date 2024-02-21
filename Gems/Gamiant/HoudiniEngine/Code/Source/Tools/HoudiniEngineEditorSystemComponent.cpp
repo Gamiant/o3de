@@ -23,12 +23,9 @@
 #include <UI/HoudiniStatusPanel.h>
 #include <UI/HoudiniConfiguration.h>
 #include <UI/HoudiniSessionControls.h>
-#include <UI/Widgets/ViewportSyncWidget.h>
+#include <UI/HoudiniNodeSync.h>
 
-#if defined(AZ_PLATFORM_WINDOWS)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif
+#include <UI/Widgets/ViewportSyncWidget.h>
 
 #include <QFile>
 #include <QTextStream>
@@ -83,6 +80,7 @@ namespace HoudiniEngine
         delete m_houdiniStatusPanel;
         delete m_configuration;
         delete m_sessionControls;
+        delete m_nodeSync;
     }
 
     void HoudiniEngineEditorSystemComponent::Activate()
@@ -99,6 +97,9 @@ namespace HoudiniEngine
         m_menuManagerInterface = AZ::Interface<AzToolsFramework::MenuManagerInterface>::Get();
         m_toolBarManagerInterface = AZ::Interface<AzToolsFramework::ToolBarManagerInterface>::Get();
         m_actionManagerInternalInterface = AZ::Interface<AzToolsFramework::ActionManagerInternalInterface>::Get();
+
+        m_hdaHandler = new HoudiniDigitalAssetHandler();
+        m_hdaHandler->Register();
     }
 
     void HoudiniEngineEditorSystemComponent::Deactivate()
@@ -110,14 +111,17 @@ namespace HoudiniEngine
         AzToolsFramework::EditorEvents::Bus::Handler::BusDisconnect();
         AZ::EntitySystemBus::Handler::BusDisconnect();
         m_houdiniInstance.reset();
+
+        m_hdaHandler->Unregister();
+        delete m_hdaHandler;
     }
 
-    void HoudiniEngineEditorSystemComponent::OnSessionStatusChange(SessionSettings::ESessionStatus sessionStatus)
+    void HoudiniEngineEditorSystemComponent::OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus)
     {
-        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.open")->setEnabled(sessionStatus == SessionSettings::ESessionStatus::Offline);
-        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.start")->setEnabled(sessionStatus == SessionSettings::ESessionStatus::Offline);
-        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.stop")->setEnabled(sessionStatus == SessionSettings::ESessionStatus::Ready);
-        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.restart")->setEnabled(sessionStatus == SessionSettings::ESessionStatus::Ready);
+        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.open")->setEnabled(sessionStatus == SessionRequests::ESessionStatus::Offline);
+        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.start")->setEnabled(sessionStatus == SessionRequests::ESessionStatus::Offline);
+        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.stop")->setEnabled(sessionStatus == SessionRequests::ESessionStatus::Ready);
+        m_actionManagerInternalInterface->GetAction("o3de.houdini.session.restart")->setEnabled(sessionStatus == SessionRequests::ESessionStatus::Ready);
     }
 
     void HoudiniEngineEditorSystemComponent::ConfigureEditorActions()
@@ -127,66 +131,101 @@ namespace HoudiniEngine
         static constexpr const char* houdiniStatusActionIdentifier = "o3de.menu.editor.houdini.status";
         static constexpr const char* houdiniConfigurationActionIdentifier = "o3de.menu.editor.houdini.config";
         static constexpr const char* houdiniSessionActionIdentifier = "o3de.menu.editor.houdini.session";
+        static constexpr const char* houdiniNodeSyncActionIdentifier = "o3de.menu.editor.houdini.nodeSync";
 
         AzToolsFramework::MenuProperties menuProperties;
         menuProperties.m_name = "Houdini";
         auto outcome = m_menuManagerInterface->RegisterMenu(houdiniMenuIdentifier, menuProperties);
         AZ_Assert(outcome.IsSuccess(), "Failed to register '%s' Menu", houdiniMenuIdentifier);
 
-
         AzToolsFramework::ActionProperties actionProperties;
-        actionProperties.m_name = "Configuration";
-        actionProperties.m_description = "Configure Houdini";
-        actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
 
-        m_actionManagerInterface->RegisterAction(
-            EditorIdentifiers::MainWindowActionContextIdentifier,
-            houdiniConfigurationActionIdentifier,
-            actionProperties,
-            []
-            {
-                AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniConfiguration");
-            }
-        );
+        // Configuration
+        {
+            actionProperties.m_name = "Configuration";
+            actionProperties.m_description = "Configure Houdini";
+            actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
 
-        outcome = m_menuManagerInterface->AddActionToMenu(houdiniMenuIdentifier, houdiniConfigurationActionIdentifier, 0);
-        AZ_Assert(outcome.IsSuccess(), "Failed to register '%s' Menu", houdiniConfigurationActionIdentifier);
+            m_actionManagerInterface->RegisterAction(
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                houdiniConfigurationActionIdentifier,
+                actionProperties,
+                []
+                {
+                    AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniConfiguration");
+                }
+            );
 
-        actionProperties.m_name = "Session Controls";
-        actionProperties.m_description = "Houdini Session Controls";
-        actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
+            outcome = m_menuManagerInterface->AddActionToMenu(houdiniMenuIdentifier, houdiniConfigurationActionIdentifier, 0);
+            AZ_Assert(outcome.IsSuccess(), "Failed to register '%s' Menu", houdiniConfigurationActionIdentifier);
+        }
 
-        m_actionManagerInterface->RegisterAction(
-            EditorIdentifiers::MainWindowActionContextIdentifier,
-            houdiniSessionActionIdentifier,
-            actionProperties,
-            []
-            {
-                AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniSessionControls");
-            }
-        );
+        // Session Controls
+        {
+            actionProperties.m_name = "Session Controls";
+            actionProperties.m_description = "Houdini Session Controls";
+            actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
+
+            m_actionManagerInterface->RegisterAction(
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                houdiniSessionActionIdentifier,
+                actionProperties,
+                []
+                {
+                    AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniSessionControls");
+                }
+            );
+
+            outcome = m_menuManagerInterface->AddActionToMenu(houdiniMenuIdentifier, houdiniSessionActionIdentifier, 100);
+            AZ_Assert(outcome.IsSuccess(), "Failed to register '%s' Menu", houdiniSessionActionIdentifier);
+        }
+
+        // Status Panel
+        {
+
+            actionProperties.m_name = "Status";
+            actionProperties.m_description = "Houdini Status Panel";
+            actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
+
+            m_actionManagerInterface->RegisterAction(
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                houdiniStatusActionIdentifier,
+                actionProperties,
+                []
+                {
+                    AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniStatusPanel");
+                }
+            );
 
 
-        outcome = m_menuManagerInterface->AddActionToMenu(houdiniMenuIdentifier, houdiniSessionActionIdentifier, 100);
-        AZ_Assert(outcome.IsSuccess(), "Failed to register '%s' Menu", houdiniSessionActionIdentifier);
+            outcome = m_menuManagerInterface->AddActionToMenu(houdiniMenuIdentifier, houdiniStatusActionIdentifier, 200);
+            AZ_Assert(outcome.IsSuccess(), "Failed to register '%s' Menu", houdiniStatusActionIdentifier);
 
-        actionProperties.m_name = "Status";
-        actionProperties.m_description = "Houdini Status Panel";
-        actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
+        }
 
-        m_actionManagerInterface->RegisterAction(
-            EditorIdentifiers::MainWindowActionContextIdentifier,
-            houdiniStatusActionIdentifier,
-            actionProperties,
-            []
-            {
-                AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniStatusPanel");
-            }
-        );
+        // Node Sync
+        {
+
+            actionProperties.m_name = "Node Sync";
+            actionProperties.m_description = "Houdini Node Sync";
+            actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
+
+            m_actionManagerInterface->RegisterAction(
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                houdiniNodeSyncActionIdentifier,
+                actionProperties,
+                []
+                {
+                    AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::OpenViewPane, "HoudiniNodeSync");
+                }
+            );
 
 
-        outcome = m_menuManagerInterface->AddActionToMenu(houdiniMenuIdentifier, houdiniStatusActionIdentifier, 200);
-        AZ_Assert(outcome.IsSuccess(), "Failed to register '%s' Menu", houdiniStatusActionIdentifier);
+            outcome = m_menuManagerInterface->AddActionToMenu(houdiniMenuIdentifier, houdiniNodeSyncActionIdentifier, 200);
+            AZ_Assert(outcome.IsSuccess(), "Failed to register '%s' Menu", houdiniNodeSyncActionIdentifier);
+
+            m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, houdiniMenuIdentifier, 580);
+        }
 
         m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, houdiniMenuIdentifier, 560);
 
@@ -311,7 +350,7 @@ namespace HoudiniEngine
             }
 
             SessionNotificationBus::Handler::BusConnect();
-            OnSessionStatusChange(SessionSettings::ESessionStatus::Offline);
+            OnSessionStatusChange(SessionRequests::ESessionStatus::Offline);
 
         }
     }
@@ -362,10 +401,12 @@ namespace HoudiniEngine
 
         m_configuration = new HoudiniConfiguration();
         m_sessionControls = new HoudiniSessionControls();
+        m_nodeSync = new HoudiniNodeSync();
 
         AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::RegisterViewPane, "HoudiniStatusPanel", "Houdini", viewOptions, [this](QWidget* /*unused*/) { return m_houdiniStatusPanel; });
         AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::RegisterViewPane, "HoudiniConfiguration", "Houdini", viewOptions, [this](QWidget* /*unused*/) { return m_configuration; });
         AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::RegisterViewPane, "HoudiniSessionControls", "Houdini", viewOptions, [this](QWidget* /*unused*/) { return m_sessionControls; });
+        AzToolsFramework::EditorRequestBus::Broadcast(&AzToolsFramework::EditorRequestBus::Events::RegisterViewPane, "HoudiniNodeSync", "Houdini", viewOptions, [this](QWidget* /*unused*/) { return m_nodeSync; });
 
     }
 

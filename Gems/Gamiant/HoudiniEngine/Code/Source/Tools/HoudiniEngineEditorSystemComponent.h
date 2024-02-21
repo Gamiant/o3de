@@ -39,6 +39,9 @@ namespace HoudiniEngine
     class HoudiniStatusPanel;
     class HoudiniConfiguration;
     class HoudiniSessionControls;
+    class HoudiniNodeSync;
+
+    class HoudiniDigitalAssetHandler;
 
     static constexpr const char* houdiniToolbarIdentifier = "o3de.toolbar.editor.houdini";
 
@@ -107,7 +110,7 @@ namespace HoudiniEngine
         ///
 
         // SessionNotificationBus...
-        void OnSessionStatusChange(SessionSettings::ESessionStatus sessionStatus) override;
+        void OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus) override;
         ///
 
 
@@ -146,6 +149,9 @@ namespace HoudiniEngine
         HoudiniStatusPanel* m_houdiniStatusPanel;
         HoudiniConfiguration* m_configuration;
         HoudiniSessionControls* m_sessionControls;
+        HoudiniNodeSync* m_nodeSync;
+
+        HoudiniDigitalAssetHandler* m_hdaHandler;
 
         void RegisterAction(const AZStd::string& actionIdentifier, const AZStd::string& contextIdentifier, const AZStd::string& name, const AZStd::string& description, const AZStd::string& category, const AZStd::string& iconPath, AzToolsFramework::ActionVisibility visibility, AZStd::function<void()> lambda);
 

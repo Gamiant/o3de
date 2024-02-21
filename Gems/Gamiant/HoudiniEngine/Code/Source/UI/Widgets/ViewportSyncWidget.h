@@ -26,15 +26,12 @@ namespace HoudiniEngine
     public:
         ViewportSyncWidget()
         {
-            // Create Label
             m_label = new QLabel(this);
             m_label->setText("Viewport Sync");
 
-            // Create ComboBox
             m_comboBox = new QComboBox(this);
             m_comboBox->setMinimumWidth(140);
 
-            // Follow the same order as the PrefabEditModeUXSetting enum.
             m_comboBox->addItem(QObject::tr("Disabled"));
             m_comboBox->addItem(QObject::tr("Houdini to O3DE"));
             m_comboBox->addItem(QObject::tr("O3DE to Houdini"));

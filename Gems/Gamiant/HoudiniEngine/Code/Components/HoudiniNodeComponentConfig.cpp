@@ -19,10 +19,6 @@
 
 #include <ISystem.h>
 
-#if defined(AZ_PLATFORM_WINDOWS)
-#include <Windows.h>
-#endif
-
 #include <AzToolsFramework/API/EntityCompositionRequestBus.h>
 #include <AzToolsFramework/Entity/EditorEntityContextBus.h>
 #include <AzToolsFramework/Entity/EditorEntityInfoBus.h>
