@@ -22,9 +22,10 @@
 #include <ActionManager/Action/ActionManagerInterface.h>
 #include <ActionManager/Menu/MenuManagerInterface.h>
 #include <ActionManager/ToolBar/ToolBarManagerInterface.h>
-
-#include <AzToolsFramework/ActionManager/ActionManagerRegistrationNotificationBus.h>
 #include <ActionManager/Action/ActionManagerInternalInterface.h>
+
+#include <AzToolsFramework/AssetBrowser/AssetBrowserBus.h>
+#include <AzToolsFramework/ActionManager/ActionManagerRegistrationNotificationBus.h>
 
 namespace AzToolsFramework
 {
@@ -55,6 +56,7 @@ namespace HoudiniEngine
         , AZ::TickBus::Handler
         , AzToolsFramework::EditorEvents::Bus::Handler
         , AzToolsFramework::ActionManagerRegistrationNotificationBus::Handler
+        , AzToolsFramework::AssetBrowser::AssetBrowserInteractionNotificationBus::Handler
     {
 
     public:
@@ -112,6 +114,13 @@ namespace HoudiniEngine
         // SessionNotificationBus...
         void OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus) override;
         ///
+
+        //  AzToolsFramework::AssetBrowser::AssetBrowserInteractionNotificationBus...
+        AzToolsFramework::AssetBrowser::SourceFileDetails GetSourceFileDetails(const char* fullSourceFileName) override;
+        void AddSourceFileCreators(const char* fullSourceFolderName, const AZ::Uuid& sourceUUID, AzToolsFramework::AssetBrowser::SourceFileCreatorList& creators) override;
+        void AddSourceFileOpeners(const char* fullSourceFileName, const AZ::Uuid& sourceUUID, AzToolsFramework::AssetBrowser::SourceFileOpenerList& openers) override;
+        ///
+
 
 
         void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;

@@ -64,17 +64,17 @@ namespace HoudiniEngine
                 ec->Class<HoudiniAssetComponent>("HoudiniDigitalAsset", "Houdini Digital Asset")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Houdini")
-                    ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("Game", 0x232b318c))
+                    ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ->Attribute(AZ::Edit::Attributes::Icon, "Editor/Icons/Houdini.png")
                     ->Attribute(AZ::Edit::Attributes::ViewportIcon, "Editor/Icons/Houdini.png")
                     ->Attribute(AZ::Edit::Attributes::RuntimeExportCallback, &HoudiniAssetComponent::ExportMeshComponent)
 
                     ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniAssetComponent::m_nodeExporter, "Material Settings", "")
-                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC("RefreshAttributesAndValues", 0xcbc2147c))
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues"))
 
                     ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniAssetComponent::m_config, "Houdini", "")
-                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC("RefreshAttributesAndValues", 0xcbc2147c))
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues"))
 
                     ->DataElement(0, &HoudiniAssetComponent::m_fbxConfig, "Bake Settings", "")
                     //->Attribute(AZ::Edit::Attributes::ChangeNotify, &EditorDebugDrawLineComponent::OnPropertyUpdate)
@@ -332,7 +332,8 @@ namespace HoudiniEngine
         float fUpdatePeriod{ 0.25f };
         if (gEnv && gEnv->pConsole)
         {
-            fUpdatePeriod = gEnv->pConsole->GetCVar("hou_update_period")->GetFVal();
+            //TODO-GMT: move to setting
+            //fUpdatePeriod = gEnv->pConsole->GetCVar("hou_update_period")->GetFVal();
         }
         fUpdatePeriod = (fUpdatePeriod < 0.01f || fUpdatePeriod >= 1.0f) ? 0.25f : fUpdatePeriod;
 

@@ -6,17 +6,90 @@
  *
  */
 
-#include <HoudiniCommon.h>
+#include <HoudiniAsset.h>
+#include <HoudiniEngine/HoudiniEngineBus.h>
 
 namespace HoudiniEngine
 {
 
     HoudiniDigitalAssetHandler::HoudiniDigitalAssetHandler()
-        : AzFramework::GenericAssetHandler<HoudiniDigitalAsset>(
-            HoudiniDigitalAsset::DisplayName,
-            HoudiniDigitalAsset::Group,
-            HoudiniDigitalAsset::Extension)
     {
+        Register();
+    }
+
+    HoudiniDigitalAssetHandler::~HoudiniDigitalAssetHandler()
+    {
+        Unregister();
+    }
+
+    void HoudiniDigitalAssetHandler::Register()
+    {
+        const bool assetManagerReady = AZ::Data::AssetManager::IsReady();
+        AZ_Error("HoudiniDigitalAssetHandler", assetManagerReady, "Asset manager isn't ready.");
+        if (assetManagerReady)
+        {
+            AZ::Data::AssetManager::Instance().RegisterHandler(this, AZ::AzTypeInfo<HoudiniDigitalAsset>::Uuid());
+        }
+
+        AZ::AssetTypeInfoBus::Handler::BusConnect(AZ::AzTypeInfo<HoudiniDigitalAsset>::Uuid());
+    }
+
+    void HoudiniDigitalAssetHandler::Unregister()
+    {
+        AZ::AssetTypeInfoBus::Handler::BusDisconnect();
+
+        if (AZ::Data::AssetManager::IsReady())
+        {
+            AZ::Data::AssetManager::Instance().UnregisterHandler(this);
+        }
+    }
+
+    // AZ::AssetTypeInfoBus
+    AZ::Data::AssetType HoudiniDigitalAssetHandler::GetAssetType() const
+    {
+        return AZ::AzTypeInfo<HoudiniDigitalAsset>::Uuid();
+    }
+
+    void HoudiniDigitalAssetHandler::GetAssetTypeExtensions(AZStd::vector<AZStd::string>& extensions)
+    {
+        extensions.push_back(HoudiniDigitalAsset::Extension);
+    }
+
+    const char* HoudiniDigitalAssetHandler::GetAssetTypeDisplayName() const
+    {
+        return "Houdini Digital Asset";
+    }
+
+    const char* HoudiniDigitalAssetHandler::GetBrowserIcon() const
+    {
+        return "Icons/Components/ColliderMesh.svg";
+    }
+
+    const char* HoudiniDigitalAssetHandler::GetGroup() const
+    {
+        return "Houdini";
+    }
+
+    AZ::Uuid HoudiniDigitalAssetHandler::GetComponentTypeId() const
+    {
+        return AZ::Uuid(HOUDINI_ASSET_COMPONENT_GUID);
+    }
+
+    bool HoudiniDigitalAssetHandler::CanCreateComponent([[maybe_unused]] const AZ::Data::AssetId& assetId) const
+    {
+        return true;
+    }
+
+    // AZ::Data::AssetHandler
+    AZ::Data::AssetPtr HoudiniDigitalAssetHandler::CreateAsset([[maybe_unused]] const AZ::Data::AssetId& id, const AZ::Data::AssetType& type)
+    {
+        if (type == AZ::AzTypeInfo<HoudiniDigitalAsset>::Uuid())
+        {
+            return aznew HoudiniDigitalAsset();
+        }
+
+        AZ_Error("HoudiniDigitalAssetHandler", false, "This handler deals only with Houdini Digital Asset (HDA) type.");
+        return nullptr;
     }
 
     AZ::Data::AssetHandler::LoadResult HoudiniDigitalAssetHandler::LoadAssetData(
@@ -24,17 +97,27 @@ namespace HoudiniEngine
         AZStd::shared_ptr<AZ::Data::AssetDataStream> stream,
         [[maybe_unused]] const AZ::Data::AssetFilterCB& assetLoadFilterCB)
     {
-        HoudiniDigitalAsset* assetData = asset.GetAs<HoudiniDigitalAsset>();
-        if (assetData && stream->GetLength() > 0)
+        const bool result = AZ::Utils::LoadObjectFromStreamInPlace<HoudiniDigitalAsset>(*stream, *asset.GetAs<HoudiniDigitalAsset>());
+        if (result == false)
         {
-            assetData->m_data.resize(stream->GetLength());
-            stream->Read(stream->GetLength(), assetData->m_data.data());
-
-            return AZ::Data::AssetHandler::LoadResult::LoadComplete;
+            AZ_Error(__FUNCTION__, false, "Failed to load asset");
+            return AssetHandler::LoadResult::Error;
         }
 
-        return AZ::Data::AssetHandler::LoadResult::Error;
+        return AssetHandler::LoadResult::LoadComplete;
     }
+
+    void HoudiniDigitalAssetHandler::DestroyAsset(AZ::Data::AssetPtr ptr)
+    {
+        delete ptr;
+    }
+
+    void HoudiniDigitalAssetHandler::GetHandledAssetTypes(AZStd::vector<AZ::Data::AssetType>& assetTypes)
+    {
+        assetTypes.push_back(AZ::AzTypeInfo<HoudiniDigitalAsset>::Uuid());
+    }
+
+
 
 
     HoudiniAsset::HoudiniAsset(IHoudini* hou, HAPI_AssetLibraryId id, AZStd::string hdaFile, AZStd::string hdaName) :

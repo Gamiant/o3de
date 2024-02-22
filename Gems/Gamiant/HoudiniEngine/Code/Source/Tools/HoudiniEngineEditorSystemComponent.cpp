@@ -85,6 +85,7 @@ namespace HoudiniEngine
 
     void HoudiniEngineEditorSystemComponent::Activate()
     {
+        //AzToolsFramework::AssetBrowser::AssetBrowserInteractionNotificationBus::Handler::BusConnect();
         AzToolsFramework::ActionManagerRegistrationNotificationBus::Handler::BusConnect();
         AzToolsFramework::EditorEvents::Bus::Handler::BusConnect();
         AZ::TickBus::Handler::BusConnect();
@@ -99,11 +100,12 @@ namespace HoudiniEngine
         m_actionManagerInternalInterface = AZ::Interface<AzToolsFramework::ActionManagerInternalInterface>::Get();
 
         m_hdaHandler = new HoudiniDigitalAssetHandler();
-        m_hdaHandler->Register();
+
     }
 
     void HoudiniEngineEditorSystemComponent::Deactivate()
     {
+        //AzToolsFramework::AssetBrowser::AssetBrowserInteractionNotificationBus::Handler::BusDisconnect();
         SettingsBus::Handler::BusDisconnect();
         AzToolsFramework::ActionManagerRegistrationNotificationBus::Handler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
@@ -112,7 +114,6 @@ namespace HoudiniEngine
         AZ::EntitySystemBus::Handler::BusDisconnect();
         m_houdiniInstance.reset();
 
-        m_hdaHandler->Unregister();
         delete m_hdaHandler;
     }
 
@@ -957,6 +958,42 @@ namespace HoudiniEngine
         newEntity->Activate();
 
         return newEntity;
+    }
+
+    AzToolsFramework::AssetBrowser::SourceFileDetails HoudiniEngineEditorSystemComponent::GetSourceFileDetails(const char* fullSourceFileName)
+    {
+        if (AZStd::wildcard_match("*.hda", fullSourceFileName))
+        {
+            // TODO-GMT: Get svg for HDA assets
+            return AzToolsFramework::AssetBrowser::SourceFileDetails("../Editor/Icons/AssetBrowser/DefaultProduct_16.svg");
+        }
+
+        // not one of our types.
+        return AzToolsFramework::AssetBrowser::SourceFileDetails();
+    }
+
+    void HoudiniEngineEditorSystemComponent::AddSourceFileCreators(
+        [[maybe_unused]] const char* fullSourceFolderName, [[maybe_unused]] const AZ::Uuid& sourceUUID, [[maybe_unused]] AzToolsFramework::AssetBrowser::SourceFileCreatorList& creators)
+    {
+
+    }
+
+    void HoudiniEngineEditorSystemComponent::AddSourceFileOpeners([[maybe_unused]] const char* fullSourceFileName, [[maybe_unused]] const AZ::Uuid& sourceUUID, [[maybe_unused]] AzToolsFramework::AssetBrowser::SourceFileOpenerList& openers)
+    {
+        using namespace AzToolsFramework;
+        using namespace AzToolsFramework::AssetBrowser;
+
+        if (AZ::IO::Path(fullSourceFileName).Extension() == HoudiniDigitalAsset::Extension)
+        {
+            auto hdaOpenInEditorCallback = []([[maybe_unused]] const char* fullSourceFileNameInCall, [[maybe_unused]] const AZ::Uuid& sourceUUIDInCall)
+                {
+                };
+
+            openers.push_back({ "O3DE_HoudiniHDA"
+                , "Open In HDA in Houdini..."
+                , QIcon(HoudiniDigitalAsset::Icon)
+                , hdaOpenInEditorCallback });
+        }
     }
 
 }
