@@ -93,21 +93,21 @@ namespace HoudiniEngine
 
     void InputNodeManager::OnTick(float /*deltaTime*/, AZ::ScriptTimePoint /*time*/)
     {
-        if (m_hou != nullptr && m_hou->IsActive())
+        if (m_houdini != nullptr && m_houdini->IsActive())
         {
             for (auto& pair : m_inputCache)
             {
                 if (pair.second.m_dirty && pair.second.m_cooking == false)
                 {                    
                     pair.second.m_cooking = true;
-                    m_hou->ExecuteCommand(pair.first, [this, &pair]()
+                    m_houdini->ExecuteCommand(pair.first, [this, &pair]()
                     {
                         CreateInputNodeFromSpline(pair.first);
                         pair.second.m_cooking = false;
                         return true;
                     });
 
-                    m_hou->RaiseCommandPriority(pair.first);
+                    m_houdini->RaiseCommandPriority(pair.first);
                 }
             }
         }
@@ -121,14 +121,14 @@ namespace HoudiniEngine
         }
 
         //Check to see if it is a houdini node too!
-        auto* otherEntity = m_hou->LookupFindEntity(value);
+        auto* otherEntity = m_houdini->LookupFindEntity(value);
 
         if (otherEntity != nullptr)
         {
-            AZ::SplinePtr spline = m_hou->LookupSpline(value);
+            AZ::SplinePtr spline = m_houdini->LookupSpline(value);
 
             auto* houdiniAssetComponent = otherEntity->FindComponent<HoudiniEngine::HoudiniAssetComponent>();
-            // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
+
             auto* houdiniTerrainComponent = otherEntity->FindComponent<HoudiniEngine::HoudiniTerrainComponent>();
             const AZ::Uuid meshComponentUuid{ "{DCE68F6E-2E16-4CB4-A834-B6C2F900A7E9}" };
             AZ::Component* meshComponent = otherEntity->FindComponent(meshComponentUuid);
@@ -136,10 +136,11 @@ namespace HoudiniEngine
             if (houdiniTerrainComponent != nullptr)
             {
                 //Must be first, otherwise this can and will recreate a recursive input
-                HAPI_NodeId valueId = m_hou->GetInputNodeManager()->CreateInputNodeFromTerrain(value);
+                HAPI_NodeId valueId = m_houdini->GetInputNodeManager()->CreateInputNodeFromTerrain(value);
                 return valueId;
             }
-            else if (houdiniAssetComponent != nullptr)
+            else
+            if (houdiniAssetComponent != nullptr)
             {
                 IHoudiniNode* otherNode = houdiniAssetComponent->GetNode();
                 if (otherNode != nullptr)
@@ -152,15 +153,16 @@ namespace HoudiniEngine
                     return HOUDINI_NOT_READY_ID;
                 }
             }            
-            else if (spline != nullptr) 
+            else
+            if (spline != nullptr) 
             {
                 HAPI_NodeId valueId = CreateInputNodeFromSpline(value);
                 return valueId;
             }
-            // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
-            else if (meshComponent != nullptr)
+            else
+            if (meshComponent != nullptr)
             {
-                HAPI_NodeId valueId = m_hou->GetInputNodeManager()->CreateInputNodeFromMesh(value);
+                HAPI_NodeId valueId = m_houdini->GetInputNodeManager()->CreateInputNodeFromMesh(value);
                 return valueId;
             }
 
@@ -171,7 +173,7 @@ namespace HoudiniEngine
 
     HAPI_NodeId InputNodeManager::CreateInputNodeFromSpline(const AZ::EntityId& id)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         HAPI_NodeId previousInputNode = -1;
         auto previousInputNodeItr = m_inputCache.find(id);
@@ -187,10 +189,10 @@ namespace HoudiniEngine
             }
         }
 
-        const HAPI_Session& session = m_hou->GetSession();
+        const HAPI_Session& session = m_houdini->GetSession();
 
-        AZ::Entity* entity = m_hou->LookupFindEntity(id);
-        AZ::SplinePtr spline = m_hou->LookupSpline(id);
+        AZ::Entity* entity = m_houdini->LookupFindEntity(id);
+        AZ::SplinePtr spline = m_houdini->LookupSpline(id);
 
         if (entity != nullptr && spline != nullptr)
         {
@@ -229,7 +231,7 @@ namespace HoudiniEngine
                 hasSplineChanged = true;
                 HAPI_CreateInputNode(&session, &newInput, name.c_str());
                 AddSplineChangeHandler(id);
-                *m_hou << "Create Input Node: Spline: " << newInput << " verts: " << numVerts << " " << name;
+                *m_houdini << "Create Input Node: Spline: " << newInput << " verts: " << numVerts << " " << name;
             }
             else
             {
@@ -237,8 +239,8 @@ namespace HoudiniEngine
                 hasSplineChanged = false;
             }
 
-            *m_hou << "---Updating Spline: " << name << "---" << "";
-            m_hou->SetProgress("Updating Input Spline: " + name, 0);
+            *m_houdini << "---Updating Spline: " << name << "---" << "";
+            m_houdini->SetProgress("Updating Input Spline: " + name, 0);
 
             //Set Spline Info:
             {
@@ -255,7 +257,7 @@ namespace HoudiniEngine
                 }
             }
             
-            *m_hou << "HAPI_SetCurveCounts: " << newInput <<  " verts: " << numVerts << "";
+            *m_houdini << "HAPI_SetCurveCounts: " << newInput <<  " verts: " << numVerts << "";
 
             HAPI_AttributeInfo pos_attr_info = HAPI_AttributeInfo_Create();
             pos_attr_info.exists = true;
@@ -266,7 +268,7 @@ namespace HoudiniEngine
             pos_attr_info.typeInfo = HAPI_ATTRIBUTE_TYPE_VECTOR;
             pos_attr_info.tupleSize = 3;
 
-            AZ::Transform transform = m_hou->LookupTransform(id);
+            AZ::Transform transform = m_houdini->LookupTransform(id);
 
             AZStd::vector<float> points(numVerts * 3);
 
@@ -286,7 +288,7 @@ namespace HoudiniEngine
 
             [[maybe_unused]] HAPI_Result result;
             
-            *m_hou << "HAPI_SetAttributeFloatData: " << newInput << " writing " << numVerts << " from buffer of size: " << points.size() << "";
+            *m_houdini << "HAPI_SetAttributeFloatData: " << newInput << " writing " << numVerts << " from buffer of size: " << points.size() << "";
 
             //Push Spline PointData to Houdini
             {
@@ -333,15 +335,15 @@ namespace HoudiniEngine
                     result = HAPI_SetAttributeFloatData(&session, newInput, 0, "P", &pos_attr_info, &points.front(), 0, numVerts);
                 }
 
-                m_hou->CheckForErrors();
+                m_houdini->CheckForErrors();
             }
 
-            auto attribList = m_hou->LookupAttributeNames(id);
+            auto attribList = m_houdini->LookupAttributeNames(id);
             
             //Push arbitrary attributes over to Houdini!
             for (auto attrib : attribList)
             {
-                auto* attribData = m_hou->LookupAttributeData(id, attrib);
+                auto* attribData = m_houdini->LookupAttributeData(id, attrib);
                 if (attribData != nullptr)
                 {
                     //The spline attribute points might not be updated yet!  If thats the case, we need to push 0 data until its updated.
@@ -370,7 +372,7 @@ namespace HoudiniEngine
                     attribInfo.count = numVerts;
                     attribInfo.tupleSize = 1;
                     
-                    *m_hou << "HAPI_SetAttributeFloatData: " << attrib << " id:" << newInput << " writing " << numVerts << " from buffer of size: " << data.size() << "";
+                    *m_houdini << "HAPI_SetAttributeFloatData: " << attrib << " id:" << newInput << " writing " << numVerts << " from buffer of size: " << data.size() << "";
 
                     //Push Spline Attribute Data To Houdini
                     {
@@ -417,7 +419,7 @@ namespace HoudiniEngine
                 if (hasSplineChanged)
                 {
                     AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateInputNodeFromSpline::CommitSplineGeo");
-                    *m_hou << "HAPI_CommitGeo: " << " id:" << newInput << "";
+                    *m_houdini << "HAPI_CommitGeo: " << " id:" << newInput << "";
                     HAPI_CommitGeo(&session, newInput);
                 }
             }
@@ -435,21 +437,21 @@ namespace HoudiniEngine
 
     HAPI_NodeId InputNodeManager::CreateInputNodeFromTerrain(const AZ::EntityId& id)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         
-        const HAPI_Session& session = m_hou->GetSession();
+        const HAPI_Session& session = m_houdini->GetSession();
 
         HAPI_NodeId previousInputNode = m_terrainCache;
 
-        AZ::Entity* entity = m_hou->LookupFindEntity(id);
+        AZ::Entity* entity = m_houdini->LookupFindEntity(id);
         
         if (entity != nullptr)
         {
-            AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateInputNodeFromTerrain::CheckForTerrain");
+            AZ_PROFILE_SCOPE(Houdini, "InputNodeManager::CreateInputNodeFromTerrain::CheckForTerrain");
 
-            *m_hou << "---Update terrain--- " << "";
+            *m_houdini << "---Update terrain--- " << "";
             
-            m_hou->SetProgress("Updating Input terrain: " + entity->GetName(), 0);
+            m_houdini->SetProgress("Updating Input terrain: " + entity->GetName(), 0);
 
             int width = 0, height = 0;
             AZStd::vector<AZ::Vector3> data;
@@ -457,7 +459,7 @@ namespace HoudiniEngine
             auto terrainComp = entity->FindComponent<HoudiniTerrainComponent>();
             if (previousInputNode == HOUDINI_INVALID_ID || terrainComp->IsDirty())
             {
-                AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateInputNodeFromTerrain::GetTerrainData");
+                AZ_PROFILE_SCOPE(Houdini, "InputNodeManager::CreateInputNodeFromTerrain::GetTerrainData");
                 terrainComp->GetTerrainData(width, height, data);
             }            
             else 
@@ -482,7 +484,7 @@ namespace HoudiniEngine
             {
                 AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateInputNodeFromTerrain::CreateNewTerrainInputNode");
                 HAPI_CreateInputNode(&session, &newInput, "TERRAIN");
-                *m_hou << "Create Input Node: TERRAIN: " << newInput << " verts: " << numVerts << "";
+                *m_houdini << "Create Input Node: TERRAIN: " << newInput << " verts: " << numVerts << "";
             }
 
             HAPI_GetDisplayGeoInfo(&session, newInput, &geoInfo);
@@ -542,7 +544,7 @@ namespace HoudiniEngine
                 }
             }
 
-            *m_hou << "HAPI_SetFaceCounts: " << geoInfo.nodeId << " writing " << m_faceCounts.size() << " from buffer of size: " << m_points.size() << "";
+            *m_houdini << "HAPI_SetFaceCounts: " << geoInfo.nodeId << " writing " << m_faceCounts.size() << " from buffer of size: " << m_points.size() << "";
 
             //Push vertex data and index data to Houdini
             {
@@ -551,7 +553,7 @@ namespace HoudiniEngine
                 HAPI_SetFaceCounts(&session, geoInfo.nodeId, 0, &m_faceCounts[0], 0, m_faceCounts.size());
             }
 
-            *m_hou << "HAPI_SetAttributeFloatData: " << geoInfo.nodeId << " writing " << numVerts << " from buffer of size: " << m_points.size() << "";
+            *m_houdini << "HAPI_SetAttributeFloatData: " << geoInfo.nodeId << " writing " << numVerts << " from buffer of size: " << m_points.size() << "";
 
             //PushAttributeData
             {
@@ -575,13 +577,11 @@ namespace HoudiniEngine
         return HOUDINI_INVALID_ID;
     }
 
-    // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
     HAPI_NodeId InputNodeManager::CreateInputNodeFromMesh(const AZ::EntityId& id)
     {
-        
         AZ_PROFILE_FUNCTION(Editor);
 
-        const HAPI_Session& session = m_hou->GetSession();
+        const HAPI_Session& session = m_houdini->GetSession();
 
         HAPI_NodeId previousInputNode = HOUDINI_INVALID_ID;
         if (m_meshNodesCache.find(id) != m_meshNodesCache.end())
@@ -589,21 +589,21 @@ namespace HoudiniEngine
             previousInputNode = m_meshNodesCache[id];
         }
 
-        AZ::Entity* entity = m_hou->LookupFindEntity(id);
+        AZ::Entity* entity = m_houdini->LookupFindEntity(id);
 
         if (entity != nullptr)
         {
             // Subscribe on transform changes
             AZ::TransformNotificationBus::MultiHandler::BusConnect(id);
 
-            *m_hou << ("-------- UPDATING MESH ------- " + entity->GetName());
-
+            *m_houdini << ("-------- UPDATING MESH ------- " + entity->GetName());
 
             const AZ::Render::MeshFeatureProcessorInterface::MeshHandle* meshHandle = nullptr;
             AZ::Render::MeshHandleStateRequestBus::EventResult(meshHandle, id, &AZ::Render::MeshHandleStateRequestBus::Events::GetMeshHandle);
 
-            if (meshHandle == nullptr || !meshHandle->IsValid()) {
-                CryLog("(HOUDINI) Could not get a valid mesh handle");
+            if (meshHandle == nullptr || !meshHandle->IsValid())
+            {
+                AZ_Error("Houdini", false, "Could not get a valid mesh handle");
                 return HOUDINI_INVALID_ID;
             }
             
@@ -621,7 +621,6 @@ namespace HoudiniEngine
                 const AZ::Data::Asset<AZ::RPI::ModelLodAsset>& modelLodAsset = modelAsset->GetLodAssets()[modelLodIndex.m_index];
                 AZ::Data::Instance<AZ::RPI::ModelLod> modelLod = AZ::RPI::ModelLod::FindOrCreate(modelLodAsset, modelAsset).get();
 
-                // compute the counts
                 AZ::u32 positionCount = 0;
                 AZ::u32 indexCount = 0;
                 
@@ -631,9 +630,9 @@ namespace HoudiniEngine
                     indexCount += mesh.GetIndexCount();
                 }
 
-                newInfo.pointCount = positionCount;      // Vertex Count
-                newInfo.faceCount = indexCount / 3;  // Faces Count
-                newInfo.vertexCount = indexCount;    // Index Count (for some reason in Houdini it is called vertex)
+                newInfo.pointCount = positionCount; // Vertex Count
+                newInfo.faceCount = indexCount / 3; // Faces Count
+                newInfo.vertexCount = indexCount;   // Index Count
 
                 newInfo.type = HAPI_PARTTYPE_MESH;
 
@@ -642,7 +641,7 @@ namespace HoudiniEngine
                     AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateNodeFromMesh::CreateNewMeshInputNode");
                     AZStd::string nodeName = "MESH " + entity->GetName();
                     HAPI_CreateInputNode(&session, &newInput, nodeName.c_str());
-                    *m_hou << "Create Input Node: " << nodeName << " verts: " << newInfo.pointCount << "";
+                    *m_houdini << "Create Input Node: " << nodeName << " verts: " << newInfo.pointCount << "";
                     m_meshNodesCache[id] = newInput;
                 }
 
@@ -714,7 +713,7 @@ namespace HoudiniEngine
                 alphas.reserve(newInfo.vertexCount);
 
                 // Points array with transform data inside
-                AZ::Transform transform = m_hou->LookupTransform(id);
+                AZ::Transform transform = m_houdini->LookupTransform(id);
 
                 struct Vec2
                 {
@@ -733,15 +732,16 @@ namespace HoudiniEngine
                 {
                     auto mesh = modelLodAsset->GetMeshes()[meshIdx];
                     const auto sourceIndices = mesh.GetIndexBufferTyped<AZ::u32>();
+
                     //NOTE: don't use AZ::Vector3/2/4 when using GetSemanticBufferTyped those classes are not packed.
                     const auto sourcePositions = mesh.GetSemanticBufferTyped<Vec3>(AZ::Name("POSITION"));
                     const auto sourceNormals = mesh.GetSemanticBufferTyped<Vec3>(AZ::Name("NORMAL"));
                     const auto sourceUVs = mesh.GetSemanticBufferTyped<Vec2>(AZ::Name("UV"));
                     const auto sourceColors = mesh.GetSemanticBufferTyped<Vec4>(AZ::Name("COLOR"));
 
-                    auto locPosCount = sourcePositions.size();      // Vertex Count
+                    auto locPosCount = sourcePositions.size(); // Vertex Count
                     auto locVertexCount = sourceIndices.size(); 
-                    auto locFaceCount = locVertexCount / 3;  // Faces Count
+                    auto locFaceCount = locVertexCount / 3; // Faces Count
                     
                     for (int i = 0; i < locPosCount; ++i)
                     {
@@ -752,12 +752,14 @@ namespace HoudiniEngine
                         points.push_back(point.GetZ());
                         points.push_back(-point.GetY());
                     }
-                    // Faces array
+
+                    // Faces
                     for (int i = 0; i < locFaceCount; ++i)
                     {
                         faces.push_back(3);
                     }
-                    // Indices array
+
+                    // Indices
                     for (int i = 0; i < locFaceCount; ++i)
                     {
                         vertices.push_back(sourceIndices[i * 3 + 0]);
@@ -770,9 +772,6 @@ namespace HoudiniEngine
                     {
                         for (int i = 0; i < locFaceCount; ++i)
                         {
-                            /*AZ::Vector3 lyNormal1 = pNorms.data ? pNorms.data[vertices[i * 3 + 0]] : Vec3(0.0f, 0.0f, 1.0f);
-                            AZ::Vector3 lyNormal2 = pNorms.data ? pNorms.data[vertices[i * 3 + 1]] : Vec3(0.0f, 0.0f, 1.0f);
-                            AZ::Vector3 lyNormal3 = pNorms.data ? pNorms.data[vertices[i * 3 + 2]] : Vec3(0.0f, 0.0f, 1.0f);*/
                             index = sourceIndices[i * 3 + 0];
                             normals.push_back(sourceNormals[index].x);
                             normals.push_back(sourceNormals[index].y);
@@ -839,9 +838,10 @@ namespace HoudiniEngine
                         }
                     }
                 }
-                
+
                 // Name attribute
                 const char* kEntityNameAttrName{ "O3DE_NameId" };
+
                 // Create attribute info for <name>_<id> detail attribute
                 HAPI_AttributeInfo entity_name_attr_info;
                 entity_name_attr_info.exists = true;
@@ -851,6 +851,7 @@ namespace HoudiniEngine
                 entity_name_attr_info.tupleSize = 1;
 
                 HAPI_AddAttribute(&session, geoInfo.nodeId, 0, kEntityNameAttrName, &entity_name_attr_info);
+
                 // Set Entity <name>_<id> data as detail attribute
                 AZStd::string entityNameId = entity->GetName() + "_" + AZStd::to_string(static_cast<AZ::u64>(entity->GetId()));
                 const char* entityNameIdAttribData = &entityNameId[0];
@@ -882,6 +883,7 @@ namespace HoudiniEngine
                 {
                     HAPI_AddAttribute(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_COLOR, &color_attr_info);
                     HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, HAPI_ATTRIB_COLOR, &color_attr_info, &colors[0], 0, newInfo.vertexCount);
+
                     // Vertex Alphas
                     HAPI_AddAttribute(&session, geoInfo.nodeId, 0, "Alpha", &alpha_attr_info);
                     HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, "Alpha", &alpha_attr_info, &alphas[0], 0, newInfo.vertexCount);
@@ -893,7 +895,7 @@ namespace HoudiniEngine
 
                 if (result != HAPI_RESULT_SUCCESS)
                 {
-                    CryLog("(HOUDINI) Commit GEOmetry Failure: %d", result);
+                    AZ_Error("Houdini", false, "Commit Geometry Failure : % d", result);
                 }
             }
 

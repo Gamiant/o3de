@@ -48,10 +48,20 @@ namespace HoudiniEngine
     constexpr AZStd::string_view ImageDsoSearchPath = "/Houdini/Settings/Initialize/ImageDsoSearchPath";
     constexpr AZStd::string_view AudioDsoSearchPath = "/Houdini/Settings/Initialize/AudioDsoSearchPath";
 
-    using BoolPropertyEvent = AZ::Event<bool>;
-    using StringPropertyEvent = AZ::Event<AZStd::string>;
-    using FloatPropertyEvent = AZ::Event<double>;
-    using U64PropertyEvent = AZ::Event<AZ::u64>;
+    // Node Sync Settings
+    constexpr AZStd::string_view KeepWorldTransform = "/Houdini/Settings/NodeSync/KeepWorldTransform";
+    constexpr AZStd::string_view PackGeometryBeforeMerge = "/Houdini/Settings/NodeSync/PackGeometryBeforeMerge";
+    constexpr AZStd::string_view ExportInputAsReferences = "/Houdini/Settings/NodeSync/ExportInputAsReferences";
+    constexpr AZStd::string_view ExportLODs = "/Houdini/Settings/NodeSync/ExportLODs";
+    constexpr AZStd::string_view ExportSockets = "/Houdini/Settings/NodeSync/ExportSockets";
+    constexpr AZStd::string_view ExportColliders = "/Houdini/Settings/NodeSync/ExportColliders";
+    constexpr AZStd::string_view ExportMaterialParams = "/Houdini/Settings/NodeSync/ExportMaterialParams";
+    constexpr AZStd::string_view MergeSplineMeshComponents = "/Houdini/Settings/NodeSync/MergeSplineMeshComponents";
+    constexpr AZStd::string_view ExportLevelInstanceContent = "/Houdini/Settings/NodeSync/ExportLevelInstanceContent";
+    constexpr AZStd::string_view DirectlyConnectHDAsAsInHoudini = "/Houdini/Settings/NodeSync/DirectlyConnectHDAsAsInHoudini";
+    constexpr AZStd::string_view UseLegacyInputCurves = "/Houdini/Settings/NodeSync/UseLegacyInputCurves";
+    constexpr AZStd::string_view SplineResolution = "/Houdini/Settings/NodeSync/SplineResolution";
+    constexpr AZStd::string_view SendNodePath = "/Houdini/Settings/NodeSync/SendNodePath";
 
     class SessionSettings
     {
@@ -71,7 +81,7 @@ namespace HoudiniEngine
             Both
         };
 
-        SessionSettings();
+        SessionSettings() = default;
 
         void SetServerHost(const AZStd::string& host);
         AZStd::string GetServerHost() const;
@@ -103,68 +113,8 @@ namespace HoudiniEngine
         void SetSyncHoudiniViewport(bool sync);
         bool GetSyncHoudiniViewport() const;
 
-    protected:
 
-        StringPropertyEvent m_serverHost;
-        AZ::SettingsRegistryInterface::NotifyEventHandler m_serverHostHandler;
-
-        StringPropertyEvent m_namedPipe;
-        AZ::SettingsRegistryInterface::NotifyEventHandler m_namedPipeHandler;
-
-        U64PropertyEvent m_serverPort;
-        AZ::SettingsRegistryInterface::NotifyEventHandler m_serverPortHandler;
-
-        U64PropertyEvent m_sessionType;
-        AZ::SettingsRegistryInterface::NotifyEventHandler m_sessionTypeHandler;
-
-        StringPropertyEvent m_otlPath;
-        AZ::SettingsRegistryInterface::NotifyEventHandler m_otlPathHandler;
-
-        BoolPropertyEvent m_autoClose;
-        AZ::SettingsRegistryInterface::NotifyEventHandler m_autoCloseHandler;
-
-        FloatPropertyEvent m_autoCloseTimeOut;
-        AZ::SettingsRegistryInterface::NotifyEventHandler m_autoCloseTimeOutHandler;
-
-        BoolPropertyEvent m_cookUsingHoudiniTime;
-        AZ::SettingsRegistryInterface::NotifyEventHandler m_cookUsingHoudiniTimeHandler;
-
-        BoolPropertyEvent m_syncViewports;
-        AZ::SettingsRegistryInterface::NotifyEventHandler m_syncViewportsHandler;
-
-    };
-
-    struct SettingsBusRequests : public AZ::EBusTraits
-    {
-        virtual SessionSettings* GetSessionSettings() = 0;
-    };
-    using SettingsBus = AZ::EBus<SettingsBusRequests>;
-
-    struct SessionNotifications : public AZ::EBusTraits
-    {
-        virtual void OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus) = 0;
-    };
-    using SessionNotificationBus = AZ::EBus<SessionNotifications>;
-
-
-    // Node Sync Settings
-    constexpr AZStd::string_view KeepWorldTransform = "/Houdini/Settings/NodeSync/KeepWorldTransform";
-    constexpr AZStd::string_view PackGeometryBeforeMerge = "/Houdini/Settings/NodeSync/PackGeometryBeforeMerge";
-    constexpr AZStd::string_view ExportInputAsReferences = "/Houdini/Settings/NodeSync/ExportInputAsReferences";
-    constexpr AZStd::string_view ExportLODs = "/Houdini/Settings/NodeSync/ExportLODs";
-    constexpr AZStd::string_view ExportSockets = "/Houdini/Settings/NodeSync/ExportSockets";
-    constexpr AZStd::string_view ExportColliders = "/Houdini/Settings/NodeSync/ExportColliders";
-    constexpr AZStd::string_view ExportMaterialParams = "/Houdini/Settings/NodeSync/ExportMaterialParams";
-    constexpr AZStd::string_view MergeSplineMeshComponents = "/Houdini/Settings/NodeSync/MergeSplineMeshComponents";
-    constexpr AZStd::string_view ExportLevelInstanceContent = "/Houdini/Settings/NodeSync/ExportLevelInstanceContent";
-    constexpr AZStd::string_view DirectlyConnectHDAsAsInHoudini = "/Houdini/Settings/NodeSync/DirectlyConnectHDAsAsInHoudini";
-    constexpr AZStd::string_view UseLegacyInputCurves = "/Houdini/Settings/NodeSync/UseLegacyInputCurves";
-    constexpr AZStd::string_view SplineResolution = "/Houdini/Settings/NodeSync/SplineResolution";
-
-    class NodeSyncSettings
-    {
-    public:
-
+        // Node Sync Settings
         void SetKeepWorldTransform(bool keepWorldTransform);
         bool GetKeepWorldTransform() const;
 
@@ -201,22 +151,24 @@ namespace HoudiniEngine
         void SetSplineResolution(float splineResolution);
         float GetSplineResolution() const;
 
-    protected:
+        void SetSendNodePath(const AZStd::string& path);
+        AZStd::string GetSendNodePath() const;
 
-        bool m_keepWorldTransform;
-        bool m_packGeometryBeforeMerge;
-        bool m_exportInputAsReferences;
-        bool m_exportLODs;
-        bool m_exportSockets;
-        bool m_exportColliders;
-        bool m_exportMaterialParams;
-        bool m_mergeSplineMeshComponents;
-        bool m_exportLevelInstanceContent;
-        bool m_directlyConnectHDAsInHoudini;
-        bool m_useLegacyInputCurves;
-        float m_splineResolution;
-
-        // TODO: terrain
     };
+
+    struct SettingsBusRequests : public AZ::EBusTraits
+    {
+        virtual SessionSettings* GetSessionSettings() = 0;
+    };
+    using SettingsBus = AZ::EBus<SettingsBusRequests>;
+
+    struct SessionNotifications : public AZ::EBusTraits
+    {
+        virtual void OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus) = 0;
+    };
+    using SessionNotificationBus = AZ::EBus<SessionNotifications>;
+
+
+
 
 }

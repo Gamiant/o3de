@@ -74,7 +74,7 @@ namespace HoudiniEngine
 
     void HoudiniTerrainComponent::DisplayEntityViewport(const AzFramework::ViewportInfo& /*viewportInfo*/, AzFramework::DebugDisplayRequests& debugDisplay)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         auto* dc = &debugDisplay;
         AZ_Assert(dc, "Invalid display context.");        

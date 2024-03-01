@@ -22,6 +22,9 @@
 #include <Shlobj.h>
 #endif
 
+#include <AtomLyIntegration/CommonFeatures/Mesh/MeshComponentBus.h>
+
+AZ_DEFINE_BUDGET(Houdini);
 
 #if defined(AZ_PLATFORM_WINDOWS)
 
@@ -47,8 +50,6 @@ namespace HoudiniEngine
 {
 
     Houdini::Houdini() 
-        : m_isActive(false)
-        , m_initialized(false)
     {
         SessionRequestBus::Handler::BusConnect();
 
@@ -112,6 +113,7 @@ namespace HoudiniEngine
         AZ::TickBus::Handler::BusConnect();
         AZ::SystemTickBus::Handler::BusConnect();
 
+        m_inputNodeManager = InputNodeManagerPtr(new InputNodeManager(this));
     }
 
     Houdini::~Houdini()
@@ -285,6 +287,25 @@ namespace HoudiniEngine
         {
             AZ_Info("Houdini", "Houdini Engine Session Configured");
         }
+    }
+
+    void Houdini::Shutdown()
+    {
+        AZ_PROFILE_FUNCTION(Houdini);
+        AZ::TickBus::ClearQueuedEvents();
+
+        HAPI_CloseSession(&m_session);
+
+        //Lock the lookups:
+        {
+            AZStd::unique_lock<AZStd::mutex> lookupLock(m_lookupLock);
+            m_lookups.clear();
+        }
+
+        m_inputNodeManager->Reset();
+        m_assetCache.clear();
+        m_nodeCache.clear();
+        m_nodeNameCache.clear();
     }
 
     bool Houdini::StartSession(SessionSettings::ESessionType sessionType, const AZStd::string& namedPipe, const AZStd::string& serverHost, AZ::u32 serverPort)
@@ -562,11 +583,6 @@ namespace HoudiniEngine
     SessionRequests::ESessionStatus Houdini::GetSessionStatus()
     {
         return m_sessionStatus;
-    }
-
-    void Houdini::SendToHoudini()
-    {
-        Test();
     }
 
     void Houdini::FetchFromHoudini()
@@ -947,7 +963,7 @@ namespace HoudiniEngine
 
     bool Houdini::CheckForErrors(bool printErrors, bool includeCookingErrors)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         bool hasError = false;
 
@@ -980,7 +996,7 @@ namespace HoudiniEngine
 
     AZStd::string Houdini::FindHda(const AZStd::string& hdaFile)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (IsActive())
         {
@@ -1003,7 +1019,7 @@ namespace HoudiniEngine
 
     void Houdini::LoadAllAssets()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (IsActive() == false)
         {
@@ -1052,7 +1068,7 @@ namespace HoudiniEngine
 
     HAPI_NodeId Houdini::FindNode(HAPI_NodeType networkType, const AZStd::string& path)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         int childCount = 0;
         HAPI_NodeId rootId;
@@ -1144,7 +1160,7 @@ namespace HoudiniEngine
 
     HoudiniNodePtr Houdini::CreateNode(const AZStd::string& operatorName, const AZStd::string& nodeName, IHoudiniNode* parent)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (IsActive() == false)
         {
@@ -1240,7 +1256,7 @@ namespace HoudiniEngine
 
     void Houdini::CookNode(HAPI_NodeId node, const AZStd::string& entityName)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (IsActive() == false)
         {
@@ -1320,7 +1336,7 @@ namespace HoudiniEngine
 
     void Houdini::SaveDebugFile()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         char desktopPath[1024];
 
@@ -1351,8 +1367,52 @@ namespace HoudiniEngine
         }
     }
 
-    void Houdini::Test()
+    void Houdini::SendToHoudini()
     {
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBus::Events::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+
+        // Go through the list of selected entities in O3DE
+
+        AzToolsFramework::EntityIdList selectedEntityList;
+        AzToolsFramework::ToolsApplicationRequestBus::BroadcastResult(selectedEntityList, &AzToolsFramework::ToolsApplicationRequests::GetSelectedEntities);
+
+        // Create the node
+        const auto& sendNodePath = settings->GetSendNodePath();
+        HAPI_NodeId o3deContentNodeId = -1;
+        HAPI_Result result = HAPI_GetNodeFromPath(&m_session, -1, sendNodePath.c_str(), &o3deContentNodeId);
+        if (result != HAPI_RESULT_SUCCESS || o3deContentNodeId < 0)
+        {
+            AZStd::string path = sendNodePath;
+            AZ::StringFunc::Replace(path, "/obj/", "");
+            result = HAPI_CreateNode(&m_session, -1, "Object/subnet", path.c_str(), true, &o3deContentNodeId);
+        }
+
+        // Iterate over all selected entities, find any that have a mesh component
+        for (auto& entityId : selectedEntityList)
+        {
+            AZStd::vector<AZ::u32> createdNodeIds;
+
+            AZ::Data::Asset<AZ::Data::AssetData> meshAssetData;
+            AZ::Render::MeshComponentRequestBus::EventResult(meshAssetData, entityId, &AZ::Render::MeshComponentRequests::GetModelAsset);
+
+            if (meshAssetData.IsReady())
+            {
+                auto nodeId = m_inputNodeManager->CreateInputNodeFromMesh(entityId);
+                createdNodeIds.push_back(nodeId);
+            }
+        }
+
+
+        // 
+        // Collect their assets
+        // Create a node for each
+
+
+
+#if 0
         HoudiniAssetPtr asset = LoadHoudiniDigitalAsset("MetalRail.hda");
 
         auto err = GetLastHoudiniError();
@@ -1410,11 +1470,12 @@ namespace HoudiniEngine
         HAPI_SetParmStringValue(&m_session, curveNode, "-4,0,4 -4,0,-4 4,0,-4 4,0,4", parm.id, 0);
 
         CheckForErrors();
+#endif
     }
 
     HoudiniAssetPtr Houdini::LoadHoudiniDigitalAsset(const AZStd::string& hdaName)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (m_assetCache.find(hdaName) == m_assetCache.end())
         {
@@ -1478,7 +1539,7 @@ namespace HoudiniEngine
     /* Houdini Util functions */
     AZStd::string Houdini::GetString(HAPI_StringHandle string_handle)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         // A string handle of 0 means an invalid string handle -- similar to
         // a null pointer.  Since we can't return NULL, though, return an empty
@@ -1506,7 +1567,7 @@ namespace HoudiniEngine
 
     AZStd::string Houdini::GetLastHoudiniError()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         int bufferLength = 0;
         HAPI_GetStatusStringBufLength(&m_session, HAPI_STATUS_CALL_RESULT, HAPI_STATUSVERBOSITY_ERRORS, &bufferLength);
@@ -1527,7 +1588,7 @@ namespace HoudiniEngine
 
     AZStd::string Houdini::GetLastHoudiniCookError()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         int bufferLength = 0;
         HAPI_GetStatusStringBufLength(&m_session, HAPI_STATUS_COOK_RESULT, HAPI_STATUSVERBOSITY_ERRORS, &bufferLength);
@@ -1551,11 +1612,36 @@ namespace HoudiniEngine
         return result;
     }
 
+    void Houdini::Log(const AZStd::string& msg)
+    {
+        AZStd::unique_lock<AZStd::mutex> theLock(m_logLock);
+
+        if (msg.empty() || msg[0] == '\n')
+        {
+            if (m_historyLine.empty() == false)
+            {
+                m_history.push(m_historyLine);
+                AZ_Warning("Houdini", m_printHistory == false, m_historyLine.c_str());
+
+                if (m_history.size() > 5000)
+                {
+                    m_history.pop();
+                }
+            }
+
+            m_historyLine = "";
+        }
+        else
+        {
+            m_historyLine += msg;
+        }
+    }
+
     //Specialization has to be in the CPP to prevent multi-instantiation
     template<>
     IHoudini& operator<< (IHoudini& os, const char* dt)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         os.Log(AZStd::string(dt));
         return os;
     }
@@ -1563,7 +1649,7 @@ namespace HoudiniEngine
     template<>
     IHoudini& operator<< (IHoudini& os, char* dt)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         os.Log(AZStd::string(dt));
         return os;
     }
@@ -1572,7 +1658,7 @@ namespace HoudiniEngine
     template<>
     IHoudini& operator<< (IHoudini& os, AZStd::string dt)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         os.Log(dt);
         return os;
     }
@@ -1580,7 +1666,7 @@ namespace HoudiniEngine
     template<>
     IHoudini& operator<< (IHoudini& os, const AZStd::string& dt)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         os.Log(dt);
         return os;
     }

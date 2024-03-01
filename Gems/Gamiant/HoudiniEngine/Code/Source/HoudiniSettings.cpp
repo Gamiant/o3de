@@ -11,34 +11,6 @@
 
 namespace HoudiniEngine
 {
-    SessionSettings::SessionSettings()
-    {
-        if (auto* registry = AZ::SettingsRegistry::Get())
-        {
-            using AZ::SettingsRegistryMergeUtils::IsPathAncestorDescendantOrEqual;
-
-            m_serverHostHandler = registry->RegisterNotifier(
-                [this](const AZ::SettingsRegistryInterface::NotifyEventArgs& notifyEventArgs)
-                {
-                    if (IsPathAncestorDescendantOrEqual(ServerHost, notifyEventArgs.m_jsonKeyPath))
-                    {
-                        m_serverHost.Signal(GetServerHost());
-                    }
-                }
-            );
-
-            m_serverPortHandler = registry->RegisterNotifier(
-                [this](const AZ::SettingsRegistryInterface::NotifyEventArgs& notifyEventArgs)
-                {
-                    if (IsPathAncestorDescendantOrEqual(ServerPort, notifyEventArgs.m_jsonKeyPath))
-                    {
-                        m_serverPort.Signal(GetServerPort());
-                    }
-                }
-            );
-        }
-    }
-
     void SessionSettings::SetServerHost(const AZStd::string& host)
     {
         AzToolsFramework::SetRegistry(ServerHost, host);
@@ -166,9 +138,9 @@ namespace HoudiniEngine
         return AzToolsFramework::GetRegistry<bool>(SyncHoudiniViewport, true);
     }
 
-    // NodeSyncSettings ////////////////////////////////////////////////////////////////
+    // SessionSettings ////////////////////////////////////////////////////////////////
 
-    void NodeSyncSettings::SetKeepWorldTransform(bool keepWorldTransform)
+    void SessionSettings::SetKeepWorldTransform(bool keepWorldTransform)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -176,12 +148,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetKeepWorldTransform() const
+    bool SessionSettings::GetKeepWorldTransform() const
     {
         return AzToolsFramework::GetRegistry<bool>(KeepWorldTransform, true);
     }
 
-    void NodeSyncSettings::SetPackGeometryBeforeMerge(bool pack)
+    void SessionSettings::SetPackGeometryBeforeMerge(bool pack)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -189,12 +161,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetPackGeometryBeforeMerge() const
+    bool SessionSettings::GetPackGeometryBeforeMerge() const
     {
         return AzToolsFramework::GetRegistry<bool>(PackGeometryBeforeMerge, false);
     }
 
-    void NodeSyncSettings::SetExportInputAsReferences(bool exportValue)
+    void SessionSettings::SetExportInputAsReferences(bool exportValue)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -202,12 +174,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetExportInputAsReferences() const
+    bool SessionSettings::GetExportInputAsReferences() const
     {
         return AzToolsFramework::GetRegistry<bool>(ExportInputAsReferences, false);
     }
 
-    void NodeSyncSettings::SetExportLODs(bool exportValue)
+    void SessionSettings::SetExportLODs(bool exportValue)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -215,12 +187,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetExportLODs() const
+    bool SessionSettings::GetExportLODs() const
     {
         return AzToolsFramework::GetRegistry<bool>(ExportLODs, false);
     }
 
-    void NodeSyncSettings::SetExportSockets(bool exportValue)
+    void SessionSettings::SetExportSockets(bool exportValue)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -228,12 +200,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetExportSockets() const
+    bool SessionSettings::GetExportSockets() const
     {
         return AzToolsFramework::GetRegistry<bool>(ExportSockets, false);
     }
 
-    void NodeSyncSettings::SetExportColliders(bool exportValue)
+    void SessionSettings::SetExportColliders(bool exportValue)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -241,12 +213,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetExportColliders() const
+    bool SessionSettings::GetExportColliders() const
     {
         return AzToolsFramework::GetRegistry<bool>(ExportColliders, false);
     }
 
-    void NodeSyncSettings::SetExportMaterialParams(bool exportValue)
+    void SessionSettings::SetExportMaterialParams(bool exportValue)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -254,12 +226,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetExportMaterialParams() const
+    bool SessionSettings::GetExportMaterialParams() const
     {
         return AzToolsFramework::GetRegistry<bool>(ExportMaterialParams, false);
     }
 
-    void NodeSyncSettings::SetMergeSplineMeshComponents(bool merge)
+    void SessionSettings::SetMergeSplineMeshComponents(bool merge)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -267,12 +239,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetMergeSplineMeshComponents() const
+    bool SessionSettings::GetMergeSplineMeshComponents() const
     {
         return AzToolsFramework::GetRegistry<bool>(MergeSplineMeshComponents, true);
     }
 
-    void NodeSyncSettings::SetExportLevelInstanceContent(bool exportValue)
+    void SessionSettings::SetExportLevelInstanceContent(bool exportValue)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -280,12 +252,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetExportLevelInstanceContent() const
+    bool SessionSettings::GetExportLevelInstanceContent() const
     {
         return AzToolsFramework::GetRegistry<bool>(ExportLevelInstanceContent, true);
     }
 
-    void NodeSyncSettings::SetDirectlyConnectHDAsInHoudini(bool directlyConnect)
+    void SessionSettings::SetDirectlyConnectHDAsInHoudini(bool directlyConnect)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -293,12 +265,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetDirectlyConnectHDAsInHoudini() const
+    bool SessionSettings::GetDirectlyConnectHDAsInHoudini() const
     {
         return AzToolsFramework::GetRegistry<bool>(DirectlyConnectHDAsAsInHoudini, true);
     }
 
-    void NodeSyncSettings::SetUseLegacyInputCurves(bool useLegacyInputCurves)
+    void SessionSettings::SetUseLegacyInputCurves(bool useLegacyInputCurves)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -306,12 +278,12 @@ namespace HoudiniEngine
         }
     }
 
-    bool NodeSyncSettings::GetUseLegacyInputCurves() const
+    bool SessionSettings::GetUseLegacyInputCurves() const
     {
         return AzToolsFramework::GetRegistry<bool>(UseLegacyInputCurves, true);
     }
 
-    void NodeSyncSettings::SetSplineResolution(float splineResolution)
+    void SessionSettings::SetSplineResolution(float splineResolution)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
         {
@@ -319,9 +291,23 @@ namespace HoudiniEngine
         }
     }
 
-    float NodeSyncSettings::GetSplineResolution() const
+    float SessionSettings::GetSplineResolution() const
     {
         return AzToolsFramework::GetRegistry<double>(SplineResolution, 50.0);
     }
+
+    void SessionSettings::SetSendNodePath(const AZStd::string& path)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(SendNodePath, path);
+        }
+    }
+
+    AZStd::string SessionSettings::GetSendNodePath() const
+    {
+        return AzToolsFramework::GetRegistry<AZStd::string>(SendNodePath, "/obj/O3DEContent");
+    }
+
 
 }

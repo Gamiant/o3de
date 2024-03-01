@@ -118,7 +118,6 @@ namespace HoudiniEngine
         AZStd::string m_lastError;
         const AZStd::string& GetLastError();
 
-        // FL[FD-15480] Update parm values from Houdini side
         AZStd::map<AZStd::string, AZ::EntityId> m_inputTypePropertiesBackup;
 
         void BackupInputTypeProperties();

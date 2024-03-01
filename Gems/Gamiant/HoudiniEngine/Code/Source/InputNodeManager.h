@@ -32,11 +32,10 @@ namespace HoudiniEngine
 
     class InputNodeManager : public IInputNodeManager
         , public LmbrCentral::SplineComponentNotificationBus::MultiHandler
-        // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
         , public AZ::TransformNotificationBus::MultiHandler
     {
     protected:
-        Houdini* m_hou;
+        Houdini* m_houdini;
         AZStd::map<AZ::EntityId, HoudiniCurveContext > m_inputCache;
         HAPI_NodeId m_terrainCache;
         AZStd::vector<AZ::EntityId> m_splineChangeHandlers;
@@ -48,12 +47,12 @@ namespace HoudiniEngine
     public:
 
         InputNodeManager()
-            : m_hou(nullptr)
+            : m_houdini(nullptr)
             , m_terrainCache(HOUDINI_INVALID_ID) 
         {}
 
         InputNodeManager(Houdini* hou) :
-            m_hou(hou)
+            m_houdini(hou)
             , m_terrainCache(HOUDINI_INVALID_ID) 
         {}
 
@@ -64,7 +63,7 @@ namespace HoudiniEngine
         HAPI_NodeId GetNodeIdFromEntity(const AZ::EntityId& id) override;
         HAPI_NodeId CreateInputNodeFromSpline(const AZ::EntityId& id) override;
         HAPI_NodeId CreateInputNodeFromTerrain(const AZ::EntityId& id) override;
-        HAPI_NodeId CreateInputNodeFromMesh(const AZ::EntityId& id) override;  // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
+        HAPI_NodeId CreateInputNodeFromMesh(const AZ::EntityId& id) override;
 
         void OnSplineChanged() override;
         void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
@@ -85,7 +84,6 @@ namespace HoudiniEngine
             }
         }
 
-        // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset       
         virtual void OnTransformChanged(const AZ::Transform& /*local*/, const AZ::Transform& /*world*/) override;
         
         AZ::RPI::ModelLodIndex GetModelLodIndex(const AZ::RPI::ViewPtr view, AZ::Data::Instance<AZ::RPI::Model> model, AZ::EntityId id) const;

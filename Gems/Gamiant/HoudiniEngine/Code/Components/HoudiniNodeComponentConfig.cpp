@@ -43,7 +43,7 @@ namespace HoudiniEngine
                 ->Field("LastError", &HoudiniNodeComponentConfig::m_lastError)
                 ->Field("ViewButton", &HoudiniNodeComponentConfig::m_viewButton)
                 ->Field("ViewReloadButton", &HoudiniNodeComponentConfig::m_viewReloadButton)
-                ->Field("ViewReloadPropertiesButton", &HoudiniNodeComponentConfig::m_viewReloadPropertiesButton) // FL[FD-15480] Update parm values from Houdini side
+                ->Field("ViewReloadPropertiesButton", &HoudiniNodeComponentConfig::m_viewReloadPropertiesButton)
                 ->Field("ExtractGroupSpline", &HoudiniNodeComponentConfig::m_viewExtractGroup)
                 //->Field("ViewDebugButton", &HoudiniNodeComponentConfig::m_viewDebugButton)
                 ->Field("HasSpline", &HoudiniNodeComponentConfig::m_hasSpline)
@@ -75,7 +75,6 @@ namespace HoudiniEngine
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniNodeComponentConfig::OnReloadHoudiniInstance)
                     ->Attribute(AZ::Edit::Attributes::ButtonText, "Reload Asset")
 
-                    // FL[FD-15480] Update parm values from Houdini side
                     ->DataElement(AZ::Edit::UIHandlers::Button, &HoudiniNodeComponentConfig::m_viewReloadPropertiesButton, "", "Reloads properties in LY without affecting Houdini engine")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniNodeComponentConfig::OnReloadProperties)
                     ->Attribute(AZ::Edit::Attributes::ButtonText, "Reload Properties")
@@ -111,7 +110,7 @@ namespace HoudiniEngine
 
     AZStd::vector<AZStd::string> HoudiniNodeComponentConfig::getOperatorNames()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         HoudiniPtr hou;
         HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
@@ -190,7 +189,7 @@ namespace HoudiniEngine
 
     AZ::Crc32 HoudiniNodeComponentConfig::OnNodeNameChanged()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         bool ok;
         auto str = QInputDialog::getText(nullptr, "Rename Node", "What would you like to name this node?  This will also be the name of the fbx files generated.", QLineEdit::EchoMode::Normal, m_nodeName.c_str(), &ok);
@@ -206,7 +205,7 @@ namespace HoudiniEngine
 
     AZ::Crc32 HoudiniNodeComponentConfig::OnSaveDebugAsset()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         HoudiniPtr hou;
         HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
@@ -236,7 +235,7 @@ namespace HoudiniEngine
 
     AZ::Crc32 HoudiniNodeComponentConfig::OnLoadHoudiniInstance()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (m_nodeName.empty()) 
         {
@@ -254,7 +253,7 @@ namespace HoudiniEngine
 
     AZ::Crc32 HoudiniNodeComponentConfig::OnReloadHoudiniInstance()
     {
-        BackupInputTypeProperties(); // FL[FD-15480] Update parm values from Houdini side
+        BackupInputTypeProperties();
 
         m_properties.Clear();
         
@@ -411,7 +410,7 @@ namespace HoudiniEngine
 
     bool HoudiniNodeComponentConfig::UpdateNode()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         
         if (m_node != nullptr && m_initialized )
         {
@@ -501,7 +500,7 @@ namespace HoudiniEngine
 
     AZStd::string HoudiniNodeComponentConfig::GetHelpText()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if ( m_node != nullptr)
         {
@@ -585,7 +584,7 @@ namespace HoudiniEngine
 
     IHoudiniNode* HoudiniNodeComponentConfig::LoadHda(const AZStd::string& operatorName, const AZStd::string& nodeName, AZStd::function<void(IHoudiniNode*)> onLoad)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (m_creating || m_locked)
         {
@@ -669,7 +668,7 @@ namespace HoudiniEngine
                 m_node->SetEntityId(m_entityId);
                 m_node->SetObjectTransform(transform);
 
-                m_node->UpdateParamInfoFromEngine(); // FL[FD-15480] Update parm values from Houdini side
+                m_node->UpdateParamInfoFromEngine();
                 m_node->UpdateEditableNodeFromEngine();
                 if (m_hasSpline) //we have a spline component added
                 {
@@ -683,7 +682,7 @@ namespace HoudiniEngine
                 for (int i = 0; i < m_node->GetNodeInfo().inputCount; i++)
                 {
                     AZ_PROFILE_SCOPE(Editor, "HoudiniNodeComponentConfig::LoadHda::BuildInputs");
-                    //HoudiniScriptProperty * prop = nullptr; // FL[FD-15480] Update parm values from Houdini side
+                    //HoudiniScriptProperty * prop = nullptr;
 
                     HAPI_StringHandle nameHandle;
                     HAPI_GetNodeInputName(&m_node->GetHou()->GetSession(), m_node->GetId(), i, &nameHandle);
@@ -693,7 +692,6 @@ namespace HoudiniEngine
 
                     if (propOld == nullptr)
                     {
-                        // FL[FD-15480] Update parm values from Houdini side
                         HoudiniScriptPropertyInput* prop = aznew HoudiniScriptPropertyInput(m_node, i);
                         if (m_inputTypePropertiesBackup.find(nameGen) != m_inputTypePropertiesBackup.end())
                         {
@@ -1052,7 +1050,6 @@ namespace HoudiniEngine
         }
     }
 
-    // FL[FD-15480] Update parm values from Houdini side
     void HoudiniNodeComponentConfig::BackupInputTypeProperties()
     {
         m_inputTypePropertiesBackup.clear();

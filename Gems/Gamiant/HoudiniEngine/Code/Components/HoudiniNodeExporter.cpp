@@ -46,7 +46,7 @@ namespace HoudiniEngine
 
     bool HoudiniNodeExporter::EditorSelectionIntersectRayViewport([[maybe_unused]] const AzFramework::ViewportInfo& viewportInfo, const AZ::Vector3& src, const AZ::Vector3& dir, float& distance)
     {
-        AZ_PROFILE_FUNCTION(AzToolsFramework);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (!m_renderMesh->GetModel())
         {
@@ -303,7 +303,7 @@ namespace HoudiniEngine
 
     void HoudiniNodeExporter::SaveToFbx(bool useClusters)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         if (!CheckHoudiniAccess())
             return;
         
@@ -528,7 +528,7 @@ namespace HoudiniEngine
 
     AZStd::vector<AZStd::string> HoudiniNodeExporter::GetClusters()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         AZStd::vector<AZStd::string> output;
         if (!CheckHoudiniAccess())
@@ -650,7 +650,7 @@ namespace HoudiniEngine
 
     void HoudiniNodeExporter::ReadAttributeHints(HAPI_NodeId nodeId, HAPI_PartInfo& partInfo)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (partInfo.attributeCounts[HAPI_ATTROWNER_DETAIL] > 0)
         {
@@ -675,7 +675,7 @@ namespace HoudiniEngine
 
     void HoudiniNodeExporter::ReadMaterialNameHints(HAPI_NodeId nodeId, HAPI_PartInfo& partInfo)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         *m_hou << "   ReadMaterialNameHints: " << nodeId << "";
 
         HAPI_AttributeInfo materialsCount = HAPI_AttributeInfo_Create();
@@ -762,7 +762,7 @@ namespace HoudiniEngine
 
     void HoudiniNodeExporter::ReadMaterials(HAPI_NodeId nodeId, HAPI_PartInfo& partInfo, HoudiniMeshData& meshData)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         bool allSame = false;
         AZStd::vector<HAPI_NodeId> materialIds(partInfo.faceCount);
@@ -841,7 +841,7 @@ namespace HoudiniEngine
 
     void HoudiniNodeExporter::ApplyMaterialsToMesh([[maybe_unused]] HoudiniMeshData& meshData)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         //Update Material:
         /*if (meshData.m_materialIndex < m_materials.size() && meshData.m_materialIndex < m_materialSettings.size())
@@ -862,7 +862,7 @@ namespace HoudiniEngine
 
     int HoudiniNodeExporter::AddGeometry(int index, HAPI_NodeId nodeId, const AZStd::string& clusterId)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         int count = 0;
 
@@ -1411,7 +1411,7 @@ namespace HoudiniEngine
 
     bool HoudiniNodeExporter::GenerateMeshData()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         if (!CheckHoudiniAccess())
             return false;        
 
@@ -1548,7 +1548,7 @@ namespace HoudiniEngine
 
     bool HoudiniNodeExporter::GenerateEditableMeshData()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         if (!CheckHoudiniAccess())
             return false;
 

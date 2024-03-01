@@ -102,7 +102,7 @@ namespace HoudiniEngine
 
     void HoudiniScatterComponent::DisplayEntityViewport(const AzFramework::ViewportInfo& /*viewportInfo*/, AzFramework::DebugDisplayRequests& debugDisplay)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         
         bool selected = false;
         AzToolsFramework::EditorEntityInfoRequestBus::EventResult(selected, GetEntityId(), &AzToolsFramework::EditorEntityInfoRequestBus::Events::IsSelected);

@@ -24,6 +24,8 @@
 #define HOUDINI_INVALID_ID -1
 #define HOUDINI_ROOT_NODE_ID -1
 
+AZ_DECLARE_BUDGET(Houdini);
+
 namespace AzFramework
 {
     class ProcessWatcher;
@@ -41,7 +43,6 @@ namespace HoudiniEngine
     {
     protected:
 
-
         SessionSettings::ESessionType m_sessionType = SessionSettings::ESessionType::TCPSocket;
         SessionSettings::EViewportSync m_viewportSync = SessionSettings::EViewportSync::Disabled;
         SessionRequests::ESessionStatus m_sessionStatus = SessionRequests::ESessionStatus::Offline;
@@ -56,16 +57,8 @@ namespace HoudiniEngine
         bool m_environmentSet = false;
         Viewport m_viewport;
         bool m_startingSession = false;
+        InputNodeManagerPtr m_inputNodeManager;
         ///
-
-
-        bool m_isActive;
-        bool m_initialized;
-
-        AZStd::string smallBuffer;
-        ICVar * m_globalStateVar = nullptr; //O3DECONVERT
-        ICVar * cVar_THRIFT = nullptr;
-        ICVar * cVar_T = nullptr;
 
         HAPI_CookOptions m_cookOptions;
 
@@ -73,7 +66,6 @@ namespace HoudiniEngine
         HAPI_ThriftServerOptions m_thriftServerOptions;
 
         HoudiniNodePtr m_rootNode;
-        InputNodeManagerPtr m_inputNodeManager;
 
         bool m_printHistory = false;
         AZStd::string m_historyLine;
@@ -84,7 +76,7 @@ namespace HoudiniEngine
         AZStd::map<IHoudiniNode*, HoudiniNodePtr> m_nodeCache;
         AZStd::map<AZStd::string, HoudiniNodePtr> m_nodeNameCache;
         
-        //Lookups
+        // Lookups
         AZStd::mutex m_lookupLock;
         AZStd::map<AZ::EntityId, HoudiniEntityContext> m_lookups;
 
@@ -96,8 +88,6 @@ namespace HoudiniEngine
         ~Houdini();
 
         const HAPI_Session& GetSession() override { return m_session; }
-
-        void Test();
 
         int m_maxSliceCount = 500;
         AZ::EntityId m_timeSlice;
@@ -113,10 +103,10 @@ namespace HoudiniEngine
         AZStd::mutex m_statusLock;
         int m_currentPercent = 0;
         AZStd::string m_currentStatus;
-                
+
         void ExecuteCommand(AZ::EntityId currentId, AZStd::function<bool()> functionToCall) override;
         void RaiseCommandPriority(AZ::EntityId newId) override;
-                
+
         void ThreadProcessor();
         void CancelProcessorThread() override;
         void CancelProcessorJob(AZ::EntityId) override;
@@ -127,11 +117,7 @@ namespace HoudiniEngine
         void GetProgress(AZStd::string& statusText, int & statusPercent, int & assetsInQueue) override;
         void SetProgress(const AZStd::string& statusText, int statusPercent) override;
 
-        // AZ::TickBus::Handler...
-        void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
-        ///
-        
-        //Lookups: (Updated per tick)
+        // Lookups: (Updated per tick)
         void RemoveLookupId(const AZ::EntityId& id) override;
         void LookupId(const AZ::EntityId& id) override;
         bool LookupIsSelected(const AZ::EntityId& id) override;
@@ -146,7 +132,7 @@ namespace HoudiniEngine
 
         bool CheckForErrors(bool printErrors = true, bool includeCookingErrors = true) override;
         void LoadAllAssets() override;
-        void ReloadAllAssets() override;  // FL[FD-10790] Houdini Digital Asset List Hot Reload
+        void ReloadAllAssets() override;
         HoudiniAssetPtr LoadHoudiniDigitalAsset(const AZStd::string& hdaName) override;
 
         void RemoveNode(const AZStd::string& oldNodeName, IHoudiniNode* node) override;
@@ -166,75 +152,13 @@ namespace HoudiniEngine
 
         void DeleteAllObjects();
 
-        void Shutdown() 
-        {
-            AZ_PROFILE_FUNCTION(Editor);
-            AZ::TickBus::ClearQueuedEvents();
-                        
-            if (m_session.type == HAPI_SESSION_INPROCESS) 
-            {
-                //This seems to sometimes cause cleanup to crash:
-                //DeleteAllObjects();
-
-                //Cleanup Houdini session:
-                {
-                    AZ_PROFILE_SCOPE(Editor, "Cleanup Houdini Session");
-                    HAPI_Cleanup(&m_session);
-                }
-
-                //CLose Session:
-                {
-                    AZ_PROFILE_SCOPE(Editor, "Close Houdini Session");
-                    HAPI_CloseSession(&m_session);
-                }
-            }
-            else
-            {
-                HAPI_CloseSession(&m_session);
-            }            
-            
-            //Lock the lookups:
-            {
-                AZStd::unique_lock<AZStd::mutex> lookupLock(m_lookupLock);
-                m_lookups.clear();
-            }
-
-            m_inputNodeManager->Reset();
-            m_assetCache.clear();
-            m_nodeCache.clear();
-            m_nodeNameCache.clear();
-            m_isActive = false;
-            m_initialized = false;
-        }
 
         bool StartSession(SessionSettings::ESessionType, const AZStd::string& namedPipe, const AZStd::string& serverHost, AZ::u32 serverPort);
         bool ConnectSession(SessionSettings::ESessionType, const AZStd::string& namedPipe, const AZStd::string& serverHost, AZ::u32 serverPort);
 
+        void Log(const AZStd::string& msg);
 
-        void Log(const AZStd::string& msg)
-        {            
-            AZStd::unique_lock<AZStd::mutex> theLock(m_logLock);
-
-            if (msg.empty() || msg[0] == '\n')
-            {
-                if (m_historyLine.empty() == false)
-                {
-                    m_history.push(m_historyLine);
-                    AZ_Warning("HOULOG", m_printHistory == false, m_historyLine.c_str());
-
-                    if (m_history.size() > 5000)
-                    {
-                        m_history.pop();
-                    }
-                }
-
-                m_historyLine = "";
-            }            
-            else
-            {
-                m_historyLine += msg;
-            }
-        }
+        void Shutdown();
 
         /* Accessors*/
 
@@ -260,6 +184,10 @@ namespace HoudiniEngine
             AZStd::unique_ptr<AzFramework::ProcessWatcher> m_houdiniProcessWatcher;
 
             std::chrono::steady_clock::time_point m_startSyncTime;
+
+            // AZ::TickBus::Handler...
+            void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
+            ///
 
             // SessionRequestBus...
             void OpenHoudini() override;

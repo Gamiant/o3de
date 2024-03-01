@@ -25,7 +25,7 @@ namespace HoudiniEngine
 {
     HoudiniTerrain::HoudiniTerrain(const AZStd::vector<AZ::Vector3>& points)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         double width = 0;
         double height = 0;
         
@@ -89,7 +89,7 @@ namespace HoudiniEngine
 
     bool HoudiniTerrain::LoadData(const AZStd::vector<float>& data)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         m_data = AZStd::vector<AZStd::vector<double>>(m_rows);   // reset data & allocate necessary size
         for (int i = 0; i < m_rows; i++)
@@ -124,7 +124,7 @@ namespace HoudiniEngine
 
     double HoudiniTerrain::GetHeightAtXY(double xRel, double yRel)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         double height = 0;
 
@@ -191,7 +191,7 @@ namespace HoudiniEngine
 
     bool HoudiniTerrain::TransferToHeightmap()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         //TODO
         // O3DECONVERT

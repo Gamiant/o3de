@@ -104,7 +104,7 @@ namespace HoudiniEngine
     template <typename T>
     IHoudini& operator<<(IHoudini& os, T dt)
     {
-        os.Log(AZStd::to_string(dt));
+        AZ_Info("Houdini", AZStd::to_string(dt).c_str())
         return os;
     }
 

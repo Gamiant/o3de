@@ -88,7 +88,7 @@ namespace HoudiniEngine
     {
         //TODO: what does this function do exactly???
 
-        //AZ_PROFILE_FUNCTION(Editor);
+        //AZ_PROFILE_FUNCTION(Houdini);
 
         //HoudiniAssetComponent* thisCompo = static_cast<HoudiniAssetComponent*>(thisComponent);
 
@@ -263,7 +263,7 @@ namespace HoudiniEngine
 
     void HoudiniAssetComponent::SaveToFbx()
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         if (m_config.GetNode() != nullptr)
         {
             m_config.UpdateNode();
@@ -302,7 +302,7 @@ namespace HoudiniEngine
 
     void HoudiniAssetComponent::OnTick(float deltaTime, AZ::ScriptTimePoint /*time*/)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         HoudiniPtr hou;
         HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
         if (hou != nullptr)
@@ -328,7 +328,6 @@ namespace HoudiniEngine
             m_nodeExporter.SetVisibleInEditor(currentVisibility);
         }
 
-        // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
         float fUpdatePeriod{ 0.25f };
         if (gEnv && gEnv->pConsole)
         {
@@ -338,7 +337,7 @@ namespace HoudiniEngine
         fUpdatePeriod = (fUpdatePeriod < 0.01f || fUpdatePeriod >= 1.0f) ? 0.25f : fUpdatePeriod;
 
         m_updateTime += deltaTime;
-        if (m_updateTime < fUpdatePeriod)  // FL[FD-10789] Support Mesh as Input to Houdini Digital Asset
+        if (m_updateTime < fUpdatePeriod)
         {
             //Update only once every 250 ms.
             return;
@@ -446,7 +445,7 @@ namespace HoudiniEngine
 
     //bool HoudiniAssetComponent::EditorSelectionIntersectRayViewport(const AzFramework::ViewportInfo& /*viewportInfo*/, const AZ::Vector3& /*src*/, const AZ::Vector3& /*dir*/, float& /*distance*/)
     //{
-    //    AZ_PROFILE_FUNCTION(Editor);
+    //    AZ_PROFILE_FUNCTION(Houdini);
     //    //O3DECONVERT
     //    /*
     //    auto statObjects = m_nodeExporter.GetStatObjects();
@@ -501,7 +500,7 @@ namespace HoudiniEngine
 
     //AZStd::vector<HoudiniMeshStatObject> HoudiniAssetComponent::GetStatObjects()
     //{
-    //    AZ_PROFILE_FUNCTION(Editor);
+    //    AZ_PROFILE_FUNCTION(Houdini);
 
     //    AZStd::vector<HoudiniMeshStatObject> output;
     //    auto& statObjects = m_nodeExporter.GetMeshData();
@@ -572,7 +571,7 @@ namespace HoudiniEngine
 
     void HoudiniAssetComponent::DisplayEntityViewport(const AzFramework::ViewportInfo& /*viewportInfo*/, AzFramework::DebugDisplayRequests& /*debugDisplay*/)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         bool selected = false;
         AzToolsFramework::EditorEntityInfoRequestBus::EventResult(selected, GetEntityId(), &AzToolsFramework::EditorEntityInfoRequestBus::Events::IsSelected);

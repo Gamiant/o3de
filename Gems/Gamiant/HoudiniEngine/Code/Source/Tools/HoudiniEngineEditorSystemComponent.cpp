@@ -429,7 +429,7 @@ namespace HoudiniEngine
 
     void HoudiniEngineEditorSystemComponent::OnTick(float deltaTime, AZ::ScriptTimePoint time)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
         /* TODO: This doesn't work today:
         static bool InitTypes = true;
         if (InitTypes)

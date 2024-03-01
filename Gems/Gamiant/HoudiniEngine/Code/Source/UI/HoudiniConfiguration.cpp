@@ -45,11 +45,17 @@ namespace HoudiniEngine
         m_ui->ptePipeName->setPlainText(settings->GetNamedPipe().c_str());
         m_ui->pteServerPort->setPlainText(AZStd::string::format("%d", settings->GetServerPort()).c_str());
 
-        m_ui->cbSessionType->addItem(QString("Named Pipe"));
         m_ui->cbSessionType->addItem(QString("TCP Socket"));
+        m_ui->cbSessionType->addItem(QString("Named Pipe"));
+
+        int sessionType = static_cast<int>(settings->GetSessionType());
+        m_ui->cbSessionType->setCurrentIndex(sessionType);
+        OnSessionTypeChanged(sessionType);
 
         connect(m_ui->pbApply, &QPushButton::clicked, this, &HoudiniConfiguration::Apply);
         connect(m_ui->pbReset, &QPushButton::clicked, this, &HoudiniConfiguration::Reset);
+
+        connect(m_ui->cbSessionType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &HoudiniConfiguration::OnSessionTypeChanged);
     }
     
     HoudiniConfiguration::~HoudiniConfiguration()
@@ -68,7 +74,6 @@ namespace HoudiniEngine
             settings->SetNamedPipe(m_ui->ptePipeName->toPlainText().toUtf8().data());
             settings->SetSessionType(m_ui->cbSessionType->currentIndex());
         }
-
     }
 
     void HoudiniConfiguration::Reset()
@@ -83,6 +88,24 @@ namespace HoudiniEngine
             settings->SetSessionType(0);
         }
     }
+
+    void HoudiniConfiguration::OnSessionTypeChanged(int index)
+    {
+        if (index == 0)
+        {
+            m_ui->pteServerHost->setEnabled(true);
+            m_ui->pteServerPort->setEnabled(true);
+            m_ui->ptePipeName->setEnabled(false);
+        }
+        else
+        {
+            m_ui->pteServerHost->setEnabled(false);
+            m_ui->pteServerPort->setEnabled(false);
+            m_ui->ptePipeName->setEnabled(true);
+
+        }
+    }
+
 }
 
 #include <UI/moc_HoudiniConfiguration.cpp>

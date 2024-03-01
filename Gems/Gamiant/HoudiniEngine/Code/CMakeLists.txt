@@ -71,18 +71,22 @@ ly_add_target(
             3rdParty::Qt::Widgets
             Legacy::EditorCore
         PUBLIC
+            3rdParty::houdini
             Legacy::CryCommon
             AZ::AzCore
+            AZ::AtomCore
             AZ::AzToolsFramework
             AZ::SceneCore
             AZ::SceneData
             Gem::LmbrCentral
-            Legacy::Editor.Headers
-            Gem::Atom_RPI.Edit
-            Gem::Atom_RPI.Public
+            Gem::Atom_Feature_Common
+            Gem::Atom_Feature_Common.Public
             Gem::Atom_Feature_Common.Static
+            Gem::Atom_RPI.Public
+            Gem::Atom_RHI.Reflect
+            Gem::CommonFeaturesAtom.Public
             Gem::AtomLyIntegration_CommonFeatures.Static
-            3rdParty::houdini
+            Gem::AtomLyIntegration_CommonFeatures.Public
 )
 
 # Here add ${gem_name} target, it depends on the Private Object library and Public API interface
