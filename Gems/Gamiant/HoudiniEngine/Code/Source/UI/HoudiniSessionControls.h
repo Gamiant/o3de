@@ -28,16 +28,19 @@ namespace HoudiniEngine
 {
     class HoudiniSessionControls
         : public QWidget
+        , SessionNotificationBus::Handler
     {
         Q_OBJECT
 
     public:
 
         HoudiniSessionControls();
+        ~HoudiniSessionControls() override;
 
     private Q_SLOTS:
 
         void OnOpenHoudini();
+        void OnCloseHoudini();
         void OnStartSession();
         void OnStopSession();
         void OnRestartSession();
@@ -46,5 +49,11 @@ namespace HoudiniEngine
     private:
 
         Ui::HoudiniSessionControls* m_ui;
+
+    protected:
+
+        // SessionNotificationBus::Handler...
+        void OnViewportSyncChange(SessionSettings::EViewportSync) override;
+        ///
     };
 }

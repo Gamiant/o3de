@@ -561,7 +561,7 @@ namespace HoudiniEngine
     //"/obj/FBXs"
     HAPI_NodeId HoudiniNodeExporter::CreateObjectMerge(const AZStd::string& rootName, const AZStd::string& clusterName)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         if (!CheckHoudiniAccess())
         {

@@ -164,7 +164,12 @@ namespace HoudiniEngine
 
     struct SessionNotifications : public AZ::EBusTraits
     {
-        virtual void OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus) = 0;
+        virtual void OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus) { AZ_UNUSED(sessionStatus); }
+
+        virtual void OnSendToHoudini() {}
+        virtual void OnFetchFromHoudini() {}
+
+        virtual void OnViewportSyncChange(SessionSettings::EViewportSync) {}
     };
     using SessionNotificationBus = AZ::EBus<SessionNotifications>;
 

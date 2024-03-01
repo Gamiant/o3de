@@ -30,12 +30,34 @@ namespace HoudiniEngine
         bool m_cooking = false;
     };
 
-    class InputNodeManager : public IInputNodeManager
-        , public LmbrCentral::SplineComponentNotificationBus::MultiHandler
-        , public AZ::TransformNotificationBus::MultiHandler
+    // InputNodes
+    class InputNodeManager
+        : public IInputNodeManager
+        , LmbrCentral::SplineComponentNotificationBus::MultiHandler
+        , AZ::TransformNotificationBus::MultiHandler
+        , AZ::TickBus::Handler
     {
+    public:
+
+        InputNodeManager(Houdini* houdini);
+        ~InputNodeManager();
+
+        void Reset() override;
+
+        HAPI_NodeId GetNodeIdFromEntity(const AZ::EntityId& id) override;
+        HAPI_NodeId CreateInputNodeFromSpline(const AZ::EntityId& id) override;
+        HAPI_NodeId CreateInputNodeFromTerrain(const AZ::EntityId& id) override;
+        HAPI_NodeId CreateInputNodeFromMesh(const AZ::EntityId& id) override;
+
+        void AddSplineChangeHandler(const AZ::EntityId& id) override;
+        void RemoveSplineChangeHandler(const AZ::EntityId& id) override;
+
+        AZ::RPI::ModelLodIndex GetModelLodIndex(const AZ::RPI::ViewPtr view, AZ::Data::Instance<AZ::RPI::Model> model, AZ::EntityId id) const;
+
     protected:
+
         Houdini* m_houdini;
+
         AZStd::map<AZ::EntityId, HoudiniCurveContext > m_inputCache;
         HAPI_NodeId m_terrainCache;
         AZStd::vector<AZ::EntityId> m_splineChangeHandlers;
@@ -44,50 +66,19 @@ namespace HoudiniEngine
         AZStd::vector<int> m_faceCounts;
         AZStd::vector<float> m_points;
 
-    public:
-
-        InputNodeManager()
-            : m_houdini(nullptr)
-            , m_terrainCache(HOUDINI_INVALID_ID) 
-        {}
-
-        InputNodeManager(Houdini* hou) :
-            m_houdini(hou)
-            , m_terrainCache(HOUDINI_INVALID_ID) 
-        {}
-
-        ~InputNodeManager() {}
-                
-        void Reset() override;
-
-        HAPI_NodeId GetNodeIdFromEntity(const AZ::EntityId& id) override;
-        HAPI_NodeId CreateInputNodeFromSpline(const AZ::EntityId& id) override;
-        HAPI_NodeId CreateInputNodeFromTerrain(const AZ::EntityId& id) override;
-        HAPI_NodeId CreateInputNodeFromMesh(const AZ::EntityId& id) override;
-
-        void OnSplineChanged() override;
-        void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
-
-        void AddSplineChangeHandler(const AZ::EntityId& id) override
-        {
-            LmbrCentral::SplineComponentNotificationBus::MultiHandler::BusConnect(id);
-            m_splineChangeHandlers.push_back(id);
-        }
-
-        void RemoveSplineChangeHandler(const AZ::EntityId& id) override
-        {
-            auto it = AZStd::find(m_splineChangeHandlers.begin(), m_splineChangeHandlers.end(), id);
-            if (it != m_splineChangeHandlers.end())
-            {
-                LmbrCentral::SplineComponentNotificationBus::MultiHandler::BusDisconnect(id);
-                m_splineChangeHandlers.erase(it);
-            }
-        }
-
-        virtual void OnTransformChanged(const AZ::Transform& /*local*/, const AZ::Transform& /*world*/) override;
-        
-        AZ::RPI::ModelLodIndex GetModelLodIndex(const AZ::RPI::ViewPtr view, AZ::Data::Instance<AZ::RPI::Model> model, AZ::EntityId id) const;
-
         AZStd::unordered_map<AZ::EntityId, HAPI_NodeId> m_meshNodesCache;
+
+        // AZ::TickBus...
+        void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
+        ///
+
+        // LmbrCentral::SplineComponentNotificationBus::MultiHandler...
+        void OnSplineChanged() override;
+        ///
+
+        // AZ::TransformNotificationBus::MultiHandler...
+        void OnTransformChanged(const AZ::Transform& /*local*/, const AZ::Transform& /*world*/) override;
+        ///
+
     };
 }

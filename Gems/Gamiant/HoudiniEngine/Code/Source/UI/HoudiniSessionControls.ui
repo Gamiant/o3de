@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>201</width>
-    <height>216</height>
+    <height>260</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -25,7 +25,7 @@
      <x>10</x>
      <y>-10</y>
      <width>181</width>
-     <height>176</height>
+     <height>205</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -40,6 +40,13 @@
      <widget class="QPushButton" name="pbOpenHoudini">
       <property name="text">
        <string>Open Houdini Session Sync</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pbCloseHoudini">
+      <property name="text">
+       <string>Close Houdini</string>
       </property>
      </widget>
     </item>
@@ -77,8 +84,8 @@
    </layout>
   </widget>
  </widget>
-  <resources>
-    <include location="HoudiniResources.qrc"/>
-  </resources>
+ <resources>
+  <include location="HoudiniResources.qrc"/>
+ </resources>
  <connections/>
 </ui>

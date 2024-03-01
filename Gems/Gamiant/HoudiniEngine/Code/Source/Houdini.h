@@ -191,6 +191,7 @@ namespace HoudiniEngine
 
             // SessionRequestBus...
             void OpenHoudini() override;
+            void CloseHoudini() override;
             void StartSession() override;
             void StopSession() override;
             void RestartSession() override;

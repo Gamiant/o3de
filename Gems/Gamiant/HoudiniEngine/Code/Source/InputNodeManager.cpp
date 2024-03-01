@@ -69,6 +69,20 @@ namespace HoudiniEngine
         return m_featureProcessor;
     }
 
+    /// InputNodeManager
+
+    InputNodeManager::InputNodeManager(Houdini* houdini)
+        : m_houdini(houdini)
+        , m_terrainCache(HOUDINI_INVALID_ID)
+    {
+        AZ::TickBus::Handler::BusConnect();
+    }
+
+    InputNodeManager::~InputNodeManager()
+    {
+        AZ::TickBus::Handler::BusDisconnect();
+    }
+
     void InputNodeManager::Reset()
     {
         m_terrainCache = HOUDINI_INVALID_ID;
@@ -364,10 +378,10 @@ namespace HoudiniEngine
                     }
 
                     HAPI_AttributeInfo attribInfo;
-                    attribInfo.exists = true;                    
+                    attribInfo.exists = true;
                     attribInfo.owner = HAPI_ATTROWNER_POINT;
                     attribInfo.originalOwner = HAPI_ATTROWNER_POINT;
-                    attribInfo.storage = HAPI_STORAGETYPE_FLOAT;                    
+                    attribInfo.storage = HAPI_STORAGETYPE_FLOAT;
                     attribInfo.typeInfo = HAPI_ATTRIBUTE_TYPE_VECTOR;
                     attribInfo.count = numVerts;
                     attribInfo.tupleSize = 1;
@@ -579,7 +593,7 @@ namespace HoudiniEngine
 
     HAPI_NodeId InputNodeManager::CreateInputNodeFromMesh(const AZ::EntityId& id)
     {
-        AZ_PROFILE_FUNCTION(Editor);
+        AZ_PROFILE_FUNCTION(Houdini);
 
         const HAPI_Session& session = m_houdini->GetSession();
 
@@ -903,6 +917,22 @@ namespace HoudiniEngine
         }
         
         return HOUDINI_INVALID_ID;
+    }
+
+    void InputNodeManager::AddSplineChangeHandler(const AZ::EntityId& id)
+    {
+        LmbrCentral::SplineComponentNotificationBus::MultiHandler::BusConnect(id);
+        m_splineChangeHandlers.push_back(id);
+    }
+
+    void InputNodeManager::RemoveSplineChangeHandler(const AZ::EntityId& id)
+    {
+        auto it = AZStd::find(m_splineChangeHandlers.begin(), m_splineChangeHandlers.end(), id);
+        if (it != m_splineChangeHandlers.end())
+        {
+            LmbrCentral::SplineComponentNotificationBus::MultiHandler::BusDisconnect(id);
+            m_splineChangeHandlers.erase(it);
+        }
     }
 
     void InputNodeManager::OnTransformChanged(const AZ::Transform& local, const AZ::Transform& world)

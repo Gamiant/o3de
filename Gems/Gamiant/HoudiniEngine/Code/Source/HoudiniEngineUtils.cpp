@@ -445,4 +445,23 @@ namespace HoudiniEngine
         }
         return {};
     }
+
+    bool HoudiniEngineUtils::SanitizeHAPIName(AZStd::string& name)
+    {
+        bool changed = false;
+
+        char startingChar = name.c_str()[0];
+        if (isdigit(startingChar))
+        {
+            name.insert(0, '_');
+            changed = true;
+        }
+
+        if (AZ::StringFunc::Replace(name, " ", "_"))
+        {
+            changed = true;
+        }
+
+        return changed;
+    }
 }

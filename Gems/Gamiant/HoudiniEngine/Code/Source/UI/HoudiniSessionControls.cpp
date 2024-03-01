@@ -73,11 +73,25 @@ namespace HoudiniEngine
         connect(m_ui->pbStopSession, &QPushButton::clicked, this, &HoudiniSessionControls::OnStopSession);
         connect(m_ui->pbRestartSession, &QPushButton::clicked, this, &HoudiniSessionControls::OnRestartSession);
         connect(m_ui->pbOpenHoudini, &QPushButton::clicked, this, &HoudiniSessionControls::OnOpenHoudini);
+        connect(m_ui->pbCloseHoudini, &QPushButton::clicked, this, &HoudiniSessionControls::OnCloseHoudini);
+
+        SessionNotificationBus::Handler::BusConnect();
+
+    }
+
+    HoudiniSessionControls::~HoudiniSessionControls()
+    {
+        SessionNotificationBus::Handler::BusDisconnect();
     }
 
     void HoudiniSessionControls::OnOpenHoudini()
     {
         SessionRequestBus::Broadcast(&SessionRequests::OpenHoudini);
+    }
+
+    void HoudiniSessionControls::OnCloseHoudini()
+    {
+        SessionRequestBus::Broadcast(&SessionRequests::CloseHoudini);
     }
 
     void HoudiniSessionControls::OnStartSession()
@@ -97,7 +111,16 @@ namespace HoudiniEngine
 
     void HoudiniSessionControls::OnSyncViewportChanged(int index)
     {
+        SessionNotificationBus::Handler::BusDisconnect();
+
         SessionRequestBus::Broadcast(&SessionRequests::SetViewportSync, index);
+
+        SessionNotificationBus::Handler::BusConnect();
+    }
+
+    void HoudiniSessionControls::OnViewportSyncChange(SessionSettings::EViewportSync sync)
+    {
+        m_ui->cbSyncViewport->setCurrentIndex(static_cast<int>(sync));
     }
 
 }

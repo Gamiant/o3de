@@ -22,10 +22,13 @@ namespace HoudiniEngine
 
     class ViewportSyncWidget
         : public QWidget
+        , SessionNotificationBus::Handler
     {
     public:
         ViewportSyncWidget()
         {
+            SessionNotificationBus::Handler::BusConnect();
+
             m_label = new QLabel(this);
             m_label->setText("Viewport Sync");
 
@@ -37,21 +40,55 @@ namespace HoudiniEngine
             m_comboBox->addItem(QObject::tr("O3DE to Houdini"));
             m_comboBox->addItem(QObject::tr("Both"));
 
-            connect(m_comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
-                OnComboBoxValueChanged(index);
+            connect(m_comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+                [&](int index)
+                {
+                    OnComboBoxValueChanged(index);
                 });
+
+            SessionSettings* settings = nullptr;
+            SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+            AZ_Assert(settings, "Settings cannot be null");
+
+            if (settings->GetSyncO3DEViewport() && settings->GetSyncHoudiniViewport())
+            {
+                m_comboBox->setCurrentIndex(static_cast<int>(SessionSettings::EViewportSync::Both));
+            }
+            else
+            if (settings->GetSyncO3DEViewport())
+            {
+                m_comboBox->setCurrentIndex(static_cast<int>(SessionSettings::EViewportSync::O3DEToHoudini));
+            }
+            else
+            if (settings->GetSyncHoudiniViewport())
+            {
+                m_comboBox->setCurrentIndex(static_cast<int>(SessionSettings::EViewportSync::HoudiniToO3DE));
+            }
 
             QHBoxLayout* layout = new QHBoxLayout(this);
             layout->addWidget(m_label);
             layout->addWidget(m_comboBox);
         }
-        ~ViewportSyncWidget() {}
 
-    private:
+        ~ViewportSyncWidget()
+        {
+            SessionNotificationBus::Handler::BusDisconnect();
+        }
+
+    protected:
+
+        void OnViewportSyncChange(SessionSettings::EViewportSync sync)
+        {
+            m_comboBox->setCurrentIndex(static_cast<int>(sync));
+        }
 
         void OnComboBoxValueChanged(int index)
         {
+            SessionNotificationBus::Handler::BusDisconnect();
+
             SessionRequestBus::Broadcast(&SessionRequests::SetViewportSync, index);
+
+            SessionNotificationBus::Handler::BusConnect();
         }
 
         QLabel* m_label = nullptr;

@@ -26,6 +26,7 @@
 #include <UI/HoudiniNodeSync.h>
 
 #include <UI/Widgets/ViewportSyncWidget.h>
+#include <UI/Widgets/StatusWidget.h>
 
 #include <QFile>
 #include <QTextStream>
@@ -302,6 +303,17 @@ namespace HoudiniEngine
                     SessionRequestBus::Broadcast(&SessionRequests::OpenHoudini);
                 });
 
+            RegisterAction("o3de.houdini.session.close",
+                EditorIdentifiers::MainWindowActionContextIdentifier,
+                "Close Houdini",
+                "Closes Houdini",
+                "Game",
+                ":/houdini/open.svg",
+                AzToolsFramework::ActionVisibility::HideWhenDisabled,
+                [] {
+                    SessionRequestBus::Broadcast(&SessionRequests::CloseHoudini);
+                });
+
             RegisterAction("o3de.houdini.session.start",
                 EditorIdentifiers::MainWindowActionContextIdentifier,
                 "Start Session",
@@ -350,6 +362,21 @@ namespace HoudiniEngine
                 );
             }
 
+            // Status Widget
+            {
+                widgetActionProperties.m_name = "Status";
+                widgetActionProperties.m_category = "Game";
+
+                auto outcome = m_actionManagerInterface->RegisterWidgetAction(
+                    "o3de.houdini.session.status",
+                    widgetActionProperties,
+                    []() -> QWidget*
+                    {
+                        return new StatusWidget();
+                    }
+                );
+            }
+
             SessionNotificationBus::Handler::BusConnect();
             OnSessionStatusChange(SessionRequests::ESessionStatus::Offline);
 
@@ -364,14 +391,19 @@ namespace HoudiniEngine
         // Play Controls
         {
             m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.widgetAction.expander", 100);
+
             m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 200);
             m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.houdiniEngineLabel", 300);
             m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.nodesync.send", 400);
             m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.open", 500);
+            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.close", 550);
             m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.start", 600);
             m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.stop", 700);
             m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.restart", 800);
             m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.viewportSync", 900);
+
+            m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 950);
+            m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.status", 1000);
 
 
             //m_toolBarManagerInterface->AddActionWithSubMenuToToolBar(houdiniToolbarIdentifier, "o3de.houdini.nodesync.send", EditorIdentifiers::PlayGameMenuIdentifier, 400);
@@ -427,7 +459,7 @@ namespace HoudiniEngine
         }
     }
 
-    void HoudiniEngineEditorSystemComponent::OnTick(float deltaTime, AZ::ScriptTimePoint time)
+    void HoudiniEngineEditorSystemComponent::OnTick(float /*deltaTime*/, AZ::ScriptTimePoint /*time*/)
     {
         AZ_PROFILE_FUNCTION(Houdini);
         /* TODO: This doesn't work today:
@@ -445,8 +477,6 @@ namespace HoudiniEngine
 
         if (m_houdiniInstance != nullptr && m_houdiniInstance->GetInputNodeManager() != nullptr && GetIEditor()->IsInGameMode() == false)
         {
-            m_houdiniInstance->GetInputNodeManager()->OnTick(deltaTime, time);
-
             int percent, assetsInQueue = 0;
             AZStd::string text;
             m_houdiniInstance->GetProgress(text, percent, assetsInQueue);

@@ -28,6 +28,7 @@ set(FILES
 
 # Widgets
     Source/UI/Widgets/ViewportSyncWidget.h
+    Source/UI/Widgets/StatusWidget.h
 
 # SideFX
     SideFX/HE_ParameterWidget.cpp

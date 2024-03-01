@@ -413,11 +413,24 @@ namespace HoudiniEngine
         processLaunchInfo.m_tetherLifetime = true;
         m_houdiniProcessWatcher = AZStd::unique_ptr<AzFramework::ProcessWatcher>(AzFramework::ProcessWatcher::LaunchProcess(processLaunchInfo, AzFramework::ProcessCommunicationType::COMMUNICATOR_TYPE_NONE));
 
-        // We'll connect to the system tick bus where we'll try to create a session while Houdini loads
-        m_startSyncTime = std::chrono::steady_clock::now();
-        m_startingSession = true;
-        m_sessionStatus = SessionRequests::ESessionStatus::Connecting;
-        SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+        if (m_houdiniProcessWatcher->IsProcessRunning())
+        {
+            // We'll connect to the system tick bus where we'll try to create a session while Houdini loads
+            m_startSyncTime = std::chrono::steady_clock::now();
+            m_startingSession = true;
+            m_sessionStatus = SessionRequests::ESessionStatus::Connecting;
+            SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+        }
+    }
+
+    void Houdini::CloseHoudini()
+    {
+        StopSession();
+
+        if (m_houdiniProcessWatcher->IsProcessRunning())
+        {
+            m_houdiniProcessWatcher->TerminateProcess(0);
+        }
     }
 
     void Houdini::OnSystemTick()
@@ -454,6 +467,12 @@ namespace HoudiniEngine
                 {
                     AZ::SystemTickBus::Handler::BusDisconnect();
                     AZ_Error("Houdini", false, "Houdini Engine Sync Session connection timed out\n");
+
+                    m_startingSession = false;
+
+                    m_sessionStatus = SessionRequests::ESessionStatus::Offline;
+                    SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+
                     return;
                 }
             }
@@ -477,6 +496,8 @@ namespace HoudiniEngine
                 if (!InitializeHAPISession())
                 {
                     AZ_Error("Houdini", false, "Failed to initialize Houdini Engine");
+                    m_startingSession = false;
+                    return;
                 }
 
                 m_sessionStatus = SessionRequests::ESessionStatus::Ready;
@@ -573,6 +594,7 @@ namespace HoudiniEngine
             settings->SetSyncHoudiniViewport(false);
         }
 
+        SessionNotificationBus::Broadcast(&SessionNotificationBus::Events::OnViewportSyncChange, m_viewportSync);
     }
 
     HAPI_Session* Houdini::GetSessionPtr()
@@ -1401,10 +1423,13 @@ namespace HoudiniEngine
             if (meshAssetData.IsReady())
             {
                 auto nodeId = m_inputNodeManager->CreateInputNodeFromMesh(entityId);
-                createdNodeIds.push_back(nodeId);
+                if (nodeId != HOUDINI_INVALID_ID)
+                {
+                    createdNodeIds.push_back(nodeId);
+                    SessionNotificationBus::Broadcast(&SessionNotificationBus::Events::OnSendToHoudini);
+                }
             }
         }
-
 
         // 
         // Collect their assets
@@ -1487,7 +1512,7 @@ namespace HoudiniEngine
 
             if (err.size() > 0)
             {
-                AZ_Warning("HOUDINI", false, (AZStd::string("[HOUDINI] ") + err).c_str());
+                AZ_Warning("Houdini", false, (AZStd::string("[HOUDINI] ") + err).c_str());
             }
             else
             {

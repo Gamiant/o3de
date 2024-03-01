@@ -26,6 +26,7 @@ namespace HoudiniEngine
         };
 
         virtual void OpenHoudini() = 0;
+        virtual void CloseHoudini() = 0;
         virtual void StartSession() = 0;
         virtual void StopSession() = 0;
         virtual void RestartSession() = 0;
@@ -147,18 +148,6 @@ namespace HoudiniEngine
             virtual bool IsLiveUpdate() { return false; }
             virtual void SetLiveUpdate(bool /*state*/) { }
     };
-  
-    //struct HoudiniMeshStatObject
-    //{
-    //    int MaterialIndex;
-    //    //IStatObj* StatObject; //ATOMCONVERT
-    //};
-
-    //class HoudiniMeshRequests : public AZ::ComponentBus
-    //{
-    //    public:
-    //        virtual AZStd::vector<HoudiniMeshStatObject> GetStatObjects() = 0;
-    //};
 
     class HoudiniCurveAttributeRequests : public AZ::ComponentBus
     {

@@ -95,6 +95,8 @@ namespace HoudiniEngine
 
         static AZStd::string GetConnectionError();
         static AZStd::string GetLastError();
+
+        static bool SanitizeHAPIName(AZStd::string& name);
     };
     
 }
