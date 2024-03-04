@@ -1646,7 +1646,10 @@ namespace HoudiniEngine
             if (m_historyLine.empty() == false)
             {
                 m_history.push(m_historyLine);
-                AZ_Warning("Houdini", m_printHistory == false, m_historyLine.c_str());
+                if (m_printHistory)
+                {
+                    AZ_Info("Houdini", AZStd::string::format("%s\n", m_historyLine.c_str()).c_str());
+                }
 
                 if (m_history.size() > 5000)
                 {

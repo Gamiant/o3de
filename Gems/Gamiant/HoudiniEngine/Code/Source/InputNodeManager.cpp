@@ -610,7 +610,7 @@ namespace HoudiniEngine
             // Subscribe on transform changes
             AZ::TransformNotificationBus::MultiHandler::BusConnect(id);
 
-            *m_houdini << ("-------- UPDATING MESH ------- " + entity->GetName());
+            *m_houdini << AZStd::string::format("CreateInputNodeFromMesh: %s", entity->GetName().c_str()).c_str() << "";
 
             const AZ::Render::MeshFeatureProcessorInterface::MeshHandle* meshHandle = nullptr;
             AZ::Render::MeshHandleStateRequestBus::EventResult(meshHandle, id, &AZ::Render::MeshHandleStateRequestBus::Events::GetMeshHandle);
@@ -655,7 +655,7 @@ namespace HoudiniEngine
                     AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateNodeFromMesh::CreateNewMeshInputNode");
                     AZStd::string nodeName = "MESH " + entity->GetName();
                     HAPI_CreateInputNode(&session, &newInput, nodeName.c_str());
-                    *m_houdini << "Create Input Node: " << nodeName << " verts: " << newInfo.pointCount << "";
+                    *m_houdini << "Create Input Node: " << nodeName << " verts: " << indexCount << "";
                     m_meshNodesCache[id] = newInput;
                 }
 

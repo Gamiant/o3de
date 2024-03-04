@@ -707,7 +707,7 @@ namespace HoudiniEngine
             }
     
             //When creating a new object, there is a chance that by having just set the entity and that triggering a creation of new materials, this will cause
-            //LY Entity Inspector to crash.  Therefore, we push the creation of the materials forward one frame when its safe to do so.
+            //O3DE Entity Inspector to crash.  Therefore, we push the creation of the materials forward one frame when its safe to do so.
             {
                 AZStd::unique_lock<AZStd::mutex> theLock(m_lock);
                 m_tickFunctions.push_back([this, qMaterialsToCreate]() mutable
