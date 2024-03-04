@@ -110,11 +110,11 @@ namespace HoudiniEngine
         //double totalMegaBytes = (double)totalBytes / 1024.0 / 1024.0;
         //if (totalMegaBytes > HDA_MAX_MB_SIZE)
         //{
-        //    AZ_Warning("HOUDINI", false, "Potential Error: Entity HDA %s is taking up a large amount of memory during export: %f MB", thisCompo->GetEntity()->GetName().c_str(), totalMegaBytes);
+        //    AZ_Warning("Houdini", false, "Potential Error: Entity HDA %s is taking up a large amount of memory during export: %f MB", thisCompo->GetEntity()->GetName().c_str(), totalMegaBytes);
         //}
         //else
         //{
-        //    AZ::Debug::Trace::Instance().Printf("HOUDINI", "Entity %s HDA using: %f MB", thisCompo->GetEntity()->GetName().c_str(), totalMegaBytes);
+        //    AZ::Debug::Trace::Instance().Printf("Houdini", "Entity %s HDA using: %f MB", thisCompo->GetEntity()->GetName().c_str(), totalMegaBytes);
         //}
 
         return AZ::ExportedComponent(meshCompo, true);

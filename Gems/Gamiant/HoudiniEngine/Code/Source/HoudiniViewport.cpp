@@ -10,6 +10,7 @@
 #include <HoudiniSettings.h>
 #include <HoudiniEngine/HoudiniEngineBus.h>
 #include <HoudiniEngine/HoudiniGlobals.h>
+#include <HoudiniEngineUtils.h>
 
 #include <Atom/RPI.Public/Base.h>
 #include <Atom/RPI.Public/ViewportContextBus.h>
@@ -26,13 +27,13 @@ namespace HoudiniEngine
         , m_clearOffset(false)
     {}
 
-    void Viewport::SyncToO3DE()
+    void Viewport::SyncFromHoudiniToO3DE()
     {
         SessionSettings* settings = nullptr;
         SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
         AZ_Assert(settings, "Settings cannot be null");
 
-        if (!settings->GetSyncO3DEViewport())
+        if (!settings->GetSyncHoudiniViewport())
         {
             return;
         }
@@ -62,7 +63,9 @@ namespace HoudiniEngine
         // Get Hapi viewport's PivotPosition, Offset and Quat,  w.r.t Houdini's coordinate and scale.
         AZ::Vector3 viewportPivotPosition = AZ::Vector3(hapiViewport.position[0], hapiViewport.position[1], hapiViewport.position[2]);
         float viewportOffset = hapiViewport.offset;
-        AZ::Quaternion viewportQuat = AZ::Quaternion(hapiViewport.rotationQuaternion[0],
+
+        AZ::Quaternion viewportQuat = AZ::Quaternion(
+            hapiViewport.rotationQuaternion[0],
             hapiViewport.rotationQuaternion[1],
             hapiViewport.rotationQuaternion[2],
             hapiViewport.rotationQuaternion[3]);
@@ -82,28 +85,10 @@ namespace HoudiniEngine
             m_clearOffset = false;
         }
 
-        // Translate Houdini's camera transform to O3DE
+        AZ::Transform t;
+        HoudiniEngineUtils::ConvertHAPIViewport(hapiViewport, t);
 
-
-        AZ::Vector3 o3deViewportPivotPosition = AZ::Vector3(hapiViewport.position[0], hapiViewport.position[2], hapiViewport.position[1]) * Globals::ScaleFactorTranslation;
-
-        static float test = 0.1f;
-        float o3deOffset = (hapiViewport.offset - m_zeroOffset) * (Globals::ScaleFactorTranslation * test);
-
-        AZ::Quaternion o3deQuaternion = AZ::Quaternion(hapiViewport.rotationQuaternion[0], hapiViewport.rotationQuaternion[2], hapiViewport.rotationQuaternion[1], -hapiViewport.rotationQuaternion[3]);
-        o3deQuaternion = o3deQuaternion * AZ::Quaternion::CreateFromEulerAnglesDegrees(AZ::Vector3(0.f, 0.f, 180.f));
-
-
-        //AZ::Vector3 o3deForward = viewportContext->GetCameraViewMatrixAsMatrix3x4().GetBasisX(); //AZ::Vector3::CreateAxisX();
-        AZ::Vector3 o3deForward = AZ::Vector3::CreateAxisX();
-
-        AZ::Quaternion o3deQuat = AZ::Quaternion::CreateIdentity();
-        AZ::Vector3 viewPosition = o3deQuat.TransformVector(o3deForward) * o3deOffset + o3deViewportPivotPosition;
-
-        AZ::Transform cameraTransform;
-        cameraTransform.SetTranslation(viewPosition);
-        cameraTransform.SetRotation(o3deQuaternion);
-        viewportContext->SetCameraTransform(cameraTransform);
+        viewportContext->SetCameraTransform(t);
 
         m_syncedHoudiniViewportOffset = viewportOffset;
         m_syncedHoudiniViewportPivotPosition = viewportPivotPosition;
@@ -111,13 +96,13 @@ namespace HoudiniEngine
 
     }
 
-    void Viewport::SyncToHoudini()
+    void Viewport::SyncFromO3DEToHoudini()
     {
         SessionSettings* settings = nullptr;
         SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
         AZ_Assert(settings, "Settings cannot be null");
 
-        if (!settings->GetSyncHoudiniViewport())
+        if (!settings->GetSyncO3DEViewport())
         {
             return;
         }
@@ -155,37 +140,9 @@ namespace HoudiniEngine
             return;
         }
 
-        // Set zero value of offset when needed
-        if (m_clearOffset)
-        {
-            m_clearOffset = hapiViewport.offset;
-            m_clearOffset = false;
-        }
-
-        // TODO-GMT: check orbit camera support
-        AZ::Quaternion hapiQuaternion = viewportRotation;
-        hapiQuaternion = hapiQuaternion * AZ::Quaternion::CreateFromEulerAnglesDegrees(AZ::Vector3(0.f, 0.f, 180.f));
-
-
-
-
-        /* Update Hapi H_View */
-        // Note: There are infinte number of H_View representation for current viewport
-        //       Each choice of pivot point determines an equivalent representation.
-        //       We just find an equivalent when the pivot position is the view position, and offset is 0
-
         HAPI_Viewport hapiView;
-        hapiView.position[0] = viewportPivotPosition.GetX() / Globals::ScaleFactorTranslation;
-        hapiView.position[1] = viewportPivotPosition.GetY() / Globals::ScaleFactorTranslation;
-        hapiView.position[2] = viewportPivotPosition.GetZ() / Globals::ScaleFactorTranslation;
+        HoudiniEngineUtils::ConvertO3DEViewport(viewportContext->GetCameraTransform(), hapiView);
 
-        // Set HAPI_Offset always 0 when syncing Houdini to O3DE viewport
-        hapiView.offset = 0.f;
-
-        hapiView.rotationQuaternion[0] = -hapiQuaternion.GetX();
-        hapiView.rotationQuaternion[1] = -hapiQuaternion.GetZ();
-        hapiView.rotationQuaternion[2] = -hapiQuaternion.GetY();
-        hapiView.rotationQuaternion[3] = hapiQuaternion.GetW();
 
         HAPI_SetViewport(session, &hapiView);
 

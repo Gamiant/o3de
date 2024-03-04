@@ -268,7 +268,7 @@ namespace HoudiniEngine
                 staticObject->SetPhysGeom(nullptr, 0);
                 staticObject->Invalidate(false);
 
-                AZ_Warning("HOUDINI", false, "Could not initialize cry physics on object.");
+                AZ_Warning("Houdini", false, "Could not initialize cry physics on object.");
             }
         }
         else

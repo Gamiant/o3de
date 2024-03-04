@@ -477,7 +477,7 @@ namespace HoudiniEngine
         }
         else
         {
-            AZ_Warning("HOUDINI", false, "Scatter could not find slice");
+            AZ_Warning("Houdini", false, "Scatter could not find slice");
         }
     }*/
 

@@ -661,7 +661,7 @@ namespace HoudiniEngine
 
                 if (m_node == nullptr)
                 {
-                    AZ_Warning("[HOUDINI]", false, "Unable to load node %s as entity: %s ", m_operatorName.c_str(), m_nodeName.c_str());
+                    AZ_Warning("Houdini", false, "Unable to load node %s as entity: %s ", m_operatorName.c_str(), m_nodeName.c_str());
                     return false;
                 }
 
@@ -754,7 +754,7 @@ namespace HoudiniEngine
                     {
                         propertiesCopy.erase(result);
 
-                        AZ_Warning("HOUDINI", false, "[Entity: %s][Node: %s] - Removing missing property %s"
+                        AZ_Warning("Houdini", false, "[Entity: %s][Node: %s] - Removing missing property %s"
                             , (entityName + " " + m_entityId.ToString()).c_str()
                             , m_node->GetNodeName().c_str()
                             , oldProp->m_name.c_str()

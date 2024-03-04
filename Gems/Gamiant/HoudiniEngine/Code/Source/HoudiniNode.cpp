@@ -98,7 +98,7 @@ namespace HoudiniEngine
             }
             else
             {
-                AZ_Warning("HOUDINI", false, "[Operator: %s][Node: %s] - Node was not valid"
+                AZ_Warning("Houdini", false, "[Operator: %s][Node: %s] - Node was not valid"
                     , m_operatorName.c_str()
                     , m_nodeName.c_str()
                 );
@@ -363,7 +363,7 @@ namespace HoudiniEngine
             {
                 AZStd::string entityName = m_hou->LookupEntityName(entityId);
 
-                AZ_Warning("HOUDINI", false, "[Entity: %s][Node: %s] - Error setting input to %s"
+                AZ_Warning("Houdini", false, "[Entity: %s][Node: %s] - Error setting input to %s"
                     , (entityName + " " + entityId.ToString()).c_str()
                     , GetNodeName().c_str()
                     , entityId.ToString().c_str()

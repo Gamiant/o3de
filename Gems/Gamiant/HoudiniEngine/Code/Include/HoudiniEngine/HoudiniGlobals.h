@@ -12,8 +12,8 @@ namespace HoudiniEngine
 {
     namespace Globals
     {
-        constexpr float ScaleFactorPosition = 100.f;
-        constexpr float ScaleFactorTranslation = 100.f;
+        constexpr float ScaleFactorPosition = 1.f;
+        constexpr float ScaleFactorTranslation = 1.f;
 
     }
 }

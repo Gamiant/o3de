@@ -689,7 +689,7 @@ namespace HoudiniEngine
                     }
 
                     AZStd::string warning = nodeName + ":" + m_name + ": '" + path + "' could not find full source!  Check this file exists.";
-                    AZ_Warning("[HOUDINI]", false, warning.c_str());
+                    AZ_Warning("Houdini", false, warning.c_str());
                 }
 
                 m_parameter->SetValueString("");
@@ -769,7 +769,7 @@ namespace HoudiniEngine
             {
                 if (path.empty() == false)
                 {
-                    AZ_Warning("[HOUDINI]", false, (path + " could not find full source!  Check this file exists.").c_str());
+                    AZ_Warning("Houdini", false, (path + " could not find full source!  Check this file exists.").c_str());
                 }
 
                 m_parameter->SetValueString("");
@@ -850,7 +850,7 @@ namespace HoudiniEngine
             {
                 if (path.empty() == false)
                 {
-                    AZ_Warning("[HOUDINI]", false, (path + " could not find full source!  Check this file exists.").c_str());
+                    AZ_Warning("Houdini", false, (path + " could not find full source!  Check this file exists.").c_str());
                 }
 
                 m_parameter->SetValueString("");

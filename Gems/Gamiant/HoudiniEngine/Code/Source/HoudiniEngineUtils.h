@@ -10,6 +10,8 @@
 
 #include <HAPI/HAPI_Common.h>
 
+#include <HoudiniEngine/HoudiniGlobals.h>
+
 #include <AzCore/base.h>
 #include <AzCore/std/string/string.h>
 #include <AzCore/std/containers/vector.h>
@@ -97,6 +99,9 @@ namespace HoudiniEngine
         static AZStd::string GetLastError();
 
         static bool SanitizeHAPIName(AZStd::string& name);
+
+        static void ConvertHAPITransform(const HAPI_Transform& hapiTransform, AZ::Transform& transform);
+        static void ConvertHAPIViewport(const HAPI_Viewport& viewport, AZ::Transform& transform);
+        static void ConvertO3DEViewport(const AZ::Transform& o3deTransform, HAPI_Viewport& viewport);
     };
-    
 }

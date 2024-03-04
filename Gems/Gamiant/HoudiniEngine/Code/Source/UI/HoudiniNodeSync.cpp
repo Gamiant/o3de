@@ -15,7 +15,6 @@
 
 namespace HoudiniEngine
 {
-    //////////////////////////////////////////////////////////////////////////
     HoudiniNodeSync::HoudiniNodeSync()
         : QWidget(nullptr)
         , m_ui(new Ui::HoudiniNodeSync())

@@ -182,7 +182,7 @@ namespace HoudiniEngine
                 if (!readResult.IsSuccess())
                 {
                     AZ_Error(
-                        "HE", false,
+                        "Houdini", false,
                         "Failed to load material."
                         "Error message: '%s'", readResult.GetError().c_str());
                     return false;
@@ -193,7 +193,7 @@ namespace HoudiniEngine
                 if (!saveResult.IsSuccess())
                 {
                     AZ_Error(
-                        "HE", false,
+                        "Houdini", false,
                         "Failed to save material file."
                         "Error message: '%s'", readResult.GetError().c_str());
                     return false;

@@ -464,4 +464,71 @@ namespace HoudiniEngine
 
         return changed;
     }
+
+    void HoudiniEngineUtils::ConvertHAPITransform(const HAPI_Transform& hapiTransform, AZ::Transform& transform)
+    {
+        AZ::Quaternion rotation = AZ::Quaternion(
+            hapiTransform.rotationQuaternion[0],
+            hapiTransform.rotationQuaternion[2],
+            hapiTransform.rotationQuaternion[1],
+            -hapiTransform.rotationQuaternion[3]);
+
+        AZ::Vector3 translation = AZ::Vector3(
+            hapiTransform.position[0],
+            hapiTransform.position[2],
+            hapiTransform.position[1]
+        );
+
+        translation *= Globals::ScaleFactorTranslation;
+
+        transform.SetRotation(rotation);
+        transform.SetTranslation(translation);
+        transform.SetUniformScale(*hapiTransform.scale);
+    }
+
+    void HoudiniEngineUtils::ConvertHAPIViewport(const HAPI_Viewport& viewport, AZ::Transform& transform)
+    {
+        AZ::Quaternion rotation = AZ::Quaternion(
+            viewport.rotationQuaternion[0],
+            viewport.rotationQuaternion[2],
+            viewport.rotationQuaternion[1],
+            -viewport.rotationQuaternion[3]);
+
+        // Rotate to transform from right handed
+        rotation = rotation * AZ::Quaternion::CreateFromEulerAnglesDegrees(AZ::Vector3(0.f, 0.f, -180.f));
+
+        AZ::Vector3 translation = AZ::Vector3(
+            viewport.position[0],
+            viewport.position[2],
+            -viewport.position[1]
+        );
+
+        translation *= (-viewport.offset * Globals::ScaleFactorTranslation);
+
+        transform.SetRotation(rotation);
+        transform.SetTranslation(translation);
+
+    }
+
+    void HoudiniEngineUtils::ConvertO3DEViewport(const AZ::Transform& o3deTransform, HAPI_Viewport& viewport)
+    {
+        AZ::Quaternion rotation = o3deTransform.GetRotation();
+        rotation = rotation * AZ::Quaternion::CreateFromEulerAnglesDegrees(AZ::Vector3(0.f, 0.f, -180.f));
+
+        viewport.rotationQuaternion[0] = rotation.GetX();
+        viewport.rotationQuaternion[1] = rotation.GetZ();
+        viewport.rotationQuaternion[2] = rotation.GetY();
+        viewport.rotationQuaternion[3] = -rotation.GetW();
+
+        const auto& cameraPosition = o3deTransform.GetTranslation();
+        //cameraPosition *= (viewport.offset * Globals::ScaleFactorTranslation);
+
+        viewport.position[0] = cameraPosition.GetX();
+        viewport.position[1] = cameraPosition.GetZ();
+        viewport.position[2] = -cameraPosition.GetY();
+
+
+        // TODO-GMT: figure out the offset when we're using orbit 
+        viewport.offset = 10.f; 
+    }
 }

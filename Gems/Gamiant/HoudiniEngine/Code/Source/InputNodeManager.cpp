@@ -902,14 +902,13 @@ namespace HoudiniEngine
                     HAPI_AddAttribute(&session, geoInfo.nodeId, 0, "Alpha", &alpha_attr_info);
                     HAPI_SetAttributeFloatData(&session, geoInfo.nodeId, 0, "Alpha", &alpha_attr_info, &alphas[0], 0, newInfo.vertexCount);
                 }
-                
 
                 // Commit Geometry to Houdini
                 auto result = HAPI_CommitGeo(&session, geoInfo.nodeId);
 
                 if (result != HAPI_RESULT_SUCCESS)
                 {
-                    AZ_Error("Houdini", false, "Commit Geometry Failure : % d", result);
+                    AZ_Error("Houdini", false, "Commit Geometry Failure : %d", result);
                 }
             }
 

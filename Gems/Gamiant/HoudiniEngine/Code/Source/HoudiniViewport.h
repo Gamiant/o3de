@@ -10,14 +10,16 @@
 
 namespace HoudiniEngine
 {
+    // The Viewport class handles the synchronization behavior between O3DE's and Houdini's
+    // viewports
     class Viewport
     {
     public:
 
         Viewport();
 
-        void SyncToO3DE();
-        void SyncToHoudini();
+        void SyncFromHoudiniToO3DE();
+        void SyncFromO3DEToHoudini();
 
     protected:
 

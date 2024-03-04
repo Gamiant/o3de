@@ -254,7 +254,7 @@ namespace HoudiniEngine
             {
                 AZStd::string entityName = m_hou->LookupEntityName(m_node->GetEntityId());
 
-                AZ_Warning("HOUDINI", false, "[Entity: %s][Node: %s][Prop: %s] - Error setting entity to %s"
+                AZ_Warning("Houdini", false, "[Entity: %s][Node: %s][Prop: %s] - Error setting entity to %s"
                     , (entityName + " " + m_node->GetEntityId().ToString()).c_str()
                     , GetNode()->GetNodeName().c_str()
                     , GetName().c_str()

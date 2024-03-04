@@ -43,19 +43,19 @@ namespace HoudiniEngine
                 ec->Class<HoudiniCurveAttributeComponent>("Houdini Attribute Data", "Per point data passed to Houdini")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Houdini")
-                    ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("Game", 0x232b318c))
+                    ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(AZ::Edit::Attributes::Icon, "Editor/Icons/Houdini.png")
                     ->Attribute(AZ::Edit::Attributes::ViewportIcon, "Editor/Icons/Houdini.png")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
 
                     ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniCurveAttributeComponent::m_liveEdit, "Live Edit", "")
-                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC("RefreshAttributesAndValues", 0xcbc2147c))
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues"))
 
                     ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniCurveAttributeComponent::m_name, "Name", "")
-                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC("RefreshAttributesAndValues", 0xcbc2147c))
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues"))
                     
                     ->DataElement(AZ::Edit::UIHandlers::Slider, &HoudiniCurveAttributeComponent::m_paintValue, "Value", "")
-                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC("RefreshAttributesAndValues", 0xcbc2147c))
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues"))
                     ->Attribute(AZ::Edit::Attributes::Min, -10000.0)
                     ->Attribute(AZ::Edit::Attributes::Max, 10000.0)
                     ->Attribute(AZ::Edit::Attributes::SoftMin, -100.0)
@@ -76,7 +76,7 @@ namespace HoudiniEngine
 
                     //Too slow
                     //->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniCurveAttributeComponent::m_attribute, "Curve Attribute", "")
-                    //->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC("RefreshAttributesAndValues", 0xcbc2147c)) 
+                    //->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues")) 
                     
                     ;                   
             }
@@ -125,7 +125,7 @@ namespace HoudiniEngine
     
     void HoudiniCurveAttributeComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
     {
-        provided.push_back(AZ_CRC("HoudiniCurveAttributeComponent", 0xa490fa4b));
+        provided.push_back(AZ_CRC_CE("HoudiniCurveAttributeComponent"));
     }
 
     void HoudiniCurveAttributeComponent::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& /*incompatible*/)
@@ -135,8 +135,8 @@ namespace HoudiniEngine
 
     void HoudiniCurveAttributeComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
     {
-        required.push_back(AZ_CRC("TransformService", 0x8ee22c50));
-        required.push_back(AZ_CRC("SplineService", 0x2b674d3c));
+        required.push_back(AZ_CRC_CE("TransformService"));
+        required.push_back(AZ_CRC_CE("SplineService"));
     }
 
     void HoudiniCurveAttributeComponent::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)

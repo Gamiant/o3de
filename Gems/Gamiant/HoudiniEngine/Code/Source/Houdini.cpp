@@ -28,7 +28,7 @@ AZ_DEFINE_BUDGET(Houdini);
 
 #if defined(AZ_PLATFORM_WINDOWS)
 
-//AZ_Warning("HOUDINI-COOK", false, (AZStd::string(__FILE__)+ AZStd::string(": ") + QString::number(__LINE__)).c_str());\
+//AZ_Warning("Houdini", false, (AZStd::string(__FILE__)+ AZStd::string(": ") + QString::number(__LINE__)).c_str());\
 
 #define ENSURE_SUCCESS( result ) \
 if ( (result) != HAPI_RESULT_SUCCESS ) \
@@ -403,7 +403,7 @@ namespace HoudiniEngine
         }
         else
         {
-            AZ_Error("Houdini", false, "Houdini - Invalid Session Type");
+            AZ_Assert(false, "Houdini - Invalid Session Type");
             return;
         }
 
@@ -439,12 +439,12 @@ namespace HoudiniEngine
 
         if (m_viewportSync == SessionSettings::EViewportSync::Both || m_viewportSync == SessionSettings::EViewportSync::HoudiniToO3DE)
         {
-            m_viewport.SyncToO3DE();
+            m_viewport.SyncFromHoudiniToO3DE();
         }
 
         if (m_viewportSync == SessionSettings::EViewportSync::Both || m_viewportSync == SessionSettings::EViewportSync::O3DEToHoudini)
         {
-            m_viewport.SyncToHoudini();
+            m_viewport.SyncFromO3DEToHoudini();
         }
 
     }
@@ -534,24 +534,24 @@ namespace HoudiniEngine
         {
             HAPI_Cleanup(&m_session);
             HAPI_CloseSession(&m_session);
+
+            m_session.id = -1;
+            m_session.type = HAPI_SESSION_MAX;
+            m_startingSession = false;
+
+            m_sessionStatus = SessionRequests::ESessionStatus::Offline;
+            SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+
+            NodeSyncRequestBus::Handler::BusDisconnect();
+
+            AZ_Info("Houdini", "Houdini Engine Session Stopped\n");
         }
-
-        m_session.id = -1;
-        m_session.type = HAPI_SESSION_MAX;
-
-        m_sessionStatus = SessionRequests::ESessionStatus::Offline;
-        SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
-
-        NodeSyncRequestBus::Handler::BusDisconnect();
-
-        AZ_Info("Houdini", "Houdini Engine Session Stopped\n");
     }
 
     void Houdini::RestartSession()
     {
         AZ_Info("Houdini", "Restarting Houdini Engine Session\n");
 
-        // Stop the current session
         StopSession();
 
         SessionSettings* settings = nullptr;
@@ -993,7 +993,7 @@ namespace HoudiniEngine
 
         if (err.length() > 0)
         {
-            AZ_Warning("HOUDINI", printErrors == false, err.c_str());
+            AZ_Warning("Houdini", printErrors == false, err.c_str());
             hasError = true;
         }
 
@@ -1004,7 +1004,7 @@ namespace HoudiniEngine
             QString error = err.c_str();
             if (error.contains("No geometry generated!", Qt::CaseInsensitive) == false)
             {
-                AZ_Warning("HOUDINI-COOKING", printErrors == false, err.c_str());                
+                AZ_Warning("Houdini", printErrors == false, err.c_str());                
             }
 
             if (includeCookingErrors)
@@ -1175,7 +1175,7 @@ namespace HoudiniEngine
         }
         else
         {
-            AZ_Warning("HOUDINI", false, "Could not rename node %s to %s", oldNodeName.c_str(), node->GetNodeName().c_str());
+            AZ_Warning("Houdini", false, "Could not rename node %s to %s", oldNodeName.c_str(), node->GetNodeName().c_str());
         }
     }
 
@@ -1184,7 +1184,7 @@ namespace HoudiniEngine
     {
         AZ_PROFILE_FUNCTION(Houdini);
 
-        if (IsActive() == false)
+        if (!IsActive())
         {
             return nullptr;
         }
@@ -1290,7 +1290,7 @@ namespace HoudiniEngine
         
         if (info.id == HOUDINI_INVALID_ID)
         {
-            AZ_Error("HOUDINI", false, (entityName + " has invalid node id! Cannot Cook this node!").c_str());
+            AZ_Error("Houdini", false, (entityName + " has invalid node id! Cannot Cook this node!").c_str());
             return;
         }
 
@@ -1512,7 +1512,7 @@ namespace HoudiniEngine
 
             if (err.size() > 0)
             {
-                AZ_Warning("Houdini", false, (AZStd::string("[HOUDINI] ") + err).c_str());
+                AZ_Warning("Houdini", false, (AZStd::string("Houdini ") + err).c_str());
             }
             else
             {

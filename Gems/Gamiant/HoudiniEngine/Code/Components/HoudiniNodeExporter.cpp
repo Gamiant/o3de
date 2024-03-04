@@ -1255,7 +1255,7 @@ namespace HoudiniEngine
 
                 //Data is already optimized, pull the data directly (do not un-index)
                 {
-                    AZ_PROFILE_SCOPE(Editor, "CopyPointData");                
+                    AZ_PROFILE_SCOPE(Editor, "CopyPointData");
                     for (int i = 0; i < partInfo.pointCount; i++)
                     {
                         meshData.m_positions[i] = Vector3f{ p[i * 3 + 0], p[i * 3 + 1], p[i * 3 + 2] };
@@ -1267,7 +1267,7 @@ namespace HoudiniEngine
                             {
                                 if (!warnedNormal)
                                 {
-                                    AZ_Warning("[HOUDINI]", false, "Invalid normal data on mesh from Houdini '%s' Normal: (%f, %f, %f) at index:%d \nUsing identity normals instead, lighting may look incorrect on this mesh.",
+                                    AZ_Warning("Houdini", false, "Invalid normal data on mesh from Houdini '%s' Normal: (%f, %f, %f) at index:%d \nUsing identity normals instead, lighting may look incorrect on this mesh.",
                                         geomName.c_str(), n[i * 3 + 0], n[i * 3 + 1], n[i * 3 + 2], i);
                                     warnedNormal = true;
                                 }
@@ -1283,7 +1283,7 @@ namespace HoudiniEngine
                         {
                             if (!warnedNormal)
                             {
-                                AZ_Warning("[HOUDINI]", false, "Normal Data missing from Houdini '%s', Using identity normals instead, lighting may look incorrect on this mesh.",
+                                AZ_Warning("Houdini", false, "Normal Data missing from Houdini '%s', Using identity normals instead, lighting may look incorrect on this mesh.",
                                     geomName.c_str());
                                 warnedNormal = true;
                             }
@@ -1339,7 +1339,7 @@ namespace HoudiniEngine
                             {
                                 if (!warnedTangents)
                                 {
-                                    AZ_Warning("[HOUDINI]", false, "Invalid normal data on mesh from Houdini '%s' Tangent: (%f, %f, %f) Bitangent:  (%f, %f, %f) at index:%d \nUsing identity normals instead, lighting may look incorrect on this mesh.",
+                                    AZ_Warning("Houdini", false, "Invalid normal data on mesh from Houdini '%s' Tangent: (%f, %f, %f) Bitangent:  (%f, %f, %f) at index:%d \nUsing identity normals instead, lighting may look incorrect on this mesh.",
                                         geomName.c_str(), azTangent.GetX(), azTangent.GetY(), azTangent.GetZ(), azBitangent.GetX(), azBitangent.GetY(), azBitangent.GetZ(), cid);
                                     warnedTangents = true;
                                 }
@@ -1712,7 +1712,7 @@ namespace HoudiniEngine
         {
             // Error retrieving material face assignments.
             //TODO:
-            /*AZ_Warning("[HOUDINI]", false, "Creating Static Meshes: Object [%d %s], Geo [%d], Part [%d %s] unable to retrieve material face assignments",
+            /*AZ_Warning("Houdini", false, "Creating Static Meshes: Object [%d %s], Geo [%d], Part [%d %s] unable to retrieve material face assignments",
                 HGPO.ObjectId, *HGPO.ObjectName, HGPO.GeoId, HGPO.PartId, *HGPO.PartName);*/
             return false;
         }
