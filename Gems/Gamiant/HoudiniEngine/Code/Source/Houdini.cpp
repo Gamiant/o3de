@@ -1048,36 +1048,28 @@ namespace HoudiniEngine
             return;
         }
 
-        for (auto searchPath : m_searchPaths)
-        {
-            //AZStd::string folder = searchPath + "/";
-            AZStd::string folder = searchPath;
+        AZStd::vector<AZ::Data::AssetInfo> assets;
 
-            char filePath[AZ_MAX_PATH_LEN] = { 0 };
-            AZ::IO::FileIOBase::GetInstance()->ResolvePath(folder.c_str(), filePath, AZ_MAX_PATH_LEN);
-            folder = AZStd::string(filePath);
-
-            if (AZ::IO::FileIOBase::GetInstance()->Exists(folder.c_str()))
+        AZ::Data::AssetCatalogRequests::AssetEnumerationCB collectAssetsCb =
+            [&]([[maybe_unused]] const AZ::Data::AssetId id, const AZ::Data::AssetInfo& info)
             {
-                AZ::IO::LocalFileIO fileIo;
-                AZStd::string errorString;
-
-                // Handles each file and directory found
-                // Safe to capture all by reference because the find will run sync
-                AZ::IO::LocalFileIO::FindFilesCallbackType fileFinderCb;
-                fileFinderCb = [&](const char* fullPath) -> bool
+                if (info.m_assetType == HoudiniDigitalAsset::RTTI_Type())
                 {
-                    if (fileIo.IsDirectory(fullPath) == false)
-                    {
-                        LoadHoudiniDigitalAsset(fullPath);
-                    }
+                    assets.push_back(info);
+                }
+            };
 
-                    return true; // keep searching
-                };
+        AZ::Data::AssetCatalogRequestBus::Broadcast(&AZ::Data::AssetCatalogRequestBus::Events::EnumerateAssets, nullptr, collectAssetsCb, nullptr);
 
-                // Scans subdirectories
-                fileIo.FindFiles(folder.c_str(), "*.hda", fileFinderCb);
-            }
+        for (auto& asset : assets)
+        {
+            auto fileIO = AZ::IO::FileIOBase::GetInstance();
+
+            const char* devAssetRoot = fileIO->GetAlias("@projectroot@");
+            AZ::IO::Path assetPath = devAssetRoot;
+            assetPath /= asset.m_relativePath;
+
+            LoadHoudiniDigitalAsset(assetPath.c_str());
         }
     }
 
@@ -1430,72 +1422,6 @@ namespace HoudiniEngine
                 }
             }
         }
-
-        // 
-        // Collect their assets
-        // Create a node for each
-
-
-
-#if 0
-        HoudiniAssetPtr asset = LoadHoudiniDigitalAsset("MetalRail.hda");
-
-        auto err = GetLastHoudiniError();
-
-        HoudiniNodePtr paintCanNode = CreateNode("Object/MetalRail", "MyMetalRail");
-        //HoudiniNodePtr paintCanNode2 = CreateNode("Object/MetalRail", "MyMetalRail_clone");
-        HoudiniNodePtr curve = CreateNode("sop/curve", "NURBS");
-
-        if (!curve)
-        {
-            return;
-        }
-
-        HAPI_NodeId curveNode = curve->GetId();
-
-        int cookStatus;
-        HAPI_Result cookResult;
-        do
-        {
-            cookResult = HAPI_GetStatus(&m_session, HAPI_STATUS_COOK_STATE, &cookStatus);
-        } while (cookStatus > HAPI_STATE_MAX_READY_STATE && cookResult == HAPI_RESULT_SUCCESS);
-
-
-        HAPI_NodeInfo curveNodeInfo;
-        (HAPI_GetNodeInfo(&m_session, curveNode, &curveNodeInfo));
-
-        AZStd::vector<HAPI_ParmInfo> parmInfos(curveNodeInfo.parmCount);
-        (HAPI_GetParameters(&m_session, curveNode, &parmInfos[0], 0, curveNodeInfo.parmCount));
-
-        int coordsParmIndex = -1;
-        int typeParmIndex = -1;
-
-        for (int i = 0; i < curveNodeInfo.parmCount; i++)
-        {
-            AZStd::string parmName = GetString(parmInfos[i].nameSH);
-            if (parmName == "coords")
-            {
-                coordsParmIndex = i;
-            }
-            if (parmName == "type")
-            {
-                typeParmIndex = i;
-            }
-        }
-        if (coordsParmIndex == -1 || typeParmIndex == -1)
-        {
-            //std::cout << "Failure at " << __FILE__ << ": " << __LINE__ << std::endl;
-            //std::cout << "Could not find coords/type parameter on curve node" << std::endl;
-        }
-        HAPI_ParmInfo parm;
-        HAPI_GetParameters(&m_session, curveNode, &parm, typeParmIndex, 1);
-        int typeValue = 1;
-        HAPI_SetParmIntValues(&m_session, curveNode, &typeValue, parm.intValuesIndex, 1);
-        HAPI_GetParameters(&m_session, curveNode, &parm, coordsParmIndex, 1);
-        HAPI_SetParmStringValue(&m_session, curveNode, "-4,0,4 -4,0,-4 4,0,-4 4,0,4", parm.id, 0);
-
-        CheckForErrors();
-#endif
     }
 
     HoudiniAssetPtr Houdini::LoadHoudiniDigitalAsset(const AZStd::string& hdaName)

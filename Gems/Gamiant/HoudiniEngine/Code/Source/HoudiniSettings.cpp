@@ -309,5 +309,17 @@ namespace HoudiniEngine
         return AzToolsFramework::GetRegistry<AZStd::string>(SendNodePath, "/obj/O3DEContent");
     }
 
+    void SessionSettings::SetUpdatePeriod(float updatePeriod)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(UpdatePeriod, updatePeriod);
+        }
+    }
+
+    float SessionSettings::GetUpdatePeriod() const
+    {
+        return AzToolsFramework::GetRegistry<double>(UpdatePeriod, 0.5);
+    }
 
 }

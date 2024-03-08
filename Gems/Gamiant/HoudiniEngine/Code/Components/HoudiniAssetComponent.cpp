@@ -22,8 +22,33 @@
 
 namespace HoudiniEngine
 {    
-    /*static*/ void HoudiniAssetComponent::Reflect(AZ::ReflectContext* context)
+    void HoudiniAssetComponent::Reflect(AZ::ReflectContext* context)
     {
+        //Reflect all the custom types we need for houdini property editing.
+        HoudiniNodeComponentConfig::Reflect(context);
+        HoudiniFbxConfig::Reflect(context);
+        HoudiniNodeExporter::Reflect(context);
+
+        HoudiniScriptProperty::Reflect(context);
+        HoudiniScriptPropertyBoolean::Reflect(context);
+        HoudiniScriptPropertyInt::Reflect(context);
+        HoudiniScriptPropertyIntChoice::Reflect(context);
+        HoudiniScriptPropertyFloat::Reflect(context);
+        HoudiniScriptPropertyVector2::Reflect(context);
+        HoudiniScriptPropertyVector3::Reflect(context);
+        HoudiniScriptPropertyVector4::Reflect(context);
+        HoudiniScriptPropertyEntity::Reflect(context);
+        HoudiniScriptPropertyFile::Reflect(context);
+        HoudiniScriptPropertyFileAny::Reflect(context);
+        HoudiniScriptPropertyFileImage::Reflect(context);
+        HoudiniScriptPropertyString::Reflect(context);
+        HoudiniScriptPropertyInput::Reflect(context);
+        HoudiniScriptPropertyColor::Reflect(context);
+        HoudiniMultiparamInstance::Reflect(context);
+        HoudiniScriptPropertyMultiparm::Reflect(context);
+        HoudiniScriptPropertyButton::Reflect(context);
+        HoudiniPropertyGroup::Reflect(context);
+
         if (AZ::SerializeContext* serialize = azrtti_cast<AZ::SerializeContext*>(context))
         {
             serialize->Class<HoudiniAssetComponent, AzToolsFramework::Components::EditorComponentBase>()
@@ -35,32 +60,6 @@ namespace HoudiniEngine
 
             if (AZ::EditContext* ec = serialize->GetEditContext())
             {
-                //Reflect all the custom types we need for houdini property editing.
-                HoudiniNodeComponentConfig::Reflect(context);
-                HoudiniFbxConfig::Reflect(context);
-                HoudiniNodeExporter::Reflect(context);
-
-                HoudiniScriptProperty::Reflect(context);
-                HoudiniScriptPropertyBoolean::Reflect(context);
-                HoudiniScriptPropertyInt::Reflect(context);
-                HoudiniScriptPropertyIntChoice::Reflect(context);
-                HoudiniScriptPropertyFloat::Reflect(context);
-                HoudiniScriptPropertyVector2::Reflect(context);
-                HoudiniScriptPropertyVector3::Reflect(context);
-                HoudiniScriptPropertyVector4::Reflect(context);
-                HoudiniScriptPropertyEntity::Reflect(context);
-                HoudiniScriptPropertyFile::Reflect(context);
-                HoudiniScriptPropertyFileAny::Reflect(context);
-                HoudiniScriptPropertyFileImage::Reflect(context);
-                HoudiniScriptPropertyString::Reflect(context);
-                HoudiniScriptPropertyInput::Reflect(context);
-                HoudiniScriptPropertyColor::Reflect(context);
-                HoudiniMultiparamInstance::Reflect(context);
-                HoudiniScriptPropertyMultiparm::Reflect(context);
-                HoudiniScriptPropertyButton::Reflect(context);
-                HoudiniPropertyGroup::Reflect(context);
-                
-
                 ec->Class<HoudiniAssetComponent>("HoudiniDigitalAsset", "Houdini Digital Asset")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Houdini")
@@ -135,18 +134,18 @@ namespace HoudiniEngine
             }
 
             HoudiniNodeComponentConfig newConfig;
-            classElement.GetChildData(AZ_CRC("OperatorType", 0xe5e6918a), newConfig.m_operatorName);
-            classElement.GetChildData(AZ_CRC("Props", 0x5b7eaaa8), newConfig.m_properties);
-            classElement.GetChildData(AZ_CRC("ViewButton", 0xd21de7b2), newConfig.m_viewButton);
-            classElement.GetChildData(AZ_CRC("ViewReloadButton", 0xd276126b), newConfig.m_viewReloadButton);
-            classElement.GetChildData(AZ_CRC("ViewDebugButton", 0x16c31f4b), newConfig.m_viewDebugButton);
+            classElement.GetChildData(AZ_CRC_CE("OperatorType"), newConfig.m_operatorName);
+            classElement.GetChildData(AZ_CRC_CE("Props"), newConfig.m_properties);
+            classElement.GetChildData(AZ_CRC_CE("ViewButton"), newConfig.m_viewButton);
+            classElement.GetChildData(AZ_CRC_CE("ViewReloadButton"), newConfig.m_viewReloadButton);
+            classElement.GetChildData(AZ_CRC_CE("ViewDebugButton"), newConfig.m_viewDebugButton);
 
-            classElement.RemoveElementByName(AZ_CRC("Node", 0x857fe845));
-            classElement.RemoveElementByName(AZ_CRC("OperatorType", 0xe5e6918a));
-            classElement.RemoveElementByName(AZ_CRC("Props", 0x5b7eaaa8));
-            classElement.RemoveElementByName(AZ_CRC("ViewButton", 0xd21de7b2));
-            classElement.RemoveElementByName(AZ_CRC("ViewReloadButton", 0xd276126b));
-            classElement.RemoveElementByName(AZ_CRC("ViewDebugButton", 0x16c31f4b));
+            classElement.RemoveElementByName(AZ_CRC_CE("Node"));
+            classElement.RemoveElementByName(AZ_CRC_CE("OperatorType"));
+            classElement.RemoveElementByName(AZ_CRC_CE("Props"));
+            classElement.RemoveElementByName(AZ_CRC_CE("ViewButton"));
+            classElement.RemoveElementByName(AZ_CRC_CE("ViewReloadButton"));
+            classElement.RemoveElementByName(AZ_CRC_CE("ViewDebugButton"));
 
             classElement.AddElementWithData<HoudiniNodeComponentConfig>(context, "Houdini", newConfig);
         }     
@@ -161,17 +160,17 @@ namespace HoudiniEngine
             //Materials became an array now move to the first position in the array:
             // TODO:
             //classElement.GetChildData(AZ_CRC("Material", 0x7cbe7595), exporter.m_materialSettings[0].m_materialAsset);
-            classElement.GetChildData(AZ_CRC("Visible", 0x7ab0e859), exporter.m_materialSettings[0].m_visible);
+            classElement.GetChildData(AZ_CRC_CE("Visible"), exporter.m_materialSettings[0].m_visible);
 
-            classElement.RemoveElementByName(AZ_CRC("Material", 0x7cbe7595));
-            classElement.RemoveElementByName(AZ_CRC("Visible", 0x7ab0e859));
-            classElement.RemoveElementByName(AZ_CRC("LiveUpdate", 0x42c7d4f9));
+            classElement.RemoveElementByName(AZ_CRC_CE("Material"));
+            classElement.RemoveElementByName(AZ_CRC_CE("Visible"));
+            classElement.RemoveElementByName(AZ_CRC_CE("LiveUpdate"));
 
             classElement.AddElementWithData<HoudiniNodeExporter>(context, "MaterialSettings", exporter);
         }
         else if (classElement.GetVersion() == 4)
         {
-            classElement.RemoveElementByName(AZ_CRC("LiveUpdate", 0x42c7d4f9));
+            classElement.RemoveElementByName(AZ_CRC_CE("LiveUpdate"));
         }
 
         return true;
@@ -202,7 +201,7 @@ namespace HoudiniEngine
             AZ::EntityBus::Handler::BusConnect(GetEntityId());
         }
         
-        m_config.m_entityId = GetEntityId();        
+        m_config.m_entityId = GetEntityId();
         m_nodeExporter.Initialize(GetEntityId(), &m_fbxConfig);
         m_nodeExporter.SetDirty(true);
         m_nodeExporter.GenerateMeshMaterials();
@@ -212,13 +211,18 @@ namespace HoudiniEngine
 
         m_config.UpdateWorldTransformData(transform);
         m_nodeExporter.UpdateWorldTransformData(transform);
-        GetIEditor()->RegisterNotifyListener(this);
+
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBus::Events::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        m_updatePeriod = settings->GetUpdatePeriod();
+        m_updatePeriod = AZ::GetClamp(m_updatePeriod, 0.01f, 0.5f);
     }
 
     void HoudiniAssetComponent::Deactivate()
     {
         m_nodeExporter.RemoveMeshData();
-        GetIEditor()->UnregisterNotifyListener(this);
         
         //HoudiniMeshRequestBus::Handler::BusDisconnect();
 
@@ -274,23 +278,21 @@ namespace HoudiniEngine
 
     void HoudiniAssetComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
     {
-        provided.push_back(AZ_CRC("HoudiniAssetComponentService", 0xf22d18e6));
+        provided.push_back(AZ_CRC_CE("HoudiniAssetComponentService"));
     }
 
     void HoudiniAssetComponent::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible)
     {
-        incompatible.push_back(AZ_CRC("HoudiniAssetComponentService", 0xf22d18e6));
+        incompatible.push_back(AZ_CRC_CE("HoudiniAssetComponentService"));
     }
 
     void HoudiniAssetComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
     {
-        required.push_back(AZ_CRC("TransformService", 0x8ee22c50));
+        required.push_back(AZ_CRC_CE("TransformService"));
     }
 
-    void HoudiniAssetComponent::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)
-    {
-        (void)dependent;
-    }
+    void HoudiniAssetComponent::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType&)
+    {}
 
     HoudiniAssetComponent::~HoudiniAssetComponent()
     {
@@ -328,16 +330,8 @@ namespace HoudiniEngine
             m_nodeExporter.SetVisibleInEditor(currentVisibility);
         }
 
-        float fUpdatePeriod{ 0.25f };
-        if (gEnv && gEnv->pConsole)
-        {
-            //TODO-GMT: move to setting
-            //fUpdatePeriod = gEnv->pConsole->GetCVar("hou_update_period")->GetFVal();
-        }
-        fUpdatePeriod = (fUpdatePeriod < 0.01f || fUpdatePeriod >= 1.0f) ? 0.25f : fUpdatePeriod;
-
         m_updateTime += deltaTime;
-        if (m_updateTime < fUpdatePeriod)
+        if (m_updateTime < m_updatePeriod)
         {
             //Update only once every 250 ms.
             return;
@@ -404,16 +398,6 @@ namespace HoudiniEngine
         //    }
         //}
     }        
-
-    void HoudiniAssetComponent::OnEditorNotifyEvent(EEditorNotifyEvent event)
-    {
-        switch (event)
-        {
-            case eNotify_OnBeginSceneSave:
-                
-                break;
-        }
-    }
 
     //AZ::Aabb HoudiniAssetComponent::GetEditorSelectionBoundsViewport(const AzFramework::ViewportInfo& /*viewportInfo*/)
     //{

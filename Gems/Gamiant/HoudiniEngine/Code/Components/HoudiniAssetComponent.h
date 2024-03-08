@@ -38,7 +38,6 @@ namespace HoudiniEngine
         //, public AzToolsFramework::EditorComponentSelectionRequestsBus::Handler
         , public AzToolsFramework::EditorComponentSelectionNotificationsBus::Handler
         , public AzToolsFramework::EditorVisibilityNotificationBus::Handler
-        , public IEditorNotifyListener
         , public LmbrCentral::SplineComponentNotificationBus::Handler
     {
     public:
@@ -56,12 +55,9 @@ namespace HoudiniEngine
         HoudiniAssetComponent() = default;
         ~HoudiniAssetComponent() override;
         
-        // -- AZ::TickBus Interface -------------------------------------------------------------------------
-        virtual void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
-        // -- AZ::TickBus Interface -------------------------------------------------------------------------
-        
-        // IEditorNotifyListener
-        void OnEditorNotifyEvent(EEditorNotifyEvent event) override;
+        // AZ::TickBus...
+        void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
+        ///
 
         ////////////////////////////////////////////////////////////////////////
         // AZ::Component interface implementation
@@ -136,6 +132,7 @@ namespace HoudiniEngine
         IHoudiniNodeComponentConfig * GetConfig() { return &m_config; }
         void SaveToFbx() override;
 
+        float m_updatePeriod = 0.5f;
         bool m_updating = false;
         bool m_loaded = false;
         float m_updateTime = 0;

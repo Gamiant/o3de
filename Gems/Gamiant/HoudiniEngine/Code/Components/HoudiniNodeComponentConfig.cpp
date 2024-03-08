@@ -15,7 +15,7 @@
 #include "ExtractPoints.h"
 #include <HoudiniSplineTranslator.h>
 
-#include "OperatorSelection.h"
+#include <UI/OperatorSelection.h>
 
 #include <ISystem.h>
 

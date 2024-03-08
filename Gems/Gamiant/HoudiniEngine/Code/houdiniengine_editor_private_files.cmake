@@ -8,9 +8,6 @@ set(FILES
     Source/ExtractPoints.h
     Source/ExtractPoints.cpp
     Source/ExtractPoints.ui
-    Source/OperatorSelection.h
-    Source/OperatorSelection.cpp
-    Source/OperatorSelection.ui
 
     Source/HoudiniSettings.h
     Source/HoudiniSettings.cpp
@@ -25,6 +22,9 @@ set(FILES
     Source/UI/HoudiniSessionControls.h
     Source/UI/HoudiniSessionControls.cpp
     Source/UI/HoudiniSessionControls.ui
+    Source/UI/OperatorSelection.h
+    Source/UI/OperatorSelection.cpp
+    Source/UI/OperatorSelection.ui
 
 # Widgets
     Source/UI/Widgets/ViewportSyncWidget.h

@@ -28,7 +28,7 @@
 
 #include <AzCore/XML/rapidxml.h>
 
-#include <Source/ui_OperatorSelection.h>
+#include <Source/UI/ui_OperatorSelection.h>
 
 #include "AssetContainer.h"
 
@@ -287,4 +287,4 @@ namespace HoudiniEngine
 
 }
 
-#include <moc_OperatorSelection.cpp>
+#include <UI/moc_OperatorSelection.cpp>

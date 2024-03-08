@@ -40,6 +40,8 @@ namespace HoudiniEngine
     constexpr AZStd::string_view HoudiniExecutable = "/Houdini/Settings/Location/HoudiniExecutable";
     constexpr AZStd::string_view CustomHoudiniHomeLocation = "/Houdini/Settings/Location/CustomHoudiniHomeLocation";
 
+    constexpr AZStd::string_view UpdatePeriod = "/Houdini/Settings/UpdatePeriod";
+
     // HAPI_Initialize
     constexpr AZStd::string_view CookingThreadStack = "/Houdini/Settings/Initialize/CookingThreadStack";
     constexpr AZStd::string_view HoudiniEnvironmentFiles = "/Houdini/Settings/Initialize/HoudiniEnvironmentFiles";
@@ -153,6 +155,9 @@ namespace HoudiniEngine
 
         void SetSendNodePath(const AZStd::string& path);
         AZStd::string GetSendNodePath() const;
+
+        void SetUpdatePeriod(float updatePeriod);
+        float GetUpdatePeriod() const;
 
     };
 
