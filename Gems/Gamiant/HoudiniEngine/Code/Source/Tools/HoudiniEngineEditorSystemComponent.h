@@ -27,6 +27,8 @@
 #include <AzToolsFramework/AssetBrowser/AssetBrowserBus.h>
 #include <AzToolsFramework/ActionManager/ActionManagerRegistrationNotificationBus.h>
 
+#include <AzToolsFramework/ViewportUi/ViewportUiRequestBus.h>
+
 namespace AzToolsFramework
 {
     class ActionManagerInterface;
@@ -121,6 +123,10 @@ namespace HoudiniEngine
         void AddSourceFileOpeners(const char* fullSourceFileName, const AZ::Uuid& sourceUUID, AzToolsFramework::AssetBrowser::SourceFileOpenerList& openers) override;
         ///
 
+        // AzToolsFramework::EditorEventsBus...
+        void NotifyCentralWidgetInitialized() override;
+        ///
+
 
 
         void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
@@ -161,6 +167,9 @@ namespace HoudiniEngine
         HoudiniNodeSync* m_nodeSync;
 
         HoudiniDigitalAssetHandler* m_hdaHandler;
+
+        AzToolsFramework::ViewportUi::ClusterId m_houdiniClusterId;
+        AzToolsFramework::ViewportUi::ButtonId m_houdiniStatusButton;
 
         void RegisterAction(const AZStd::string& actionIdentifier, const AZStd::string& contextIdentifier, const AZStd::string& name, const AZStd::string& description, const AZStd::string& category, const AZStd::string& iconPath, AzToolsFramework::ActionVisibility visibility, AZStd::function<void()> lambda);
 

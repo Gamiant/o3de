@@ -70,12 +70,15 @@ namespace HoudiniEngine
     {
         SettingsBus::Handler::BusConnect();
         HoudiniEngineRequestBus::Handler::BusConnect();
+        AzToolsFramework::EditorEvents::Bus::Handler::BusConnect();
 
         m_houdiniInstance = HoudiniPtr(new Houdini());
     }
 
     HoudiniEngineEditorSystemComponent::~HoudiniEngineEditorSystemComponent()
     {
+        AzToolsFramework::EditorEvents::Bus::Handler::BusDisconnect();
+
         m_houdiniInstance->Shutdown();
 
         delete m_houdiniStatusPanel;
@@ -102,6 +105,9 @@ namespace HoudiniEngine
 
         m_hdaHandler = new HoudiniDigitalAssetHandler();
 
+
+
+
     }
 
     void HoudiniEngineEditorSystemComponent::Deactivate()
@@ -124,6 +130,9 @@ namespace HoudiniEngine
         m_actionManagerInternalInterface->GetAction("o3de.houdini.session.start")->setEnabled(sessionStatus == SessionRequests::ESessionStatus::Offline);
         m_actionManagerInternalInterface->GetAction("o3de.houdini.session.stop")->setEnabled(sessionStatus == SessionRequests::ESessionStatus::Ready);
         m_actionManagerInternalInterface->GetAction("o3de.houdini.session.restart")->setEnabled(sessionStatus == SessionRequests::ESessionStatus::Ready);
+
+        bool visible = (sessionStatus != SessionRequests::ESessionStatus::Offline);
+        AzToolsFramework::ViewportUi::ViewportUiRequestBus::Event(AzToolsFramework::ViewportUi::DefaultViewportId, &AzToolsFramework::ViewportUi::ViewportUiRequestBus::Events::SetClusterVisible, m_houdiniClusterId, visible);
     }
 
     void HoudiniEngineEditorSystemComponent::ConfigureEditorActions()
@@ -1024,6 +1033,42 @@ namespace HoudiniEngine
                 , QIcon(HoudiniDigitalAsset::Icon)
                 , hdaOpenInEditorCallback });
         }
+    }
+
+    void HoudiniEngineEditorSystemComponent::NotifyCentralWidgetInitialized()
+    {
+        AzToolsFramework::ViewportUi::ViewportUiRequestBus::EventResult(
+            m_houdiniClusterId,
+            AzToolsFramework::ViewportUi::DefaultViewportId,
+            &AzToolsFramework::ViewportUi::ViewportUiRequestBus::Events::CreateCluster,
+            AzToolsFramework::ViewportUi::Alignment::BottomLeft);
+
+        auto RegisterClusterButton = [](AzToolsFramework::ViewportUi::ClusterId clusterId,
+            const char* iconName,
+            const char* tooltip) -> AzToolsFramework::ViewportUi::ButtonId
+            {
+                AzToolsFramework::ViewportUi::ButtonId buttonId;
+                AzToolsFramework::ViewportUi::ViewportUiRequestBus::EventResult(
+                    buttonId,
+                    AzToolsFramework::ViewportUi::DefaultViewportId,
+                    &AzToolsFramework::ViewportUi::ViewportUiRequestBus::Events::CreateClusterButton,
+                    clusterId,
+                    iconName);
+
+                AzToolsFramework::ViewportUi::ViewportUiRequestBus::Event(
+                    AzToolsFramework::ViewportUi::DefaultViewportId,
+                    &AzToolsFramework::ViewportUi::ViewportUiRequestBus::Events::SetClusterButtonTooltip,
+                    clusterId,
+                    buttonId,
+                    tooltip);
+
+                return buttonId;
+            };
+
+        m_houdiniStatusButton = RegisterClusterButton(m_houdiniClusterId, ":/houdini/houdini_icon.svg", "Houdini is Connected");
+
+        AzToolsFramework::ViewportUi::ViewportUiRequestBus::Event(AzToolsFramework::ViewportUi::DefaultViewportId, &AzToolsFramework::ViewportUi::ViewportUiRequestBus::Events::SetClusterVisible, m_houdiniClusterId, false);
+
     }
 
 }
