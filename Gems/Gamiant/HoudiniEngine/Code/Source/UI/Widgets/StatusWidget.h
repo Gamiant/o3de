@@ -31,10 +31,12 @@ namespace HoudiniEngine
             SessionNotificationBus::Handler::BusConnect();
 
             m_label = new QLabel(this);
-            m_label->setText("Status");
+            m_label->setText("");
 
             QHBoxLayout* layout = new QHBoxLayout(this);
             layout->addWidget(m_label);
+
+            OnSessionStatusChange(SessionRequests::ESessionStatus::Offline);
         }
 
         ~StatusWidget()
