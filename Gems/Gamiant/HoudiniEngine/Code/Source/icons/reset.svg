@@ -1,14 +1,63 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 49 (51002) - http://www.bohemiancoding.com/sketch -->
-    <title>Reset</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="Reset" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="Group-3"></g>
-        <g id="Group">
-            <rect id="Icon-Background" x="0" y="0" width="24" height="24"></rect>
-            <path d="M17.9170416,13 L15,13 L19,8 L23,13 L19.9381062,13 C19.4460082,16.9463116 16.0796177,20 12,20 C7.581722,20 4,16.418278 4,12 C4,7.581722 7.581722,4 12,4 C12.7802003,4 13.9671798,4.06538456 15.0498484,4.51218321 C15.7716274,4.81004899 16.4416987,5.24040551 17.0600622,5.80325277 L15.7131139,7.27359539 C15.0274394,6.82544032 14.5159069,6.53408503 14.1785164,6.39952951 C13.6724307,6.19769624 12.5830744,6 12,6 C8.6862915,6 6,8.6862915 6,12 C6,15.3137085 8.6862915,18 12,18 C14.9729963,18 17.4409635,15.8377133 17.9170416,13 Z" id="Combined-Shape" fill="#E9E9E9"></path>
-        </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24px"
+   height="24px"
+   viewBox="0 0 24 24"
+   version="1.1"
+   id="svg10719"
+   sodipodi:docname="reset.svg"
+   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview10721"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="42.791667"
+     inkscape:cx="11.988315"
+     inkscape:cy="11.988315"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="-8"
+     inkscape:window-y="1432"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Group" />
+  <!-- Generator: Sketch 49 (51002) - http://www.bohemiancoding.com/sketch -->
+  <title
+     id="title10708">Reset</title>
+  <desc
+     id="desc10710">Created with Sketch.</desc>
+  <defs
+     id="defs10712" />
+  <g
+     id="Reset"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd">
+    <g
+       id="Group-3" />
+    <g
+       id="Group">
+      <rect
+         id="Icon-Background"
+         x="0"
+         y="0"
+         width="24"
+         height="24" />
+      <path
+         d="m 17.443829,13.289192 h -3.595138 l 4.929841,-6.445959 4.929842,6.445959 h -3.773662 c -0.606492,5.087551 -4.755435,9.024342 -9.783402,9.024342 -5.4453531,0 -9.85968376,-4.617526 -9.85968376,-10.313534 0,-5.6960078 4.41433066,-10.3135343 9.85968376,-10.3135343 0.961565,0 2.424471,0.084293 3.758817,0.6603024 0.889564,0.3840062 1.715401,0.9388181 2.47751,1.6644363 L 14.727575,5.9067579 C 13.882509,5.329 13.252065,4.9533873 12.836244,4.7799194 12.212514,4.5197178 10.869926,4.2648493 10.15131,4.2648493 6.0672952,4.2648493 2.7565472,7.7279944 2.7565472,12 c 0,4.272005 3.310748,7.735151 7.3947628,7.735151 3.6641,0 6.705772,-2.787603 7.292519,-6.445959 z"
+         id="Combined-Shape"
+         fill="#E9E9E9"
+         style="fill:#ffffff;fill-opacity:1;stroke-width:1.2605" />
     </g>
+  </g>
 </svg>

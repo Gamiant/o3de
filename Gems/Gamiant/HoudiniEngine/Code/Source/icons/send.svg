@@ -5,7 +5,7 @@
    viewBox="0 0 24 24"
    version="1.1"
    id="svg13"
-   sodipodi:docname="stop.svg"
+   sodipodi:docname="send.svg"
    inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -26,7 +26,7 @@
      showgrid="false"
      inkscape:zoom="42.791667"
      inkscape:cx="11.988315"
-     inkscape:cy="10.165531"
+     inkscape:cy="12.035053"
      inkscape:window-width="2560"
      inkscape:window-height="1369"
      inkscape:window-x="-8"
@@ -46,22 +46,8 @@
      stroke-width="1"
      fill="none"
      fill-rule="evenodd"
-     transform="rotate(-114.71246,12.01707,12.013784)"
-     style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#adadad;stroke-opacity:1" />
-  <circle
-     style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#fcfcfc;stroke-opacity:1;stroke-width:2;stroke-dasharray:none"
-     id="path500"
-     cx="11.824733"
-     cy="12.058422"
-     r="9.8851023" />
-  <rect
-     style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:2.00000454;stroke-opacity:1;stroke-dasharray:none"
-     id="rect1275"
-     width="18.388117"
-     height="0.30908144"
-     x="7.6537623"
-     y="0.30756199"
-     transform="matrix(0.72013273,0.69383633,-0.69166225,0.72222111,0,0)" />
+     transform="matrix(-0.41587309,-1.0517226,0.90365524,-0.48401549,6.158238,30.42296)"
+     style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#e7e7e7;stroke-opacity:1" />
   <metadata
      id="metadata1640">
     <rdf:RDF>
@@ -71,4 +57,17 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
+  <path
+     id="rect3587"
+     style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.07317;stroke-opacity:1"
+     d="m 12.001613,1.9379168 -9.8290627,11.4395922 9.9220487,8.788146 9.736075,-8.788146 z m -0.01166,3.8825417 6.504784,7.5706195 H 5.4851705 Z"
+     sodipodi:nodetypes="ccccccccc" />
+  <g
+     id="Reset-9-7"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd"
+     transform="matrix(-0.41587309,-1.0517226,0.90365524,-0.48401549,6.1466147,34.305434)"
+     style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#e7e7e7;stroke-opacity:1" />
 </svg>

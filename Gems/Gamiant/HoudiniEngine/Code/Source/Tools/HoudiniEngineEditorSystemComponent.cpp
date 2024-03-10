@@ -295,10 +295,10 @@ namespace HoudiniEngine
                 "Send",
                 "Send selection to Houdini",
                 "Game",
-                ":/houdini/load.svg",
+                ":/houdini/send.svg",
                 AzToolsFramework::ActionVisibility::AlwaysShow,
                 [] {
-                    // EBus to send node sync
+                    NodeSyncRequestBus::Broadcast(&NodeSyncRequestBus::Events::SendToHoudini);
                 });
 
             RegisterAction("o3de.houdini.session.open",
@@ -306,7 +306,7 @@ namespace HoudiniEngine
                 "Open Houdini",
                 "Opens Houdini and establishes a Session Sync",
                 "Game",
-                ":/houdini/open.svg",
+                ":/houdini/houdini_icon.svg",
                 AzToolsFramework::ActionVisibility::HideWhenDisabled,
                 [] {
                     SessionRequestBus::Broadcast(&SessionRequests::OpenHoudini);
@@ -317,7 +317,7 @@ namespace HoudiniEngine
                 "Close Houdini",
                 "Closes Houdini",
                 "Game",
-                ":/houdini/open.svg",
+                ":/houdini/close.svg",
                 AzToolsFramework::ActionVisibility::HideWhenDisabled,
                 [] {
                     SessionRequestBus::Broadcast(&SessionRequests::CloseHoudini);
@@ -403,21 +403,23 @@ namespace HoudiniEngine
 
             m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 200);
             m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.houdiniEngineLabel", 300);
-            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.nodesync.send", 400);
-            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.open", 500);
-            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.close", 550);
+
+            m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 350);
+            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.open", 400);
+            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.close", 500);
             m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.start", 600);
             m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.stop", 700);
             m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.restart", 800);
-            m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.viewportSync", 900);
 
-            m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 950);
-            m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.status", 1000);
+            m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 900);
+            m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.viewportSync", 1000);
 
+            m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 1000);
+            m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.houdini.nodesync.send", 1100);
 
-            //m_toolBarManagerInterface->AddActionWithSubMenuToToolBar(houdiniToolbarIdentifier, "o3de.houdini.nodesync.send", EditorIdentifiers::PlayGameMenuIdentifier, 400);
-            //m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 500);
-            //m_toolBarManagerInterface->AddActionToToolBar(houdiniToolbarIdentifier, "o3de.action.game.simulate", 600);
+            m_toolBarManagerInterface->AddSeparatorToToolBar(houdiniToolbarIdentifier, 1150);
+            m_toolBarManagerInterface->AddWidgetToToolBar(houdiniToolbarIdentifier, "o3de.houdini.session.status", 1200);
+
         }
 
     }
