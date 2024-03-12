@@ -82,9 +82,9 @@ namespace HoudiniEngine
         SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
         if (settings)
         {
-            settings->SetServerHost("localhost");
-            settings->SetServerPort(9090);
-            settings->SetNamedPipe("o3de_houdini");
+            settings->SetServerHost(Globals::SessionServer);
+            settings->SetServerPort(Globals::SessionPort);
+            settings->SetNamedPipe(Globals::SessionNamedPipe);
             settings->SetSessionType(0);
         }
     }

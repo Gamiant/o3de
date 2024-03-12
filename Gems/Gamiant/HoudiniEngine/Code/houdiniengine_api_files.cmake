@@ -4,6 +4,7 @@ set(FILES
     Include/HoudiniEngine/HoudiniEngineBus.h
     Include/HoudiniEngine/HoudiniCommonForwards.h
     Include/HoudiniEngine/HoudiniGlobals.h
+    Include/HoudiniEngine/HoudiniPlatform.h
 
     # This file is generated with cmake using HoudiniVersion.h.in
     Include/HoudiniEngine/HoudiniVersion.h

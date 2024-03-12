@@ -24,6 +24,8 @@
 
 #include <AtomLyIntegration/CommonFeatures/Mesh/MeshComponentBus.h>
 
+#include <HoudiniEngine/HoudiniPlatform.h>
+
 AZ_DEFINE_BUDGET(Houdini);
 
 #if defined(AZ_PLATFORM_WINDOWS)
@@ -57,7 +59,21 @@ namespace HoudiniEngine
 
         HAPI_Result result = HAPI_RESULT_FAILURE;
 
-        m_houdiniPath = AZStd::string::format("C:\\Program Files\\Side Effects Software\\Houdini %s\\bin\\", HoudiniVersionString.data());
+        int houdiniVersionMajor = -1, houdiniVersionMinor = -1, houdiniVersionBuild = -1, houdiniVersionPatch = -1;
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_MAJOR, &houdiniVersionMajor);
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_MINOR, &houdiniVersionMinor);
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_BUILD, &houdiniVersionBuild);
+        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_PATCH, &houdiniVersionPatch);
+        AZ_Info("Houdini", "Houdini Version: %d.%d.%d.%d\n", houdiniVersionMajor, houdiniVersionMinor, houdiniVersionBuild, houdiniVersionPatch);
+
+        m_houdiniPath = GetHoudiniInstallationPath(houdiniVersionMajor, houdiniVersionMinor, houdiniVersionBuild, houdiniVersionPatch) + "bin\\";
+
+        if (m_houdiniPath.empty())
+        {
+            // Try the default installation path
+            m_houdiniPath = AZStd::string::format("C:\\Program Files\\Side Effects Software\\Houdini %s\\bin\\", HoudiniVersionString.data());
+        }
+
         AZ_Info("Houdini", "Houdini Path: %s\n", m_houdiniPath.c_str());
 
         const auto gemAlias = AZ::StringFunc::Path::FixedString::format("@gemroot:HoudiniEngine@/External/%s/bin", HoudiniVersionString.data());
@@ -67,12 +83,6 @@ namespace HoudiniEngine
         m_HAPIlibPath = resolvedLevelPath;
         AZ_Info("Houdini", "HAPI Lib Path: %s\n", m_HAPIlibPath.c_str());
 
-        int houdiniVersionMajor = -1, houdiniVersionMinor = -1, houdiniVersionBuild = -1, houdiniVersionPatch = -1;
-        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_MAJOR, &houdiniVersionMajor);
-        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_MINOR, &houdiniVersionMinor);
-        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_BUILD, &houdiniVersionBuild);
-        HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_PATCH, &houdiniVersionPatch);
-        AZ_Info("Houdini", "Houdini Version: %d.%d.%d.%d\n", houdiniVersionMajor, houdiniVersionMinor, houdiniVersionBuild, houdiniVersionPatch);
 
         int engineMajor = -1, engineMinor = -1;
         HAPI_GetEnvInt(HAPI_ENVINT_VERSION_HOUDINI_ENGINE_MAJOR, &engineMajor);
@@ -413,13 +423,17 @@ namespace HoudiniEngine
         processLaunchInfo.m_tetherLifetime = true;
         m_houdiniProcessWatcher = AZStd::unique_ptr<AzFramework::ProcessWatcher>(AzFramework::ProcessWatcher::LaunchProcess(processLaunchInfo, AzFramework::ProcessCommunicationType::COMMUNICATOR_TYPE_NONE));
 
-        if (m_houdiniProcessWatcher->IsProcessRunning())
+        if (m_houdiniProcessWatcher && m_houdiniProcessWatcher->IsProcessRunning())
         {
             // We'll connect to the system tick bus where we'll try to create a session while Houdini loads
             m_startSyncTime = std::chrono::steady_clock::now();
             m_startingSession = true;
             m_sessionStatus = SessionRequests::ESessionStatus::Connecting;
             SessionNotificationBus::Broadcast(&SessionNotifications::OnSessionStatusChange, m_sessionStatus);
+        }
+        else
+        {
+            AZ_Error("Houdini", false, "Unable to launch Houdini process: '%s %s'\n", processLaunchInfo.m_processExecutableString.c_str(), processLaunchInfo.GetCommandLineParametersAsString().c_str());
         }
     }
 
@@ -478,7 +492,7 @@ namespace HoudiniEngine
             }
             else
             {
-                AZ_Info("Houdini", "Houdini Session Estabished ------------------------\n");
+                AZ_Info("Houdini", "Houdini Session Established ------------------------\n");
                 AZ_Info("Houdini", "Session Type: %s\n", sessionType == SessionSettings::ESessionType::TCPSocket ? "TCP Socket" : "Named Pipe");
                 if (sessionType == SessionSettings::ESessionType::TCPSocket)
                 {

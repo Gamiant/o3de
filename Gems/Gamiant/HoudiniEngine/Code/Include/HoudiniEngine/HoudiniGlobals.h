@@ -15,5 +15,8 @@ namespace HoudiniEngine
         constexpr float ScaleFactorPosition = 1.f;
         constexpr float ScaleFactorTranslation = 1.f;
 
+        constexpr AZ::u32 SessionPort = 9090;
+        constexpr AZStd::string_view SessionServer = "localhost";
+        constexpr AZStd::string_view SessionNamedPipe = "o3de_houdini";
     }
 }

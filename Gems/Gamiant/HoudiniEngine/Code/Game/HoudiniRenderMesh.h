@@ -44,7 +44,7 @@ namespace HoudiniEngine
         ~HoudiniRenderMesh();
 
         //! For building the mesh.
-        void BuildMesh(const HoudiniModelData& renderData);
+        void BuildMesh(const HoudiniModelData& renderData, const AZ::Transform& worldFromLocal);
         //! Updates the models transform
         void UpdateTransform(const AZ::Transform& worldFromLocal);
         //! Returns if the Model/Mesh is visible or not.

@@ -67,7 +67,7 @@ namespace HoudiniEngine
 
         HoudiniNodePtr m_rootNode;
 
-        bool m_printHistory = false;
+        bool m_printHistory = true;
         AZStd::string m_historyLine;
         AZStd::queue<AZStd::string> m_history;
 

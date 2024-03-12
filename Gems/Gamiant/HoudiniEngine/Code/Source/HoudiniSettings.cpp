@@ -7,6 +7,8 @@
  */
 
 #include "HoudiniSettings.h"
+#include <HoudiniEngine/HoudiniGlobals.h>
+
 #include <Viewport/ViewportSettings.h>
 
 namespace HoudiniEngine
@@ -18,7 +20,7 @@ namespace HoudiniEngine
 
     AZStd::string SessionSettings::GetServerHost() const
     {
-        return AzToolsFramework::GetRegistry<AZStd::string>(ServerHost, "localhost");
+        return AzToolsFramework::GetRegistry<AZStd::string>(ServerHost, Globals::SessionServer);
     }
 
     void SessionSettings::SetNamedPipe(const AZStd::string& pipe)
@@ -28,7 +30,7 @@ namespace HoudiniEngine
 
     AZStd::string SessionSettings::GetNamedPipe() const
     {
-        return AzToolsFramework::GetRegistry<AZStd::string>(NamedPipe, "o3de_houdini");
+        return AzToolsFramework::GetRegistry<AZStd::string>(NamedPipe, Globals::SessionNamedPipe);
     }
 
     void SessionSettings::SetServerPort(AZ::u64 port)
@@ -41,8 +43,7 @@ namespace HoudiniEngine
 
     AZ::u32 SessionSettings::GetServerPort() const
     {
-        AZ::u32 port = aznumeric_cast<AZ::u32>(AzToolsFramework::GetRegistry<AZ::u64>(ServerPort, 9090));
-        return port;
+        return aznumeric_cast<AZ::u32>(AzToolsFramework::GetRegistry<AZ::u64>(ServerPort, Globals::SessionPort));
     }
 
     void SessionSettings::SetSessionType(AZ::u64 sessionType)
@@ -55,9 +56,7 @@ namespace HoudiniEngine
 
     SessionSettings::ESessionType SessionSettings::GetSessionType() const
     {
-        ESessionType sessionType;
-        sessionType = static_cast<ESessionType>(AzToolsFramework::GetRegistry<AZ::u64>(SessionType, 0));
-        return sessionType;
+        return static_cast<ESessionType>(AzToolsFramework::GetRegistry<AZ::u64>(SessionType, 0));
     }
 
     void SessionSettings::SetOTLPath(const AZStd::string& otlPath)

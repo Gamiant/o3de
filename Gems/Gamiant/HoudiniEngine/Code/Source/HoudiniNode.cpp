@@ -48,7 +48,7 @@ namespace HoudiniEngine
 
             if (m_nodeInfo.isValid)
             {
-                if (m_nodeInfo.parmCount > 0)
+                if (m_nodeInfo.type != HAPI_NODETYPE_NONE && m_nodeInfo.parmCount > 0)
                 {
                     AZStd::vector<HAPI_ParmInfo> parms(m_nodeInfo.parmCount);
 
@@ -254,7 +254,7 @@ namespace HoudiniEngine
         float previousMatrix[16];
         float currentMatrix[16];
 
-        HAPI_Transform previousTransform = HAPI_Transform_Create();        
+        HAPI_Transform previousTransform = HAPI_Transform_Create();
         HAPI_GetObjectTransform(m_session, info.nodeId, -1, HAPI_RSTOrder::HAPI_RSTORDER_DEFAULT, &previousTransform);
         
         HAPI_ConvertTransformQuatToMatrix(m_session, &previousTransform, previousMatrix);
@@ -264,7 +264,7 @@ namespace HoudiniEngine
         for (int i = 0; i < 16; i++)
         {
             float a = previousMatrix[i];
-            float b = currentMatrix[i];            
+            float b = currentMatrix[i];
             if (fabs(a - b) > 0.0001f)
             {
                 different = true;

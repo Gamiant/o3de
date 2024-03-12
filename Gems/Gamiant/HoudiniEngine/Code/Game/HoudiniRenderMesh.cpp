@@ -190,6 +190,28 @@ namespace HoudiniEngine
 
     bool HoudiniRenderMesh::CreateModel()
     {
+        AZ::RPI::ModelAssetCreator modelCreator;
+        modelCreator.Begin(AZ::Data::AssetId(AZ::Uuid::CreateRandom()));
+        modelCreator.SetName(ModelName);
+        modelCreator.AddLodAsset(AZStd::move(m_lodAsset));
+
+        /*if (auto materialAsset = AZ::RPI::AssetUtils::LoadAssetByProductPath<AZ::RPI::MaterialAsset>(TexturedMaterialPath.data()))
+        {
+            m_materialInstance = AZ::RPI::Material::FindOrCreate(materialAsset);
+
+            AZ::RPI::ModelMaterialSlot materialSlot;
+            materialSlot.m_stableId = OneMaterialSlotId;
+            materialSlot.m_defaultMaterialAsset = materialAsset;
+            modelCreator.AddMaterialSlot(materialSlot);
+        }
+        else
+        {
+            AZ_Error("CreateLodAsset", false, "Could not load material.");
+            return;
+        }*/
+
+        modelCreator.End(m_modelAsset);
+
         m_model = AZ::RPI::Model::FindOrCreate(m_modelAsset);
         m_meshFeatureProcessor = AZ::RPI::Scene::GetFeatureProcessorForEntity<AZ::Render::MeshFeatureProcessorInterface>(m_entityId);
 
@@ -201,8 +223,7 @@ namespace HoudiniEngine
 
         m_meshFeatureProcessor->ReleaseMesh(m_meshHandle);
         m_meshHandle = m_meshFeatureProcessor->AcquireMesh(AZ::Render::MeshHandleDescriptor{ m_modelAsset });
-        AZ::Render::MeshHandleStateNotificationBus::Event(
-            m_entityId, &AZ::Render::MeshHandleStateNotificationBus::Events::OnMeshHandleSet, &m_meshHandle);
+        AZ::Render::MeshHandleStateNotificationBus::Event(m_entityId, &AZ::Render::MeshHandleStateNotificationBus::Events::OnMeshHandleSet, &m_meshHandle);
 
         return true;
     }
@@ -249,9 +270,10 @@ namespace HoudiniEngine
         m_materialPathList = materialPaths;
     }
 
-    void HoudiniRenderMesh::BuildMesh(const HoudiniModelData& modelData)
+    void HoudiniRenderMesh::BuildMesh(const HoudiniModelData& modelData, const AZ::Transform& worldFromLocal)
     {
         CreateMesh(modelData);
+        UpdateTransform(worldFromLocal);
     }
 
     void HoudiniRenderMesh::UpdateTransform(const AZ::Transform& worldFromLocal)
