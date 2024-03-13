@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include <AzCore/base.h>
+#include <AzCore/std/string/string_view.h>
+
 namespace HoudiniEngine
 {
     namespace Globals

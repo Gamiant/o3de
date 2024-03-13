@@ -12,24 +12,6 @@ set(FILES
     Source/HoudiniSettings.h
     Source/HoudiniSettings.cpp
 
-# UI
-    Source/UI/HoudiniStatusPanel.h
-    Source/UI/HoudiniStatusPanel.cpp
-    Source/UI/HoudiniStatusPanel.ui
-    Source/UI/HoudiniConfiguration.h
-    Source/UI/HoudiniConfiguration.cpp
-    Source/UI/HoudiniConfiguration.ui
-    Source/UI/HoudiniSessionControls.h
-    Source/UI/HoudiniSessionControls.cpp
-    Source/UI/HoudiniSessionControls.ui
-    Source/UI/OperatorSelection.h
-    Source/UI/OperatorSelection.cpp
-    Source/UI/OperatorSelection.ui
-
-# Widgets
-    Source/UI/Widgets/ViewportSyncWidget.h
-    Source/UI/Widgets/StatusWidget.h
-
 # SideFX
     SideFX/HE_ParameterWidget.cpp
     SideFX/HE_ParameterWidget.h
@@ -98,20 +80,39 @@ set(FILES
     Source/HoudiniPaintAttribTool.cpp
     Source/HoudiniScriptProperties.h
     Source/HoudiniScriptProperties.cpp
-    Source/HoudiniSplineTranslator.h
-    Source/HoudiniSplineTranslator.cpp
     Source/HoudiniTerrain.h
     Source/HoudiniTerrain.cpp
     Source/InputNodeManager.h
     Source/InputNodeManager.cpp
-    Source/HoudiniMaterialTranslator.h
-    Source/HoudiniMaterialTranslator.cpp
     Source/HoudiniViewport.h
     Source/HoudiniViewport.cpp
     Source/HoudiniResources.qrc
+
+# Translators
+    Source/Translators/HoudiniMaterialTranslator.h
+    Source/Translators/HoudiniMaterialTranslator.cpp
+    Source/Translators/HoudiniSplineTranslator.h
+    Source/Translators/HoudiniSplineTranslator.cpp
+
+    # UI
+    Source/UI/HoudiniStatusPanel.h
+    Source/UI/HoudiniStatusPanel.cpp
+    Source/UI/HoudiniStatusPanel.ui
+    Source/UI/HoudiniConfiguration.h
+    Source/UI/HoudiniConfiguration.cpp
+    Source/UI/HoudiniConfiguration.ui
+    Source/UI/HoudiniSessionControls.h
+    Source/UI/HoudiniSessionControls.cpp
+    Source/UI/HoudiniSessionControls.ui
+    Source/UI/OperatorSelection.h
+    Source/UI/OperatorSelection.cpp
+    Source/UI/OperatorSelection.ui
     Source/UI/HoudiniNodeSync.h
     Source/UI/HoudiniNodeSync.cpp
     Source/UI/HoudiniNodeSync.ui
+
+# Widgets
+    Source/UI/Widgets/ViewportSyncWidget.h
+    Source/UI/Widgets/StatusWidget.h
+
 )
-
-

@@ -13,7 +13,7 @@
 #include <Components/HoudiniNodeComponentConfig.h>
 #include <HoudiniCommon.h>
 #include "ExtractPoints.h"
-#include <HoudiniSplineTranslator.h>
+#include <Translators/HoudiniSplineTranslator.h>
 
 #include <UI/OperatorSelection.h>
 
