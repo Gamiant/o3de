@@ -9,8 +9,8 @@
 #include <HoudiniCommon.h>
 #include <Components/HoudiniNodeExporter.h>
 #include <Game/HoudiniMeshComponent.h>
-#include <HoudiniSplineTranslator.h>
-#include <HoudiniMaterialTranslator.h>
+#include <Translators/HoudiniSplineTranslator.h>
+#include <Translators/HoudiniMaterialTranslator.h>
 
 #include <IIndexedMesh.h>
 
@@ -27,6 +27,8 @@
 #include <AzToolsFramework/ToolsComponents/TransformComponentBus.h>
 #include <AzFramework/Components/TransformComponent.h>
 
+#include <AzCore/Jobs/JobFunction.h>
+#include <AzCore/Jobs/JobCompletion.h>
 
 namespace HoudiniEngine
 {
@@ -885,495 +887,512 @@ namespace HoudiniEngine
             parts.push_back(partInfo);
         }
 
+
+        AZ::JobCompletion jobCompletion;
+
+
         for (auto partInfo : parts)
         {
-            AZ_PROFILE_SCOPE(Editor, "GettingGeometryPart");
-            //Setup attribute buffers
-            HAPI_AttributeInfo p_info = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo n_info = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo cd_info = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo a_info = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo uv_info = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo tangent_info = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo bitangent_info = HAPI_AttributeInfo_Create();
-
-            HAPI_AttributeInfo n_vinfo = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo cd_vinfo = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo a_vinfo = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo uv_vinfo = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo tangent_vinfo = HAPI_AttributeInfo_Create();
-            HAPI_AttributeInfo bitangent_vinfo = HAPI_AttributeInfo_Create();
-
-            AZStd::vector<HAPI_AttributeInfo> attrib_infos = { p_info, n_info, cd_info, uv_info, tangent_info, bitangent_info };
-
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "P", HAPI_ATTROWNER_POINT, &p_info);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "N", HAPI_ATTROWNER_POINT, &n_info);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "Cd", HAPI_ATTROWNER_POINT, &cd_info);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "Alpha", HAPI_ATTROWNER_POINT, &a_info);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "uv", HAPI_ATTROWNER_POINT, &uv_info);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "tangent", HAPI_ATTROWNER_POINT, &tangent_info);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "bitangent", HAPI_ATTROWNER_POINT, &bitangent_info);
-
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "N", HAPI_ATTROWNER_VERTEX, &n_vinfo);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "Cd", HAPI_ATTROWNER_VERTEX, &cd_vinfo);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "Alpha", HAPI_ATTROWNER_VERTEX, &a_vinfo);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "uv", HAPI_ATTROWNER_VERTEX, &uv_vinfo);                                    
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "tangent", HAPI_ATTROWNER_VERTEX, &tangent_vinfo);
-            HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "bitangent", HAPI_ATTROWNER_VERTEX, &bitangent_vinfo);
-
-            if (p_info.exists == false || partInfo.vertexCount == 0)
-            {
-                //No geometry! Skip
-                continue;
-            }
-
-            //Face counting
-            AZStd::vector<int> polyCount(partInfo.faceCount);
-            if (partInfo.faceCount > 0)
-            {
-                HAPI_GetFaceCounts(m_session, nodeId, partInfo.id, &polyCount.front(), 0, partInfo.faceCount);
-            }
-            else
-            {
-                continue;
-            }
-
-            AZStd::unique_lock<AZStd::mutex> theLock(HoudiniMeshData::m_dataLock);
-
-            while (index + count >= m_modelData.m_meshes.size())
-            {
-                //Put more until we have enough.
-                m_modelData.m_meshes.push_back(HoudiniMeshData());
-            }
-
-            HoudiniMeshData& meshData = m_modelData.m_meshes[index + count];
-            
-            AZStd::string objectName = m_hou->GetString(m_node->GetNodeInfo().nameSH);
-            AZStd::string geomName = objectName + "/" + m_hou->GetString(nodeInfo.nameSH) + "_" + clusterId;
-            meshData.m_meshName = geomName;
-            //staticObject->SetGeoName(geomName.c_str());
-            AZ_PROFILE_SCOPE(Editor, geomName.c_str());
-
-            ///Useful for debugging and verifying that the tangent generation is good.
-            static bool forceComputeTangents = false;
-            if (forceComputeTangents)
-            {
-                //Ignore tangents in the file.
-                tangent_info.exists = false;
-                tangent_info.tupleSize = 0;
-                bitangent_info.exists = false;
-                bitangent_info.tupleSize = 0;
-                
-                tangent_vinfo.exists = false;
-                tangent_vinfo.tupleSize = 0;
-                bitangent_vinfo.exists = false;
-                bitangent_vinfo.tupleSize = 0;
-            }
-
-            int nSize = AZStd::max(n_info.tupleSize, n_vinfo.tupleSize);
-            int cdSize = AZStd::max(cd_info.tupleSize, cd_vinfo.tupleSize);
-            int alphaSize = AZStd::max(a_info.tupleSize, a_vinfo.tupleSize);
-            int uvSize = AZStd::max(uv_info.tupleSize, uv_vinfo.tupleSize);
-            int tanSize = AZStd::max(tangent_info.tupleSize, tangent_vinfo.tupleSize);
-            int bitanSize = AZStd::max(bitangent_info.tupleSize, bitangent_vinfo.tupleSize);
-            
-            //Output Buffers:
-            {
-                AZ_PROFILE_SCOPE(Editor, "AllocateOutputBuffers");
-                meshData.m_indices.resize(partInfo.vertexCount);
-                meshData.m_positions.resize(partInfo.vertexCount);
-                meshData.m_normals.resize(partInfo.vertexCount);
-                /*data.m_colors.resize(cdSize == 0 ? 0 : partInfo.vertexCount);
-                data.m_uvs.resize(uvSize == 0 ? 0 : partInfo.vertexCount);
-                data.m_tangents.resize(tanSize == 0 ? 0 : partInfo.vertexCount);
-                data.m_bitangents.resize(bitanSize == 0 ? 0 : partInfo.vertexCount);*/
-                meshData.m_colors.resize(partInfo.vertexCount);
-                meshData.m_uvs.resize(partInfo.vertexCount);
-                meshData.m_tangents.resize(partInfo.vertexCount);
-                meshData.m_bitangents.resize(partInfo.vertexCount);
-            }
-
-            //AZ_PROFILE_EVENT_BEGIN(EDITOR, "AllocateTempCopyBuffers");
-            AZStd::vector<int> idx(partInfo.vertexCount);
-            AZStd::vector<float> p(partInfo.vertexCount * p_info.tupleSize);
-            AZStd::vector<float> n(partInfo.vertexCount *  nSize);
-            AZStd::vector<float> cd(partInfo.vertexCount * cdSize);
-            AZStd::vector<float> alpha(partInfo.vertexCount * alphaSize);
-            AZStd::vector<float> uv(partInfo.vertexCount * uvSize);
-            AZStd::vector<float> tangent(partInfo.vertexCount * tanSize);
-            AZStd::vector<float> bitangent(partInfo.vertexCount * bitanSize);
-            //AZ_PROFILE_EVENT_END(EDITOR);
-
-            auto logger = [=](auto attribName, const HAPI_AttributeInfo& attribInfo, const AZStd::vector<float>& buffer)
-            {
-                *m_hou << "   HAPI_GetAttributeFloatData: " << clusterId << " " << nodeId << " " << partInfo.id << " " << attribName << " Reading:" << attribInfo.count * attribInfo.tupleSize << " into buffer size: " << buffer.size() << "";
-            };
-
-            bool needsUnwind = false;
-
-            //Read all the data: N, CD, and UV can come in through the vertex direct stream..
-            logger("P", p_info, p);
-            {
-                AZ_PROFILE_SCOPE(Editor, "ReadPointDataFromHOU");
-                HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "P", &p_info, 3, &p.front(), 0, p_info.count);
-            }
-
-            if (n.empty() == false)
-            {
-                AZ_PROFILE_SCOPE(Editor, "ReadNormalDataFromHOU");
-                if (n_info.exists)
+            const auto jobLambda = [this, index, &count, nodeId, nodeInfo, clusterId, &partInfo]() -> void
                 {
-                    logger("N", n_info, n);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "N", &n_info, 3, &n.front(), 0, n_info.count);                    
-                }
-                if (n_vinfo.exists)
-                {
-                    logger("N (vertex)", n_vinfo, n);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "N", &n_vinfo, 3, &n.front(), 0, n_vinfo.count);
-                    needsUnwind = true;
-                }
-            }
 
-            if (cd.empty() == false)
-            {
-                AZ_PROFILE_SCOPE(Editor, "ReadColorDataFromHOU");
-                if (cd_info.exists)
-                {
-                    logger("CD", cd_info, cd);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "Cd", &cd_info, cd_info.tupleSize, &cd.front(), 0, cd_info.count);
-                }
-                if (cd_vinfo.exists)
-                {
-                    logger("CD (vertex)", cd_vinfo, cd);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "Cd", &cd_vinfo, cd_vinfo.tupleSize, &cd.front(), 0, cd_vinfo.count);
-                    needsUnwind = true;
-                }
-            }
+                    AZ_PROFILE_SCOPE(Editor, "GettingGeometryPart");
+                    //Setup attribute buffers
+                    HAPI_AttributeInfo p_info = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo n_info = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo cd_info = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo a_info = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo uv_info = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo tangent_info = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo bitangent_info = HAPI_AttributeInfo_Create();
 
-            if (alpha.empty() == false)
-            {
-                AZ_PROFILE_SCOPE(Editor, "ReadColorAlphaDataFromHOU");
-                if (a_info.exists)
-                {
-                    logger("Alpha", a_info, alpha);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "Alpha", &a_info, a_info.tupleSize, &alpha.front(), 0, a_info.count);
-                }
-                if (a_vinfo.exists)
-                {
-                    logger("Alpha (vertex)", cd_vinfo, cd);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "Alpha", &a_vinfo, a_vinfo.tupleSize, &alpha.front(), 0, a_vinfo.count);
-                    needsUnwind = true;
-                }
-            }
-            
-            if (uv.empty() == false)
-            {
-                AZ_PROFILE_SCOPE(Editor, "ReadUVDataFromHOU");
-                if (uv_info.exists)
-                {
-                    logger("UV", uv_info, uv);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "uv", &uv_info, uv_info.tupleSize, &uv.front(), 0, uv_info.count);
-                }
-                
-                if (uv_vinfo.exists)
-                {
-                    logger("UV (vertex)", uv_vinfo, uv);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "uv", &uv_vinfo, uv_vinfo.tupleSize, &uv.front(), 0, uv_vinfo.count);
-                    needsUnwind = true;
-                }
-            }
-            
-            if (tangent.empty() == false && bitangent.empty() == false)
-            {
-                AZ_PROFILE_SCOPE(Editor, "ReadTangentDataFromHOU");
-                if (tangent_info.exists)
-                {
-                    logger("tangents", tangent_info, tangent);
-                    logger("bitangent", bitangent_info, bitangent);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "tangent", &tangent_info, tangent_info.tupleSize, &tangent.front(), 0, tangent_info.count);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "bitangent", &bitangent_info, bitangent_info.tupleSize, &bitangent.front(), 0, bitangent_info.count);
-                }
+                    HAPI_AttributeInfo n_vinfo = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo cd_vinfo = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo a_vinfo = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo uv_vinfo = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo tangent_vinfo = HAPI_AttributeInfo_Create();
+                    HAPI_AttributeInfo bitangent_vinfo = HAPI_AttributeInfo_Create();
 
-                if (tangent_vinfo.exists)
-                {
-                    logger("tangents (vertex)", tangent_vinfo, tangent);
-                    logger("bitangent", bitangent_vinfo, bitangent);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "tangent", &tangent_vinfo, tangent_vinfo.tupleSize, &tangent.front(), 0, tangent_vinfo.count);
-                    HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "bitangent", &bitangent_vinfo, bitangent_vinfo.tupleSize, &bitangent.front(), 0, bitangent_vinfo.count);
-                    needsUnwind = true;
-                }
-            }
+                    AZStd::vector<HAPI_AttributeInfo> attrib_infos = { p_info, n_info, cd_info, uv_info, tangent_info, bitangent_info };
 
-            //Faces
-            if (idx.empty() == false)
-            {
-                AZ_PROFILE_SCOPE(Editor, "ReadFaceVertexDataFromHOU");
-                *m_hou << "   HAPI_GetVertexList: " << nodeId << " " << partInfo.id << " idx Reading:" << partInfo.vertexCount << " into buffer size: " << idx.size() << "";
-                HAPI_GetVertexList(m_session, nodeId, partInfo.id, &idx.front(), 0, partInfo.vertexCount);
-            }
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "P", HAPI_ATTROWNER_POINT, &p_info);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "N", HAPI_ATTROWNER_POINT, &n_info);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "Cd", HAPI_ATTROWNER_POINT, &cd_info);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "Alpha", HAPI_ATTROWNER_POINT, &a_info);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "uv", HAPI_ATTROWNER_POINT, &uv_info);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "tangent", HAPI_ATTROWNER_POINT, &tangent_info);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "bitangent", HAPI_ATTROWNER_POINT, &bitangent_info);
 
-            //Apply material data:
-            {
-                AZ_PROFILE_SCOPE(Editor, "ApplyMaterialData");
-                // NOTE: this is part of HoudiniMeshTranslator. For now we treat the node exporter as one since we do the geometries/mesh here.
-                CreateNeededMaterials(objectName, nodeId, partInfo, meshData);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "N", HAPI_ATTROWNER_VERTEX, &n_vinfo);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "Cd", HAPI_ATTROWNER_VERTEX, &cd_vinfo);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "Alpha", HAPI_ATTROWNER_VERTEX, &a_vinfo);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "uv", HAPI_ATTROWNER_VERTEX, &uv_vinfo);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "tangent", HAPI_ATTROWNER_VERTEX, &tangent_vinfo);
+                    HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "bitangent", HAPI_ATTROWNER_VERTEX, &bitangent_vinfo);
 
-                //HACK:  
-                //meshData.m_materialIndex = 1;
-                /*ReadAttributeHints(nodeId, partInfo);
-                ReadMaterialNameHints(nodeId, partInfo);
-                ReadMaterials(nodeId, partInfo, data);
-                ApplyMaterialsToMesh(data);*/
-            }
-            
-            if (needsUnwind)
-            {
-                AZ_PROFILE_SCOPE(Editor, "UnwindVertexData");
-
-                for (int i = 0; i < partInfo.vertexCount / 3; i++)
-                {
-                    meshData.m_indices[i * 3 + 0] = i * 3 + 0;
-                    meshData.m_indices[i * 3 + 1] = i * 3 + 2;
-                    meshData.m_indices[i * 3 + 2] = i * 3 + 1;
-                }
-
-                //Pull the data to be per vertex. Optimize will clean it up.
-                for (int i = 0; i < partInfo.vertexCount; i++)
-                {
-                    int id = idx[i];
-                    meshData.m_positions[i] = Vector3f{ p[id * 3 + 0], p[id * 3 + 1], p[id * 3 + 2] };
-
-                    int lookup = id * 3 + 0;
-                    if (lookup > p_info.count * p_info.tupleSize)
+                    if (p_info.exists == false || partInfo.vertexCount == 0)
                     {
-                        *m_hou << "ERROR index " << i << " out of bounds on read:  " << lookup << " into array of size: " << p_info.count * p_info.tupleSize << "";
+                        //No geometry! Skip
+                        return;
                     }
 
-                    if (n_info.exists || n_vinfo.exists)
+                    //Face counting
+                    AZStd::vector<int> polyCount(partInfo.faceCount);
+                    if (partInfo.faceCount > 0)
                     {
-                        int cid = n_vinfo.exists ? i : id;
-                        meshData.m_normals[i] = Vector3f{ n[cid * 3 + 0], n[cid * 3 + 1], n[cid * 3 + 2] };
+                        HAPI_GetFaceCounts(m_session, nodeId, partInfo.id, &polyCount.front(), 0, partInfo.faceCount);
+                    }
+                    else
+                    {
+                        return;
                     }
 
-                    if (cd_info.exists || cd_vinfo.exists)
-                    {
-                        float r = 0, g = 0, b = 0, a = 1.0f;
-                        int cid = cd_vinfo.exists ? i : id;
-                        int size = AZStd::max(cd_info.tupleSize, cd_vinfo.tupleSize);
+                    AZStd::unique_lock<AZStd::mutex> theLock(HoudiniMeshData::m_dataLock);
 
-                        if (size >= 3)
+                    while (index + count >= m_modelData.m_meshes.size())
+                    {
+                        //Put more until we have enough.
+                        m_modelData.m_meshes.push_back(HoudiniMeshData());
+                    }
+
+                    HoudiniMeshData& meshData = m_modelData.m_meshes[index + count];
+
+                    AZStd::string objectName = m_hou->GetString(m_node->GetNodeInfo().nameSH);
+                    AZStd::string geomName = objectName + "/" + m_hou->GetString(nodeInfo.nameSH) + "_" + clusterId;
+                    meshData.m_meshName = geomName;
+                    //staticObject->SetGeoName(geomName.c_str());
+                    AZ_PROFILE_SCOPE(Editor, geomName.c_str());
+
+                    ///Useful for debugging and verifying that the tangent generation is good.
+                    static bool forceComputeTangents = false;
+                    if (forceComputeTangents)
+                    {
+                        //Ignore tangents in the file.
+                        tangent_info.exists = false;
+                        tangent_info.tupleSize = 0;
+                        bitangent_info.exists = false;
+                        bitangent_info.tupleSize = 0;
+
+                        tangent_vinfo.exists = false;
+                        tangent_vinfo.tupleSize = 0;
+                        bitangent_vinfo.exists = false;
+                        bitangent_vinfo.tupleSize = 0;
+                    }
+
+                    int nSize = AZStd::max(n_info.tupleSize, n_vinfo.tupleSize);
+                    int cdSize = AZStd::max(cd_info.tupleSize, cd_vinfo.tupleSize);
+                    int alphaSize = AZStd::max(a_info.tupleSize, a_vinfo.tupleSize);
+                    int uvSize = AZStd::max(uv_info.tupleSize, uv_vinfo.tupleSize);
+                    int tanSize = AZStd::max(tangent_info.tupleSize, tangent_vinfo.tupleSize);
+                    int bitanSize = AZStd::max(bitangent_info.tupleSize, bitangent_vinfo.tupleSize);
+
+                    //Output Buffers:
+                    {
+                        AZ_PROFILE_SCOPE(Editor, "AllocateOutputBuffers");
+                        meshData.m_indices.resize(partInfo.vertexCount);
+                        meshData.m_positions.resize(partInfo.vertexCount);
+                        meshData.m_normals.resize(partInfo.vertexCount);
+                        /*data.m_colors.resize(cdSize == 0 ? 0 : partInfo.vertexCount);
+                        data.m_uvs.resize(uvSize == 0 ? 0 : partInfo.vertexCount);
+                        data.m_tangents.resize(tanSize == 0 ? 0 : partInfo.vertexCount);
+                        data.m_bitangents.resize(bitanSize == 0 ? 0 : partInfo.vertexCount);*/
+                        meshData.m_colors.resize(partInfo.vertexCount);
+                        meshData.m_uvs.resize(partInfo.vertexCount);
+                        meshData.m_tangents.resize(partInfo.vertexCount);
+                        meshData.m_bitangents.resize(partInfo.vertexCount);
+                    }
+
+                    //AZ_PROFILE_EVENT_BEGIN(EDITOR, "AllocateTempCopyBuffers");
+                    AZStd::vector<int> idx(partInfo.vertexCount);
+                    AZStd::vector<float> p(partInfo.vertexCount * p_info.tupleSize);
+                    AZStd::vector<float> n(partInfo.vertexCount * nSize);
+                    AZStd::vector<float> cd(partInfo.vertexCount * cdSize);
+                    AZStd::vector<float> alpha(partInfo.vertexCount * alphaSize);
+                    AZStd::vector<float> uv(partInfo.vertexCount * uvSize);
+                    AZStd::vector<float> tangent(partInfo.vertexCount * tanSize);
+                    AZStd::vector<float> bitangent(partInfo.vertexCount * bitanSize);
+                    //AZ_PROFILE_EVENT_END(EDITOR);
+
+                    auto logger = [=](auto attribName, const HAPI_AttributeInfo& attribInfo, const AZStd::vector<float>& buffer)
                         {
-                            r = cd[cid * size + 0];
-                            g = cd[cid * size + 1];
-                            b = cd[cid * size + 2];
-                        }
+                            //*m_hou << "   HAPI_GetAttributeFloatData: " << clusterId << " " << nodeId << " " << partInfo.id << " " << attribName << " Reading:" << attribInfo.count * attribInfo.tupleSize << " into buffer size: " << buffer.size() << "";
+                        };
 
-                        if (size == 4)
-                        {
-                            a = cd[cid * size + 3];
-                        }
+                    bool needsUnwind = false;
 
-                        if (a_info.exists || a_vinfo.exists)
-                        {
-                            a = alpha[cid * alphaSize];
-                        }
-
-                        meshData.m_colors[i] = Vector4f{ r, g, b, a };
-                    }
-
-                    if (uv_info.exists || uv_vinfo.exists)
+                    //Read all the data: N, CD, and UV can come in through the vertex direct stream..
+                    //logger("P", p_info, p);
                     {
-                        int cid = uv_vinfo.exists ? i : id;
-                        int size = AZStd::max(uv_info.tupleSize, uv_vinfo.tupleSize);
-                        meshData.m_uvs[i] = Vector2f{ uv[cid * size + 0], -uv[cid * size + 1] };
-                    }
-                    else {
-                        meshData.m_uvs[i] = Vector2f{ 0.f, 0.f };
+                        AZ_PROFILE_SCOPE(Editor, "ReadPointDataFromHOU");
+                        HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "P", &p_info, 3, &p.front(), 0, p_info.count);
                     }
 
-                    if (tangent_info.exists && bitangent_info.exists ||
-                        tangent_vinfo.exists && bitangent_vinfo.exists)
+                    if (n.empty() == false)
                     {
-                        if (bitangent_info.count == tangent_info.count ||
-                            bitangent_vinfo.count == tangent_vinfo.count)
-                        {
-                            int cid = tangent_vinfo.exists ? i : id;
-                            int size = AZStd::max(tangent_info.tupleSize, tangent_vinfo.tupleSize);
-                            if (size >= 3)
-                            {
-                                Vec3 tangentVal(tangent[cid * size + 0], tangent[cid * size + 1], tangent[cid * size + 2]);
-                                Vec3 bitangentVal(bitangent[cid * size + 0], bitangent[cid * size + 1], bitangent[cid * size + 2]);
-
-                                meshData.m_tangents[i] = Vector4f{ tangentVal.x, tangentVal.y, tangentVal.z, 0.f };
-                                meshData.m_bitangents[i] = Vector3f{ bitangentVal.x, bitangentVal.y, bitangentVal.z };
-                            }
-                        }
-                    }
-                    
-                }
-
-                if (tangent_info.exists && bitangent_info.exists ||
-                    tangent_vinfo.exists && bitangent_vinfo.exists)
-                {
-                    meshData.CalculateTangents();
-                }
-            }
-            else
-            {
-                AZ_PROFILE_SCOPE(Editor, "CopyVertexData2HoudiniMeshData");
-
-                //ResizeDownIndices
-                {
-                    AZ_PROFILE_SCOPE(Editor, "ResizeIndices");
-                    meshData.m_indices.resize(idx.size());
-                }
-
-                //Copy Index Data:
-                {
-                    AZ_PROFILE_SCOPE(Editor, "CopyIndices");
-                    for (int i = 0; i < idx.size() / 3; i++)
-                    {
-                        meshData.m_indices[i * 3 + 0] = idx[i * 3 + 0];
-                        meshData.m_indices[i * 3 + 1] = idx[i * 3 + 2];
-                        meshData.m_indices[i * 3 + 2] = idx[i * 3 + 1];
-                    }
-                }
-
-                //Resize Down:
-                {
-                    AZ_PROFILE_SCOPE(Editor, "ResizeDown");
-                    meshData.m_positions.resize(partInfo.pointCount);
-                    meshData.m_normals.resize(partInfo.pointCount);
-                    meshData.m_colors.resize(partInfo.pointCount);
-                    meshData.m_uvs.resize(partInfo.pointCount);
-                    meshData.m_tangents.resize(partInfo.pointCount);
-                    meshData.m_bitangents.resize(partInfo.pointCount);
-                }
-
-                bool warnedNormal = false;
-                bool warnedTangents = false;
-
-                //Data is already optimized, pull the data directly (do not un-index)
-                {
-                    AZ_PROFILE_SCOPE(Editor, "CopyPointData");
-                    for (int i = 0; i < partInfo.pointCount; i++)
-                    {
-                        meshData.m_positions[i] = Vector3f{ p[i * 3 + 0], p[i * 3 + 1], p[i * 3 + 2] };
-                        
+                        AZ_PROFILE_SCOPE(Editor, "ReadNormalDataFromHOU");
                         if (n_info.exists)
                         {
-                            bool zeroNormal = n[i * 3 + 0] == 0 && n[i * 3 + 1] == 0 && n[i * 3 + 2] == 0;
-                            if (zeroNormal)
-                            {
-                                if (!warnedNormal)
-                                {
-                                    AZ_Warning("Houdini", false, "Invalid normal data on mesh from Houdini '%s' Normal: (%f, %f, %f) at index:%d \nUsing identity normals instead, lighting may look incorrect on this mesh.",
-                                        geomName.c_str(), n[i * 3 + 0], n[i * 3 + 1], n[i * 3 + 2], i);
-                                    warnedNormal = true;
-                                }
-                                
-                                meshData.m_normals[i] = Vector3f{ 0, 0, 1 };
-                            }
-                            else 
-                            {
-                                meshData.m_normals[i] = Vector3f{ n[i * 3 + 0], n[i * 3 + 1], n[i * 3 + 2] };
-                            }
+                            //logger("N", n_info, n);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "N", &n_info, 3, &n.front(), 0, n_info.count);
                         }
-                        else
+                        if (n_vinfo.exists)
                         {
-                            if (!warnedNormal)
-                            {
-                                AZ_Warning("Houdini", false, "Normal Data missing from Houdini '%s', Using identity normals instead, lighting may look incorrect on this mesh.",
-                                    geomName.c_str());
-                                warnedNormal = true;
-                            }
-
-                            //TODO: Generate something better?
-                            meshData.m_normals[i] = Vector3f{ 0, 0, 1 };
+                            //logger("N (vertex)", n_vinfo, n);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "N", &n_vinfo, 3, &n.front(), 0, n_vinfo.count);
+                            needsUnwind = true;
                         }
+                    }
 
+                    if (cd.empty() == false)
+                    {
+                        AZ_PROFILE_SCOPE(Editor, "ReadColorDataFromHOU");
                         if (cd_info.exists)
                         {
-                            float r = 0, g = 0, b = 0, a = 1.0f;
-                            int size = cd_info.tupleSize;
-
-                            if (cd_info.tupleSize >= 3)
-                            {
-                                r = cd[i * size + 0];
-                                g = cd[i * size + 1];
-                                b = cd[i * size + 2];
-                            }
-
-                            if (cd_info.tupleSize == 4)
-                            {
-                                a = cd[i * size + 3];
-                            }
-                            
-                            if (a_info.exists && a_info.tupleSize == 1)
-                            {
-                                a = alpha[i * alphaSize];
-                            }
-
-                            meshData.m_colors[i] = Vector4f{ r, g, b, a };
+                            //logger("CD", cd_info, cd);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "Cd", &cd_info, cd_info.tupleSize, &cd.front(), 0, cd_info.count);
                         }
+                        if (cd_vinfo.exists)
+                        {
+                            //logger("CD (vertex)", cd_vinfo, cd);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "Cd", &cd_vinfo, cd_vinfo.tupleSize, &cd.front(), 0, cd_vinfo.count);
+                            needsUnwind = true;
+                        }
+                    }
 
+                    if (alpha.empty() == false)
+                    {
+                        AZ_PROFILE_SCOPE(Editor, "ReadColorAlphaDataFromHOU");
+                        if (a_info.exists)
+                        {
+                            //logger("Alpha", a_info, alpha);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "Alpha", &a_info, a_info.tupleSize, &alpha.front(), 0, a_info.count);
+                        }
+                        if (a_vinfo.exists)
+                        {
+                            //logger("Alpha (vertex)", cd_vinfo, cd);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "Alpha", &a_vinfo, a_vinfo.tupleSize, &alpha.front(), 0, a_vinfo.count);
+                            needsUnwind = true;
+                        }
+                    }
+
+                    if (uv.empty() == false)
+                    {
+                        AZ_PROFILE_SCOPE(Editor, "ReadUVDataFromHOU");
                         if (uv_info.exists)
                         {
-                            int size = uv_info.tupleSize;
-                            meshData.m_uvs[i] = Vector2f{ uv[i * size + 0], -uv[i * size + 1] };
-                        }
-                        else {
-                            meshData.m_uvs[i] = Vector2f{ 0.f, 0.f };
+                            //logger("UV", uv_info, uv);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "uv", &uv_info, uv_info.tupleSize, &uv.front(), 0, uv_info.count);
                         }
 
-                        if (tangent_info.exists && bitangent_info.exists && tangent_info.tupleSize == bitangent_info.tupleSize && tangent_info.tupleSize >= 3)
+                        if (uv_vinfo.exists)
                         {
-                            int cid = i;
-                            int size = tangent_info.tupleSize;
+                            //logger("UV (vertex)", uv_vinfo, uv);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "uv", &uv_vinfo, uv_vinfo.tupleSize, &uv.front(), 0, uv_vinfo.count);
+                            needsUnwind = true;
+                        }
+                    }
 
-                            const auto& azTangent = AZ::Vector3(tangent[cid * size + 0], tangent[cid * size + 1], tangent[cid * size + 2]);
-                            const auto& azBitangent = AZ::Vector3(bitangent[cid * size + 0], bitangent[cid * size + 1], bitangent[cid * size + 2]);
-                            
-                            if (NumberValid(azTangent.GetX()) == false || NumberValid(azTangent.GetY()) == false || NumberValid(azTangent.GetZ()) == false ||
-                                NumberValid(azBitangent.GetX()) == false || NumberValid(azBitangent.GetY()) == false || NumberValid(azBitangent.GetZ()) == false)                                
+                    if (tangent.empty() == false && bitangent.empty() == false)
+                    {
+                        AZ_PROFILE_SCOPE(Editor, "ReadTangentDataFromHOU");
+                        if (tangent_info.exists)
+                        {
+                            //logger("tangents", tangent_info, tangent);
+                            //logger("bitangent", bitangent_info, bitangent);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "tangent", &tangent_info, tangent_info.tupleSize, &tangent.front(), 0, tangent_info.count);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "bitangent", &bitangent_info, bitangent_info.tupleSize, &bitangent.front(), 0, bitangent_info.count);
+                        }
+
+                        if (tangent_vinfo.exists)
+                        {
+                            //logger("tangents (vertex)", tangent_vinfo, tangent);
+                            //logger("bitangent", bitangent_vinfo, bitangent);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "tangent", &tangent_vinfo, tangent_vinfo.tupleSize, &tangent.front(), 0, tangent_vinfo.count);
+                            HAPI_GetAttributeFloatData(m_session, nodeId, partInfo.id, "bitangent", &bitangent_vinfo, bitangent_vinfo.tupleSize, &bitangent.front(), 0, bitangent_vinfo.count);
+                            needsUnwind = true;
+                        }
+                    }
+
+                    //Faces
+                    if (idx.empty() == false)
+                    {
+                        AZ_PROFILE_SCOPE(Editor, "ReadFaceVertexDataFromHOU");
+                        //*m_hou << "   HAPI_GetVertexList: " << nodeId << " " << partInfo.id << " idx Reading:" << partInfo.vertexCount << " into buffer size: " << idx.size() << "";
+                        HAPI_GetVertexList(m_session, nodeId, partInfo.id, &idx.front(), 0, partInfo.vertexCount);
+                    }
+
+                    //Apply material data:
+                    {
+                        AZ_PROFILE_SCOPE(Editor, "ApplyMaterialData");
+                        // NOTE: this is part of HoudiniMeshTranslator. For now we treat the node exporter as one since we do the geometries/mesh here.
+                        CreateNeededMaterials(objectName, nodeId, partInfo, meshData);
+
+                        //HACK:  
+                        //meshData.m_materialIndex = 1;
+                        /*ReadAttributeHints(nodeId, partInfo);
+                        ReadMaterialNameHints(nodeId, partInfo);
+                        ReadMaterials(nodeId, partInfo, data);
+                        ApplyMaterialsToMesh(data);*/
+                    }
+
+                    if (needsUnwind)
+                    {
+                        AZ_PROFILE_SCOPE(Editor, "UnwindVertexData");
+
+                        for (int i = 0; i < partInfo.vertexCount / 3; i++)
+                        {
+                            meshData.m_indices[i * 3 + 0] = i * 3 + 0;
+                            meshData.m_indices[i * 3 + 1] = i * 3 + 2;
+                            meshData.m_indices[i * 3 + 2] = i * 3 + 1;
+                        }
+
+                        //Pull the data to be per vertex. Optimize will clean it up.
+                        for (int i = 0; i < partInfo.vertexCount; i++)
+                        {
+                            int id = idx[i];
+                            meshData.m_positions[i] = Vector3f{ p[id * 3 + 0], p[id * 3 + 1], p[id * 3 + 2] };
+
+                            int lookup = id * 3 + 0;
+                            if (lookup > p_info.count * p_info.tupleSize)
                             {
-                                if (!warnedTangents)
+                               // *m_hou << "ERROR index " << i << " out of bounds on read:  " << lookup << " into array of size: " << p_info.count * p_info.tupleSize << "";
+                            }
+
+                            if (n_info.exists || n_vinfo.exists)
+                            {
+                                int cid = n_vinfo.exists ? i : id;
+                                meshData.m_normals[i] = Vector3f{ n[cid * 3 + 0], n[cid * 3 + 1], n[cid * 3 + 2] };
+                            }
+
+                            if (cd_info.exists || cd_vinfo.exists)
+                            {
+                                float r = 0, g = 0, b = 0, a = 1.0f;
+                                int cid = cd_vinfo.exists ? i : id;
+                                int size = AZStd::max(cd_info.tupleSize, cd_vinfo.tupleSize);
+
+                                if (size >= 3)
                                 {
-                                    AZ_Warning("Houdini", false, "Invalid normal data on mesh from Houdini '%s' Tangent: (%f, %f, %f) Bitangent:  (%f, %f, %f) at index:%d \nUsing identity normals instead, lighting may look incorrect on this mesh.",
-                                        geomName.c_str(), azTangent.GetX(), azTangent.GetY(), azTangent.GetZ(), azBitangent.GetX(), azBitangent.GetY(), azBitangent.GetZ(), cid);
-                                    warnedTangents = true;
+                                    r = cd[cid * size + 0];
+                                    g = cd[cid * size + 1];
+                                    b = cd[cid * size + 2];
                                 }
 
-                                meshData.m_tangents[i] = Vector4f{ 1,0,0,0 };
-                                meshData.m_bitangents[i] = Vector3f{ 0,1,0 };
-                                continue;
+                                if (size == 4)
+                                {
+                                    a = cd[cid * size + 3];
+                                }
+
+                                if (a_info.exists || a_vinfo.exists)
+                                {
+                                    a = alpha[cid * alphaSize];
+                                }
+
+                                meshData.m_colors[i] = Vector4f{ r, g, b, a };
                             }
-                            
-                            meshData.m_tangents[i] = Vector4f{ azTangent.GetX(), azTangent.GetY(), azTangent.GetZ(), 0.f };
-                            meshData.m_bitangents[i] = Vector3f{ azBitangent.GetX(), azBitangent.GetY(), azBitangent.GetZ() };
+
+                            if (uv_info.exists || uv_vinfo.exists)
+                            {
+                                int cid = uv_vinfo.exists ? i : id;
+                                int size = AZStd::max(uv_info.tupleSize, uv_vinfo.tupleSize);
+                                meshData.m_uvs[i] = Vector2f{ uv[cid * size + 0], -uv[cid * size + 1] };
+                            }
+                            else {
+                                meshData.m_uvs[i] = Vector2f{ 0.f, 0.f };
+                            }
+
+                            if (tangent_info.exists && bitangent_info.exists ||
+                                tangent_vinfo.exists && bitangent_vinfo.exists)
+                            {
+                                if (bitangent_info.count == tangent_info.count ||
+                                    bitangent_vinfo.count == tangent_vinfo.count)
+                                {
+                                    int cid = tangent_vinfo.exists ? i : id;
+                                    int size = AZStd::max(tangent_info.tupleSize, tangent_vinfo.tupleSize);
+                                    if (size >= 3)
+                                    {
+                                        Vec3 tangentVal(tangent[cid * size + 0], tangent[cid * size + 1], tangent[cid * size + 2]);
+                                        Vec3 bitangentVal(bitangent[cid * size + 0], bitangent[cid * size + 1], bitangent[cid * size + 2]);
+
+                                        meshData.m_tangents[i] = Vector4f{ tangentVal.x, tangentVal.y, tangentVal.z, 0.f };
+                                        meshData.m_bitangents[i] = Vector3f{ bitangentVal.x, bitangentVal.y, bitangentVal.z };
+                                    }
+                                }
+                            }
+
+                        }
+
+                        if (tangent_info.exists && bitangent_info.exists ||
+                            tangent_vinfo.exists && bitangent_vinfo.exists)
+                        {
+                            meshData.CalculateTangents();
+                        }
+                    }
+                    else
+                    {
+                        AZ_PROFILE_SCOPE(Editor, "CopyVertexData2HoudiniMeshData");
+
+                        //ResizeDownIndices
+                        {
+                            AZ_PROFILE_SCOPE(Editor, "ResizeIndices");
+                            meshData.m_indices.resize(idx.size());
+                        }
+
+                        //Copy Index Data:
+                        {
+                            AZ_PROFILE_SCOPE(Editor, "CopyIndices");
+                            for (int i = 0; i < idx.size() / 3; i++)
+                            {
+                                meshData.m_indices[i * 3 + 0] = idx[i * 3 + 0];
+                                meshData.m_indices[i * 3 + 1] = idx[i * 3 + 2];
+                                meshData.m_indices[i * 3 + 2] = idx[i * 3 + 1];
+                            }
+                        }
+
+                        //Resize Down:
+                        {
+                            AZ_PROFILE_SCOPE(Editor, "ResizeDown");
+                            meshData.m_positions.resize(partInfo.pointCount);
+                            meshData.m_normals.resize(partInfo.pointCount);
+                            meshData.m_colors.resize(partInfo.pointCount);
+                            meshData.m_uvs.resize(partInfo.pointCount);
+                            meshData.m_tangents.resize(partInfo.pointCount);
+                            meshData.m_bitangents.resize(partInfo.pointCount);
+                        }
+
+                        bool warnedNormal = false;
+                        bool warnedTangents = false;
+
+                        //Data is already optimized, pull the data directly (do not un-index)
+                        {
+                            AZ_PROFILE_SCOPE(Editor, "CopyPointData");
+                            for (int i = 0; i < partInfo.pointCount; i++)
+                            {
+                                meshData.m_positions[i] = Vector3f{ p[i * 3 + 0], p[i * 3 + 1], p[i * 3 + 2] };
+
+                                if (n_info.exists)
+                                {
+                                    bool zeroNormal = n[i * 3 + 0] == 0 && n[i * 3 + 1] == 0 && n[i * 3 + 2] == 0;
+                                    if (zeroNormal)
+                                    {
+                                        if (!warnedNormal)
+                                        {
+                                            AZ_Warning("Houdini", false, "Invalid normal data on mesh from Houdini '%s' Normal: (%f, %f, %f) at index:%d \nUsing identity normals instead, lighting may look incorrect on this mesh.",
+                                                geomName.c_str(), n[i * 3 + 0], n[i * 3 + 1], n[i * 3 + 2], i);
+                                            warnedNormal = true;
+                                        }
+
+                                        meshData.m_normals[i] = Vector3f{ 0, 0, 1 };
+                                    }
+                                    else
+                                    {
+                                        meshData.m_normals[i] = Vector3f{ n[i * 3 + 0], n[i * 3 + 1], n[i * 3 + 2] };
+                                    }
+                                }
+                                else
+                                {
+                                    if (!warnedNormal)
+                                    {
+                                        AZ_Warning("Houdini", false, "Normal Data missing from Houdini '%s', Using identity normals instead, lighting may look incorrect on this mesh.",
+                                            geomName.c_str());
+                                        warnedNormal = true;
+                                    }
+
+                                    //TODO: Generate something better?
+                                    meshData.m_normals[i] = Vector3f{ 0, 0, 1 };
+                                }
+
+                                if (cd_info.exists)
+                                {
+                                    float r = 0, g = 0, b = 0, a = 1.0f;
+                                    int size = cd_info.tupleSize;
+
+                                    if (cd_info.tupleSize >= 3)
+                                    {
+                                        r = cd[i * size + 0];
+                                        g = cd[i * size + 1];
+                                        b = cd[i * size + 2];
+                                    }
+
+                                    if (cd_info.tupleSize == 4)
+                                    {
+                                        a = cd[i * size + 3];
+                                    }
+
+                                    if (a_info.exists && a_info.tupleSize == 1)
+                                    {
+                                        a = alpha[i * alphaSize];
+                                    }
+
+                                    meshData.m_colors[i] = Vector4f{ r, g, b, a };
+                                }
+
+                                if (uv_info.exists)
+                                {
+                                    int size = uv_info.tupleSize;
+                                    meshData.m_uvs[i] = Vector2f{ uv[i * size + 0], -uv[i * size + 1] };
+                                }
+                                else {
+                                    meshData.m_uvs[i] = Vector2f{ 0.f, 0.f };
+                                }
+
+                                if (tangent_info.exists && bitangent_info.exists && tangent_info.tupleSize == bitangent_info.tupleSize && tangent_info.tupleSize >= 3)
+                                {
+                                    int cid = i;
+                                    int size = tangent_info.tupleSize;
+
+                                    const auto& azTangent = AZ::Vector3(tangent[cid * size + 0], tangent[cid * size + 1], tangent[cid * size + 2]);
+                                    const auto& azBitangent = AZ::Vector3(bitangent[cid * size + 0], bitangent[cid * size + 1], bitangent[cid * size + 2]);
+
+                                    if (NumberValid(azTangent.GetX()) == false || NumberValid(azTangent.GetY()) == false || NumberValid(azTangent.GetZ()) == false ||
+                                        NumberValid(azBitangent.GetX()) == false || NumberValid(azBitangent.GetY()) == false || NumberValid(azBitangent.GetZ()) == false)
+                                    {
+                                        if (!warnedTangents)
+                                        {
+                                            AZ_Warning("Houdini", false, "Invalid normal data on mesh from Houdini '%s' Tangent: (%f, %f, %f) Bitangent:  (%f, %f, %f) at index:%d \nUsing identity normals instead, lighting may look incorrect on this mesh.",
+                                                geomName.c_str(), azTangent.GetX(), azTangent.GetY(), azTangent.GetZ(), azBitangent.GetX(), azBitangent.GetY(), azBitangent.GetZ(), cid);
+                                            warnedTangents = true;
+                                        }
+
+                                        meshData.m_tangents[i] = Vector4f{ 1,0,0,0 };
+                                        meshData.m_bitangents[i] = Vector3f{ 0,1,0 };
+                                        continue;
+                                    }
+
+                                    meshData.m_tangents[i] = Vector4f{ azTangent.GetX(), azTangent.GetY(), azTangent.GetZ(), 0.f };
+                                    meshData.m_bitangents[i] = Vector3f{ azBitangent.GetX(), azBitangent.GetY(), azBitangent.GetZ() };
+                                }
+                            }
+
+                            if (tangent_info.exists && bitangent_info.exists ||
+                                tangent_vinfo.exists && bitangent_vinfo.exists)
+                            {
+                                meshData.CalculateTangents();
+                            }
                         }
                     }
 
-                    if (tangent_info.exists && bitangent_info.exists ||
-                        tangent_vinfo.exists && bitangent_vinfo.exists)
-                    {
-                        meshData.CalculateTangents();
-                    }
-                }
-            }
+                    count++;
 
-            count++;
-            meshData.UpdateStatObject();
+                    AZ::Transform transform = m_hou->LookupTransform(m_entityId);
+                    meshData.UpdateWorldTransform(transform);
 
-            AZ::Transform transform = m_hou->LookupTransform(m_entityId);
-            meshData.UpdateWorldTransform(transform);
+                    meshData.CalculateAABB();
+                    m_modelData.m_aabb.AddAabb(meshData.GetAabb());
 
-            meshData.CalculateAABB();
-            m_modelData.m_aabb.AddAabb(meshData.GetAabb());
+                    AZ_Info("Houdini", "%s - Vertex Count: %d\n", meshData.m_meshName.c_str(), meshData.m_positions.size());
+                };
+
+            AZ::Job* executeGroupJob = aznew AZ::JobFunction<decltype(jobLambda)>(jobLambda, true, nullptr); // Auto-deletes
+            executeGroupJob->SetDependent(&jobCompletion);
+            executeGroupJob->Start();
+
         }
+        jobCompletion.StartAndWaitForCompletion();
+
+
 
         return count;
-    }    
+    }
 
     bool HoudiniNodeExporter::Initialize(const AZ::EntityId& id, HoudiniFbxConfig* fbxConfig)
     {
@@ -1413,7 +1432,7 @@ namespace HoudiniEngine
     {
         AZ_PROFILE_FUNCTION(Houdini);
         if (!CheckHoudiniAccess())
-            return false;        
+            return false;
 
         if (!m_materialWaitList.empty())
             return false;
@@ -1433,9 +1452,10 @@ namespace HoudiniEngine
 
         AZ_PROFILE_SCOPE(Editor, m_node->GetNodeName().c_str());
 
-        *m_hou << "--- GenerateMeshData --- " + m_hou->GetString(nodeInfo.nameSH) << "";
-
         auto clusters = GetClusters();
+
+        *m_hou << "--- GenerateMeshData --- " + m_hou->GetString(nodeInfo.nameSH) << " Clusters: " << clusters.size() << "";
+
         if (clusters.size() == 0) 
         {
             //Just do all of it in one go:
@@ -1452,7 +1472,7 @@ namespace HoudiniEngine
             if (!cluster.empty())
             {
                 usingCluster = true;
-                geomNodeId = CreateObjectMerge("ExportNodes", cluster);                
+                geomNodeId = CreateObjectMerge("ExportNodes", cluster);
                 *m_hou << "  --- CreateObjectMerge --- " << geomNodeId << " " << cluster << "";
             }             
 
@@ -1507,7 +1527,8 @@ namespace HoudiniEngine
                 {
                     // set the default material here.
                     // defaulthoudini.azmaterial is an attempt to use vertex colors.
-                    auto& meshInstance = meshMap["editor/materials/defaulthoudini.azmaterial"/*"materials/basic_grey.azmaterial"*/].emplace_back(mesh);
+                    //auto& meshInstance = meshMap["editor/materials/defaulthoudini.azmaterial"/*"materials/basic_grey.azmaterial"*/].emplace_back(mesh);
+                    auto& meshInstance = meshMap["materials/basic_grey.azmaterial"].emplace_back(mesh);
                     meshInstance.CalculateTangents();
                     meshInstance.ClearMaterialList();
                 }
@@ -1542,6 +1563,8 @@ namespace HoudiniEngine
             m_renderMesh->SetMaterialPathList(m_modelData.GetMaterials());
             m_dirty = true;
         }
+
+        RebuildRenderMesh();
         
         return true;
     }
@@ -1566,7 +1589,7 @@ namespace HoudiniEngine
 
         if (!m_node->IsEditableGeometryBuilt())
         {
-            //NOTE: originally called from an Output Translator(Unreal Plugin)
+            //NOTE: originally called from an Output Translator
             HoudiniSplineTranslator::CreateHoudiniSplineComponentFromHoudiniEditableNode(m_entityId, geometryInfo.nodeId);
             m_node->SetEditableGeometryBuilt(true);
         }
@@ -1624,8 +1647,16 @@ namespace HoudiniEngine
                 {
                     AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusDisconnect();
                     AzFramework::BoundsRequestBus::Handler::BusDisconnect();
-                    m_renderMesh->BuildMesh(m_modelData);
-                    m_renderMesh->UpdateTransform(m_world);
+
+                    const AZ::EntityId entityId = GetEntityId();
+
+                    AZ::Transform worldFromLocal = AZ::Transform::CreateIdentity();
+                    AZ::TransformBus::EventResult(worldFromLocal, entityId, &AZ::TransformBus::Events::GetWorldTM);
+
+                    m_renderMesh->BuildMesh(m_modelData, worldFromLocal);
+                    m_renderMesh->UpdateTransform(worldFromLocal);
+                    m_renderMesh->SetVisiblity(true);
+
                     AzFramework::BoundsRequestBus::Handler::BusConnect(m_entityId);
                     AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusConnect(m_entityId);
                 });

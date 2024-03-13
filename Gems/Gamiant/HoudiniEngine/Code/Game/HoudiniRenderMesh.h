@@ -144,8 +144,13 @@ namespace HoudiniEngine
         //! For toggling visibility
         bool m_visible = true;
 
+        AZ::Data::Instance<AZ::RPI::Material> m_materialInstance;
+
         //! model name.
         static constexpr AZStd::string_view ModelName = "HoudiniEngineMesh";
+
+        static constexpr AZStd::string_view TexturedMaterialPath = "materials/whiteboxdefault.azmaterial";
+        static constexpr AZ::RPI::ModelMaterialSlot::StableId OneMaterialSlotId = 0;
 
     };
 } // namespace HoudiniEngine
