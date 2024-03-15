@@ -20,6 +20,8 @@
 #include <AzCore/Component/TransformBus.h>
 #include <AzCore/Name/Name.h>
 
+#include <HoudiniEngine/HoudiniGlobals.h>
+
 namespace AZ::RPI
 {
     class ModelLodAsset;
@@ -146,10 +148,8 @@ namespace HoudiniEngine
 
         AZ::Data::Instance<AZ::RPI::Material> m_materialInstance;
 
-        //! model name.
-        static constexpr AZStd::string_view ModelName = "HoudiniEngineMesh";
-
-        static constexpr AZStd::string_view TexturedMaterialPath = "materials/whiteboxdefault.azmaterial";
+        static constexpr AZStd::string_view ModelName = Globals::DefaultModelName;
+        static constexpr AZStd::string_view TexturedMaterialPath = Globals::DefaultMaterial;
         static constexpr AZ::RPI::ModelMaterialSlot::StableId OneMaterialSlotId = 0;
 
     };

@@ -21,5 +21,10 @@ namespace HoudiniEngine
         constexpr AZ::u32 SessionPort = 9090;
         constexpr AZStd::string_view SessionServer = "localhost";
         constexpr AZStd::string_view SessionNamedPipe = "o3de_houdini";
+
+        constexpr AZStd::string_view DefaultModelName = "HoudiniEngineMesh";
+
+        constexpr AZStd::string_view DefaultMaterial = "materials/houdinidefault.azmaterial";
+
     }
 }

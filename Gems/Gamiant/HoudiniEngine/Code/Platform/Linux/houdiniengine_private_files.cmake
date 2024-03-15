@@ -5,4 +5,5 @@
 #      ../Include/Linux/HoudiniEngineLinux.h
 
 set(FILES
+    HoudiniPlatform_Linux.cpp
 )

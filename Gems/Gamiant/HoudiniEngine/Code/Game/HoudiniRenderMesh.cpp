@@ -8,6 +8,8 @@
 
 #include "HoudiniRenderMesh.h"
 
+#include <HoudiniAsset.h>
+
 #include <Atom/RPI.Public/Model/Model.h>
 #include <Atom/RPI.Public/Scene.h>
 #include <Atom/RPI.Reflect/Asset/AssetUtils.h>
@@ -195,7 +197,7 @@ namespace HoudiniEngine
         modelCreator.SetName(ModelName);
         modelCreator.AddLodAsset(AZStd::move(m_lodAsset));
 
-        /*if (auto materialAsset = AZ::RPI::AssetUtils::LoadAssetByProductPath<AZ::RPI::MaterialAsset>(TexturedMaterialPath.data()))
+        if (auto materialAsset = AZ::RPI::AssetUtils::LoadAssetByProductPath<AZ::RPI::MaterialAsset>(Globals::DefaultMaterial.data()))
         {
             m_materialInstance = AZ::RPI::Material::FindOrCreate(materialAsset);
 
@@ -207,8 +209,8 @@ namespace HoudiniEngine
         else
         {
             AZ_Error("CreateLodAsset", false, "Could not load material.");
-            return;
-        }*/
+            return false;
+        }
 
         modelCreator.End(m_modelAsset);
 
@@ -326,7 +328,11 @@ namespace HoudiniEngine
     void HoudiniRenderMesh::SetVisiblity(bool visibility)
     {
         m_visible = visibility;
-        m_meshFeatureProcessor->SetVisible(m_meshHandle, m_visible);
+
+        if (m_meshFeatureProcessor)
+        {
+            m_meshFeatureProcessor->SetVisible(m_meshHandle, m_visible);
+        }
     }
 
     bool HoudiniRenderMesh::IsVisible() const

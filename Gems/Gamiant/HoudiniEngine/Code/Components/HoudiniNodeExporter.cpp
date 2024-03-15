@@ -1423,8 +1423,8 @@ namespace HoudiniEngine
         }
 
         //TODO: hardcoded to default for now
-        //m_renderMesh->SetMaterialPathList({ "editor/materials/defaulthoudini.azmaterial" });
-        m_renderMesh->SetMaterialPathList({ "materials/basic_grey.azmaterial" });
+        m_renderMesh->SetMaterialPathList({ Globals::DefaultMaterial });
+
         return true;
     }
 
@@ -1526,9 +1526,8 @@ namespace HoudiniEngine
                 else
                 {
                     // set the default material here.
-                    // defaulthoudini.azmaterial is an attempt to use vertex colors.
-                    //auto& meshInstance = meshMap["editor/materials/defaulthoudini.azmaterial"/*"materials/basic_grey.azmaterial"*/].emplace_back(mesh);
-                    auto& meshInstance = meshMap["materials/basic_grey.azmaterial"].emplace_back(mesh);
+                    auto& meshInstance = meshMap[Globals::DefaultMaterial].emplace_back(mesh);
+
                     meshInstance.CalculateTangents();
                     meshInstance.ClearMaterialList();
                 }
