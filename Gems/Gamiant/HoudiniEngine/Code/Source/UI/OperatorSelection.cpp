@@ -35,10 +35,10 @@
 namespace HoudiniEngine
 {
     //////////////////////////////////////////////////////////////////////////
-    OperatorSelection::OperatorSelection(OperatorMode selectionMode, const AZStd::string& previousValue)
+    OperatorSelection::OperatorSelection(OperatorMode selectionMode, AZ::Data::Asset<HoudiniDigitalAsset> asset)
         : QDialog(nullptr)
+        , m_asset(asset)
         , m_selectionMode(selectionMode)
-        , m_previousValue(previousValue)
         , m_ui(new Ui::OperatorSelection())
     {
         m_ui->setupUi(this);
@@ -48,7 +48,7 @@ namespace HoudiniEngine
 
         m_ui->listOperators->verticalScrollBar()->setPageStep(1);
         m_ui->listOperators->verticalScrollBar()->setSingleStep(1);
-        
+
         LoadData();
 
         connect(m_ui->cmdButtons, SIGNAL(accepted()), this, SLOT(accept()));
@@ -148,63 +148,41 @@ namespace HoudiniEngine
 
     void OperatorSelection::LoadData()
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        AZStd::vector<AZStd::string> output;
-        output.push_back("");
-
-        if (hou != nullptr && hou->IsActive())
+        for (auto& operatorName : m_asset->m_assetNames)
         {
-            hou->ReloadAllAssets(); 
-            auto assets = hou->GetAvailableAssets();
-
-            for (auto asset : assets)
+            if (m_selectionMode == OperatorMode::Scatter)
             {
-                auto result = asset->getAssets();
+                QString file = m_asset.GetHint().c_str();
+                file = file.toLower();
 
-                if (m_selectionMode == OperatorMode::Scatter)
+                if (file.indexOf("scatter") >= 0)
                 {
-                    QString file = asset->GetHdaFile().c_str();
-                    file = file.toLower();                    
-
-                    if (file.indexOf("scatter") >= 0)
-                    {
-                        for (auto op : result)
-                        {
-                            AddAsset(asset.get(), op);
-                        }
-                    }
+                    AddAsset(operatorName);
                 }
-                else if (m_selectionMode == OperatorMode::Terrain)
+            }
+            else if (m_selectionMode == OperatorMode::Terrain)
+            {
+                QString file = m_asset.GetHint().c_str();
+                file = file.toLower();
+                if (file.indexOf("terrain") >= 0)
                 {
-                    QString file = asset->GetHdaFile().c_str();
-                    file = file.toLower();
-                    if (file.indexOf("terrain") >= 0)
-                    {
-                        for (auto op : result)
-                        {
-                            AddAsset(asset.get(), op);
-                        }
-                    }
+                    AddAsset(operatorName);
                 }
-                else
-                {
-                    for (auto op : result)
-                    {
-                        AddAsset(asset.get(), op);
-                    }
-                }
+            }
+            else
+            {
+                AddAsset(operatorName);
             }
         }
     }
 
-    void OperatorSelection::AddAsset(IHoudiniAsset* asset, const AZStd::string& operatorName)
+    void OperatorSelection::AddAsset(const AZStd::string& operatorName)
     {
-        QString imagePath = asset->GetHdaFile().c_str();
+        QString imagePath = m_asset.GetHint().c_str();
         imagePath = imagePath.toLower();
         imagePath = imagePath.replace(".hda", ".png");
 
-        QString configPath = asset->GetHdaFile().c_str();
+        QString configPath = m_asset.GetHint().c_str();
         configPath = configPath.toLower();
         configPath = configPath.replace(".hda", ".xml");
 
@@ -265,8 +243,8 @@ namespace HoudiniEngine
             previewPath = imagePath;
         }
 
-        AssetContainer container;
-        container.asset = asset;
+        HoudiniDigitalAssetContainer container;
+        container.m_asset = m_asset.GetAs<HoudiniDigitalAsset>();
 
         QVariant userData = QVariant::fromValue(container);
         
@@ -277,10 +255,10 @@ namespace HoudiniEngine
         item->setData(Qt::UserRole, userData);
         item->setSizeHint(QSize(255,200));
 
-        if (m_previousValue == operatorName) 
-        {
-            m_ui->listOperators->setCurrentItem(item);
-        }
+        //if (m_previousValue == operatorName) 
+        //{
+        //    m_ui->listOperators->setCurrentItem(item);
+        //}
     }
 
     //////////////////////////////////////////////////////////////////////////

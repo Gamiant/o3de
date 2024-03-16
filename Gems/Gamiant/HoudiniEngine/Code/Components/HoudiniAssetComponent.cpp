@@ -18,6 +18,8 @@
 
 #include <AzToolsFramework/Entity/EditorEntityInfoBus.h>
 
+#include <AzToolsFramework/API/EditorAssetSystemAPI.h>
+
 #define HDA_MAX_MB_SIZE 20.0
 
 namespace HoudiniEngine
@@ -159,7 +161,7 @@ namespace HoudiniEngine
 
             //Materials became an array now move to the first position in the array:
             // TODO:
-            //classElement.GetChildData(AZ_CRC("Material", 0x7cbe7595), exporter.m_materialSettings[0].m_materialAsset);
+            //classElement.GetChildData(AZ_CRC_CE("Material"), exporter.m_materialSettings[0].m_materialAsset);
             classElement.GetChildData(AZ_CRC_CE("Visible"), exporter.m_materialSettings[0].m_visible);
 
             classElement.RemoveElementByName(AZ_CRC_CE("Material"));
@@ -181,33 +183,81 @@ namespace HoudiniEngine
         EditorComponentBase::Init();
     }
 
+    void HoudiniAssetComponent::SetPrimaryAsset(const AZ::Data::AssetId& assetId)
+    {
+        if (m_config.GetNodeName().empty())
+        {
+            const auto& entityId = GetEntityId();
+            AZ::ComponentApplicationBus::BroadcastResult(m_config.m_nodeName, &AZ::ComponentApplicationRequests::GetEntityName, entityId);
+
+            // Make the node name unique by adding the EntityId to the name
+            m_config.m_nodeName.append(entityId.ToString());
+        }
+
+        AZ::Transform transform = AZ::Transform::CreateIdentity();
+        AZ::TransformBus::EventResult(transform, GetEntityId(), &AZ::TransformBus::Events::GetWorldTM);
+
+        m_config.UpdateWorldTransformData(transform);
+        m_nodeExporter.UpdateWorldTransformData(transform);
+
+        bool currentVisibility = true;
+        AzToolsFramework::EditorEntityInfoRequestBus::EventResult(currentVisibility, GetEntityId(), &AzToolsFramework::EditorEntityInfoRequestBus::Events::IsVisible);
+        m_nodeExporter.SetVisibleInEditor(currentVisibility);
+
+        AZ::Data::Asset<HoudiniDigitalAsset> asset = AZ::Data::AssetManager::Instance().GetAsset<HoudiniDigitalAsset>(assetId, AZ::Data::AssetLoadBehavior::NoLoad);
+        AZ::Data::AssetBus::MultiHandler::BusConnect(assetId);
+        asset.QueueLoad();
+
+    }
+
+    void HoudiniAssetComponent::OnAssetReady(AZ::Data::Asset<AZ::Data::AssetData> asset)
+    {
+        AZ::Data::AssetBus::MultiHandler::BusDisconnect(asset->GetId());
+
+        m_config.Create(asset);
+    }
+
+    void HoudiniAssetComponent::OnAssetReloaded(AZ::Data::Asset<AZ::Data::AssetData> asset)
+    {
+        AZ::Data::AssetBus::MultiHandler::BusDisconnect(asset->GetId());
+    }
+
+    void HoudiniAssetComponent::OnAssetError(AZ::Data::Asset<AZ::Data::AssetData> asset)
+    {
+        AZ::Data::AssetBus::MultiHandler::BusDisconnect(asset->GetId());
+    }
+
+
     void HoudiniAssetComponent::Activate()
     {
         EditorComponentBase::Activate();
-        HoudiniAssetRequestBus::Handler::BusConnect(GetEntityId());
-        //HoudiniMeshRequestBus::Handler::BusConnect(GetEntityId());
-        HoudiniMaterialRequestBus::Handler::BusConnect(GetEntityId());
+
+        const AZ::EntityId& entityId = GetEntityId();
+
+        HoudiniAssetRequestBus::Handler::BusConnect(entityId);
+        //HoudiniMeshRequestBus::Handler::BusConnect(entityId);
+        HoudiniMaterialRequestBus::Handler::BusConnect(entityId);
 
         AZ::TickBus::Handler::BusConnect();
-        AZ::TransformNotificationBus::Handler::BusConnect(GetEntityId());
-        AzFramework::EntityDebugDisplayEventBus::Handler::BusConnect(GetEntityId());
-        //AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusConnect(GetEntityId());
-        AzToolsFramework::EditorComponentSelectionNotificationsBus::Handler::BusConnect(GetEntityId());
-        AzToolsFramework::EditorVisibilityNotificationBus::Handler::BusConnect(GetEntityId());
-        LmbrCentral::SplineComponentNotificationBus::Handler::BusConnect(GetEntityId());
+        AZ::TransformNotificationBus::Handler::BusConnect(entityId);
+        AzFramework::EntityDebugDisplayEventBus::Handler::BusConnect(entityId);
+        //AzToolsFramework::EditorComponentSelectionRequestsBus::Handler::BusConnect(entityId);
+        AzToolsFramework::EditorComponentSelectionNotificationsBus::Handler::BusConnect(entityId);
+        AzToolsFramework::EditorVisibilityNotificationBus::Handler::BusConnect(entityId);
+        LmbrCentral::SplineComponentNotificationBus::Handler::BusConnect(entityId);
 
-        if (AZ::EntityBus::Handler::BusIsConnectedId(GetEntityId()) == false)
+        if (AZ::EntityBus::Handler::BusIsConnectedId(entityId) == false)
         {
-            AZ::EntityBus::Handler::BusConnect(GetEntityId());
+            AZ::EntityBus::Handler::BusConnect(entityId);
         }
         
-        m_config.m_entityId = GetEntityId();
-        m_nodeExporter.Initialize(GetEntityId(), &m_fbxConfig);
+        m_config.m_entityId = entityId;
+        m_nodeExporter.Initialize(entityId, &m_fbxConfig);
         m_nodeExporter.SetDirty(true);
         m_nodeExporter.GenerateMeshMaterials();
 
         AZ::Transform transform = AZ::Transform::CreateIdentity();
-        AZ::TransformBus::EventResult(transform, GetEntityId(), &AZ::TransformBus::Events::GetWorldTM);
+        AZ::TransformBus::EventResult(transform, entityId, &AZ::TransformBus::Events::GetWorldTM);
 
         m_config.UpdateWorldTransformData(transform);
         m_nodeExporter.UpdateWorldTransformData(transform);
@@ -305,35 +355,18 @@ namespace HoudiniEngine
     void HoudiniAssetComponent::OnTick(float deltaTime, AZ::ScriptTimePoint /*time*/)
     {
         AZ_PROFILE_FUNCTION(Houdini);
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou != nullptr)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini && houdini->IsActive())
         {
             //Update the lookup tables:
-            hou->LookupId(GetEntityId());
-        }
-
-        if (!m_loaded)
-        {
-            //Delayed load because we need to make sure other components are powered up.
-            m_config.OnLoadHoudiniInstance();
-            m_loaded = true;
-
-            AZ::Transform transform = AZ::Transform::CreateIdentity();
-            AZ::TransformBus::EventResult(transform, GetEntityId(), &AZ::TransformBus::Events::GetWorldTM);
-            
-            m_config.UpdateWorldTransformData(transform);
-            m_nodeExporter.UpdateWorldTransformData(transform);
-
-            bool currentVisibility = true;
-            AzToolsFramework::EditorEntityInfoRequestBus::EventResult(currentVisibility, GetEntityId(), &AzToolsFramework::EditorEntityInfoRequestBus::Events::IsVisible);
-            m_nodeExporter.SetVisibleInEditor(currentVisibility);
+            houdini->LookupId(GetEntityId());
         }
 
         m_updateTime += deltaTime;
         if (m_updateTime < m_updatePeriod)
         {
-            //Update only once every 250 ms.
+            //Update only once every update period.
             return;
         }
         m_updateTime = 0;

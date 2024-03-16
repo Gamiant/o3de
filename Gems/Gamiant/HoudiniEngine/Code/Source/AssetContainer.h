@@ -18,6 +18,13 @@ namespace HoudiniEngine
         IHoudiniAsset* asset = nullptr;
     };
 
+    class HoudiniDigitalAssetContainer
+    {
+    public:
+        HoudiniDigitalAsset* m_asset = nullptr;
+    };
+
 } // namespace HoudiniEngine
 
 Q_DECLARE_METATYPE(HoudiniEngine::AssetContainer);
+Q_DECLARE_METATYPE(HoudiniEngine::HoudiniDigitalAssetContainer);

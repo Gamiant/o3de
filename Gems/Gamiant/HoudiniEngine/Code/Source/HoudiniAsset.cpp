@@ -9,6 +9,8 @@
 #include <HoudiniAsset.h>
 #include <HoudiniEngine/HoudiniEngineBus.h>
 
+#include <AzToolsFramework/API/EditorAssetSystemAPI.h>
+
 namespace HoudiniEngine
 {
 
@@ -85,7 +87,7 @@ namespace HoudiniEngine
     {
         if (type == AZ::AzTypeInfo<HoudiniDigitalAsset>::Uuid())
         {
-            return aznew HoudiniDigitalAsset();
+            return aznew HoudiniDigitalAsset(id);
         }
 
         AZ_Error("HoudiniDigitalAssetHandler", false, "This handler deals only with Houdini Digital Asset (HDA) type.");
@@ -94,14 +96,57 @@ namespace HoudiniEngine
 
     AZ::Data::AssetHandler::LoadResult HoudiniDigitalAssetHandler::LoadAssetData(
         const AZ::Data::Asset<AZ::Data::AssetData>& asset,
-        AZStd::shared_ptr<AZ::Data::AssetDataStream> stream,
-        [[maybe_unused]] const AZ::Data::AssetFilterCB& assetLoadFilterCB)
+        AZStd::shared_ptr<AZ::Data::AssetDataStream>,
+        const AZ::Data::AssetFilterCB&)
     {
-        const bool result = AZ::Utils::LoadObjectFromStreamInPlace<HoudiniDigitalAsset>(*stream, *asset.GetAs<HoudiniDigitalAsset>());
-        if (result == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+
+        if (houdini && houdini->IsActive())
         {
-            AZ_Error(__FUNCTION__, false, "Failed to load asset");
-            return AssetHandler::LoadResult::Error;
+            bool foundAsset = false;
+            AZStd::string absolutePath;
+
+            AZ::Data::AssetInfo assetInfo;
+            AZ::Data::AssetCatalogRequestBus::BroadcastResult(assetInfo, &AZ::Data::AssetCatalogRequestBus::Events::GetAssetInfoById, asset.GetId());
+            if (assetInfo.m_assetType != AZ::Data::s_invalidAssetType)
+            {
+                AzToolsFramework::AssetSystemRequestBus::BroadcastResult(foundAsset, &AzToolsFramework::AssetSystemRequestBus::Events::GetFullSourcePathFromRelativeProductPath, asset.GetHint(), absolutePath);
+            }
+
+            HAPI_AssetLibraryId id;
+            HAPI_Result result = HAPI_LoadAssetLibraryFromFile(&houdini->GetSession(), absolutePath.c_str(), true, &id);
+            if (result != HAPI_RESULT_SUCCESS)
+            {
+                AZ_Error("Houdini", false, houdini->GetLastHoudiniError().c_str());
+                return AssetHandler::LoadResult::Error;
+            }
+
+            HoudiniDigitalAsset* hda = asset.GetAs<HoudiniDigitalAsset>();
+            hda->m_assetLibraryId = id;
+
+            int assetCount = 0;
+            HAPI_GetAvailableAssetCount(&houdini->GetSession(), id, &assetCount);
+
+            if (assetCount > 0)
+            {
+                AZStd::vector<HAPI_StringHandle> assetNameHandles(assetCount);
+                HAPI_GetAvailableAssets(&houdini->GetSession(), id, &assetNameHandles[0], assetCount);
+
+                for (int i = 0; i < assetCount; i++)
+                {
+                    AZStd::string assetName = houdini->GetString(assetNameHandles[i]);
+                    hda->m_assetNames.push_back(assetName);
+                }
+            }
+
+            AZ_Info("Houdini", AZStd::string::format("HDA Loaded %s\n", assetInfo.m_relativePath.c_str()).c_str());
+        }
+        else
+        {
+            // Need to figure out how to do this, I may need to register assets like this
+            // so that they're loaded when a Houdini session is established
+            return AssetHandler::LoadResult::MoreDataRequired;
         }
 
         return AssetHandler::LoadResult::LoadComplete;

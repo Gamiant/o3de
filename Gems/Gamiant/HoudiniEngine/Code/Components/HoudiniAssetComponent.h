@@ -37,6 +37,7 @@ namespace HoudiniEngine
         , public AzToolsFramework::EditorComponentSelectionNotificationsBus::Handler
         , public AzToolsFramework::EditorVisibilityNotificationBus::Handler
         , public LmbrCentral::SplineComponentNotificationBus::Handler
+        , AZ::Data::AssetBus::MultiHandler
     {
     public:
         AZ_EDITOR_COMPONENT(HoudiniAssetComponent, HOUDINI_ASSET_COMPONENT_GUID, AzToolsFramework::Components::EditorComponentBase)
@@ -52,10 +53,19 @@ namespace HoudiniEngine
 
         HoudiniAssetComponent() = default;
         ~HoudiniAssetComponent() override;
-        
+
+        void SetPrimaryAsset(const AZ::Data::AssetId& /*assetId*/) override;
+
         // AZ::TickBus...
         void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
         ///
+
+        // Data::AssetBus...
+        void OnAssetReady(AZ::Data::Asset<AZ::Data::AssetData> asset) override;
+        void OnAssetReloaded(AZ::Data::Asset<AZ::Data::AssetData> asset) override;
+        void OnAssetError(AZ::Data::Asset<AZ::Data::AssetData> asset) override;
+        ///
+
 
         ////////////////////////////////////////////////////////////////////////
         // AZ::Component interface implementation
@@ -125,6 +135,9 @@ namespace HoudiniEngine
         {
             return m_config.GetNodeName(); 
         }
+
+        AZStd::vector<AZStd::string> m_assetNames;
+        const AZStd::vector<AZStd::string>& GetAssetNames() const { return m_assetNames; }
 
         IHoudiniNode* GetNode() override { return m_config.GetNode(); }
         IHoudiniNodeComponentConfig * GetConfig() { return &m_config; }

@@ -29,12 +29,15 @@ namespace HoudiniEngine
         static bool VersionConverter(AZ::SerializeContext& context, AZ::SerializeContext::DataElementNode& classElement);
 
         HoudiniNodeComponentConfig() = default;
-        virtual ~HoudiniNodeComponentConfig() = default;
+        ~HoudiniNodeComponentConfig() override = default;
 
         bool IsInitialized() override
         {
             return m_initialized;
         }
+
+        IHoudiniNode* Create(AZ::Data::Asset<AZ::Data::AssetData> asset);
+        AZ::Data::Asset<AZ::Data::AssetData> m_asset;
 
         //HoudiniAssetRequestBus
         IHoudiniNode* LoadHda(const AZStd::string& operatorName, const AZStd::string& nodeName, AZStd::function<void(IHoudiniNode*)> onLoad = {}) override;

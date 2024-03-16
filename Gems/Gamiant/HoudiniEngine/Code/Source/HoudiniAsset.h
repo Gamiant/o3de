@@ -28,7 +28,14 @@ namespace HoudiniEngine
         AZ_RTTI(HoudiniDigitalAsset, "{B9776D29-2A0B-46B7-8B27-8F753354AAFA}", AZ::Data::AssetData);
         AZ_CLASS_ALLOCATOR(HoudiniDigitalAsset, AZ::SystemAllocator);
 
-        AZStd::vector<AZ::u8> m_data;
+        HoudiniDigitalAsset(const AZ::Data::AssetId& assetId, AZ::Data::AssetData::AssetStatus status = AssetStatus::NotLoaded)
+            : AZ::Data::AssetData(assetId, status)
+        {
+        }
+
+        HAPI_AssetLibraryId m_assetLibraryId = -1;
+        AZStd::vector<AZStd::string> m_assetNames;
+
     };
 
     class HoudiniDigitalAssetHandler
@@ -78,7 +85,7 @@ namespace HoudiniEngine
             AZStd::string m_hdaName;
             
             int m_assetCount;
-            AZStd::vector<AZStd::string> m_assets;            
+            AZStd::vector<AZStd::string> m_assets;
         public:
 
             HoudiniAsset(IHoudini* hou, HAPI_AssetLibraryId id, AZStd::string hdaFile, AZStd::string hdaName);

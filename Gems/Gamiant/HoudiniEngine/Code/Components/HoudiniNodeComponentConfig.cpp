@@ -170,7 +170,7 @@ namespace HoudiniEngine
     {        
         if (m_creating == false)
         {
-            OperatorSelection window(m_selectionMode, m_operatorName);
+            OperatorSelection window(m_selectionMode, m_asset);
             window.exec();
 
             if (window.result() == QDialog::Accepted)
@@ -580,6 +580,13 @@ namespace HoudiniEngine
 
             param->SetProcessed(true);
         }
+    }
+
+    IHoudiniNode* HoudiniNodeComponentConfig::Create(AZ::Data::Asset<AZ::Data::AssetData> asset)
+    {
+        m_asset = asset;
+
+        return nullptr;
     }
 
     IHoudiniNode* HoudiniNodeComponentConfig::LoadHda(const AZStd::string& operatorName, const AZStd::string& nodeName, AZStd::function<void(IHoudiniNode*)> onLoad)

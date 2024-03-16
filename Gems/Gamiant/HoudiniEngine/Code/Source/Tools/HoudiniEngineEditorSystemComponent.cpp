@@ -106,6 +106,8 @@ namespace HoudiniEngine
         m_hdaHandler = new HoudiniDigitalAssetHandler();
 
 
+        AZ::Data::AssetCatalogRequestBus::Broadcast(&AZ::Data::AssetCatalogRequestBus::Events::EnableCatalogForAsset, AZ::AzTypeInfo<HoudiniDigitalAsset>::Uuid());
+        AZ::Data::AssetCatalogRequestBus::Broadcast(&AZ::Data::AssetCatalogRequestBus::Events::AddExtension, HoudiniDigitalAsset::Extension);
 
 
     }

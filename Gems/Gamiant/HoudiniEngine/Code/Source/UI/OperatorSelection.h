@@ -35,7 +35,7 @@ namespace HoudiniEngine
         Q_OBJECT
     public:
 
-        OperatorSelection(OperatorMode selectionMode, const AZStd::string& m_previousValue = "");
+        OperatorSelection(OperatorMode selectionMode, AZ::Data::Asset<HoudiniDigitalAsset> asset);
         virtual ~OperatorSelection();
        
         const AZStd::string& GetSelectedOperator() const
@@ -51,12 +51,12 @@ namespace HoudiniEngine
 
     private:
         void LoadData();
-        void AddAsset(HoudiniEngine::IHoudiniAsset* asset, const AZStd::string& operatorName);
+        void AddAsset(const AZStd::string& operatorName);
 
         AZStd::string m_selectedOperator;
         OperatorMode m_selectionMode = OperatorMode::Assets;
-        
-        AZStd::string m_previousValue;
+
+        AZ::Data::Asset<HoudiniDigitalAsset> m_asset;
 
         Ui::OperatorSelection* m_ui;
     };
