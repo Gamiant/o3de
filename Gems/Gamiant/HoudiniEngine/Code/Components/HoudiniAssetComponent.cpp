@@ -121,60 +121,8 @@ namespace HoudiniEngine
         return AZ::ExportedComponent(meshCompo, true);
     }
 
-    bool HoudiniAssetComponent::VersionConverter(AZ::SerializeContext& context, AZ::SerializeContext::DataElementNode& classElement)
+    bool HoudiniAssetComponent::VersionConverter(AZ::SerializeContext& /*context*/, AZ::SerializeContext::DataElementNode& /*classElement*/)
     {
-        if (classElement.GetVersion() == 1)
-        {          
-            //Convert the base class up.
-            for (int i = 0; i < classElement.GetNumSubElements(); ++i)
-            {
-                AZ::SerializeContext::DataElementNode& elementNode = classElement.GetSubElement(i);
-                if (elementNode.GetName() == AZ_CRC("BaseClass1", 0xd4925735))
-                {
-                    elementNode.Convert(context, AzToolsFramework::Components::EditorComponentBase::TYPEINFO_Uuid());
-                }
-            }
-
-            HoudiniNodeComponentConfig newConfig;
-            classElement.GetChildData(AZ_CRC_CE("OperatorType"), newConfig.m_operatorName);
-            classElement.GetChildData(AZ_CRC_CE("Props"), newConfig.m_properties);
-            classElement.GetChildData(AZ_CRC_CE("ViewButton"), newConfig.m_viewButton);
-            classElement.GetChildData(AZ_CRC_CE("ViewReloadButton"), newConfig.m_viewReloadButton);
-            classElement.GetChildData(AZ_CRC_CE("ViewDebugButton"), newConfig.m_viewDebugButton);
-
-            classElement.RemoveElementByName(AZ_CRC_CE("Node"));
-            classElement.RemoveElementByName(AZ_CRC_CE("OperatorType"));
-            classElement.RemoveElementByName(AZ_CRC_CE("Props"));
-            classElement.RemoveElementByName(AZ_CRC_CE("ViewButton"));
-            classElement.RemoveElementByName(AZ_CRC_CE("ViewReloadButton"));
-            classElement.RemoveElementByName(AZ_CRC_CE("ViewDebugButton"));
-
-            classElement.AddElementWithData<HoudiniNodeComponentConfig>(context, "Houdini", newConfig);
-        }     
-        else if (classElement.GetVersion() == 3)
-        {                        
-            AZStd::vector<HoudiniMaterialSettings> newMaterials;
-            newMaterials.push_back(HoudiniMaterialSettings());
-
-            HoudiniNodeExporter exporter;
-            exporter.m_materialSettings = newMaterials;
-
-            //Materials became an array now move to the first position in the array:
-            // TODO:
-            //classElement.GetChildData(AZ_CRC_CE("Material"), exporter.m_materialSettings[0].m_materialAsset);
-            classElement.GetChildData(AZ_CRC_CE("Visible"), exporter.m_materialSettings[0].m_visible);
-
-            classElement.RemoveElementByName(AZ_CRC_CE("Material"));
-            classElement.RemoveElementByName(AZ_CRC_CE("Visible"));
-            classElement.RemoveElementByName(AZ_CRC_CE("LiveUpdate"));
-
-            classElement.AddElementWithData<HoudiniNodeExporter>(context, "MaterialSettings", exporter);
-        }
-        else if (classElement.GetVersion() == 4)
-        {
-            classElement.RemoveElementByName(AZ_CRC_CE("LiveUpdate"));
-        }
-
         return true;
     }
     
@@ -191,6 +139,7 @@ namespace HoudiniEngine
             AZ::ComponentApplicationBus::BroadcastResult(m_config.m_nodeName, &AZ::ComponentApplicationRequests::GetEntityName, entityId);
 
             // Make the node name unique by adding the EntityId to the name
+            m_config.m_nodeName.append(".");
             m_config.m_nodeName.append(entityId.ToString());
         }
 

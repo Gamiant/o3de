@@ -74,7 +74,7 @@ namespace HoudiniEngine
     public:
         virtual bool IsInitialized() = 0;
         virtual IHoudiniNode* LoadHda(const AZStd::string&, const AZStd::string& nodeName, AZStd::function<void(IHoudiniNode*)> onLoad = {}) = 0;
-        virtual AZStd::vector<AZStd::string> getOperatorNames() = 0;
+
         virtual AZ::ScriptProperty* GetProperty(const AZStd::string& name) = 0;
         
         virtual IHoudiniNode* GetNode() = 0;
@@ -161,8 +161,14 @@ namespace HoudiniEngine
             virtual bool GetPaintValue(const AZStd::string& name, float& paintValue) = 0;
             virtual bool GetFloatAttribute(const AZStd::string& name, LmbrCentral::SplineAttribute<float>*& splinePointer) = 0;
             virtual void CommitChanges() = 0;
-    };    
-    
+    };
+
+    struct HoudiniNodeEventNotifications : public AZ::EBusTraits
+    {
+        virtual void OnHDALoaded(IHoudiniNode*) {}
+    };
+    using HoudiniNodeEventNotificationBus = AZ::EBus<HoudiniNodeEventNotifications>;
+
     //Buses:
     using HoudiniAssetRequestBus = AZ::EBus<HoudiniAssetRequests>;
     using HoudiniCurveAttributeRequestBus = AZ::EBus<HoudiniCurveAttributeRequests>;

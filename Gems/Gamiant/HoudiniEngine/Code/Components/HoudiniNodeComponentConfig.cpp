@@ -59,11 +59,11 @@ namespace HoudiniEngine
                     ->Attribute(AZ_CRC("PlaceholderText", 0xa23ec278), &HoudiniNodeComponentConfig::GetHelpText)
                     ->Attribute(AZ::Edit::Attributes::ReadOnly, true)*/
 
-                    ->DataElement(AZ::Edit::UIHandlers::Button, &HoudiniNodeComponentConfig::m_nodeName, "Node Name", "This must be unique per file.  The cache files will be generated with this name.")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniNodeComponentConfig::m_nodeName, "Node Name", "This must be unique per file.  The cache files will be generated with this name.")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniNodeComponentConfig::OnNodeNameChanged)
-                    ->Attribute(AZ::Edit::Attributes::ButtonText, &HoudiniNodeComponentConfig::m_nodeName)
+                    ->Attribute(AZ::Edit::Attributes::ReadOnly, true)
 
-                    ->DataElement(AZ::Edit::UIHandlers::Button, &HoudiniNodeComponentConfig::m_operatorName, "OperatorType", "List of Houdini Digital Assets")
+                    ->DataElement(AZ::Edit::UIHandlers::Button, &HoudiniNodeComponentConfig::m_operatorName, "OperatorType", "List of Houdini operators in a digital asset library")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniNodeComponentConfig::OnSelectOperator)
                     ->Attribute(AZ::Edit::Attributes::ButtonText, &HoudiniNodeComponentConfig::m_operatorName)
 
@@ -106,64 +106,6 @@ namespace HoudiniEngine
             classElement.AddElementWithData<bool>(context, "Locked", false);
         }
         return true;
-    }
-
-    AZStd::vector<AZStd::string> HoudiniNodeComponentConfig::getOperatorNames()
-    {
-        AZ_PROFILE_FUNCTION(Houdini);
-
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        AZStd::vector<AZStd::string> output;
-        output.push_back("");
-
-        if (hou != nullptr && hou->IsActive())
-        {
-            auto assets = hou->GetAvailableAssets();
-
-            for (auto asset : assets)
-            {
-                auto result = asset->getAssets();
-                if (result.size() == 0)
-                {
-                    m_operatorName = "";
-                }
-
-                if (m_selectionMode == OperatorMode::Scatter)
-                {
-                    QString file = asset->GetHdaFile().c_str();
-                    file = file.toLower();
-                    if (file.indexOf("scatter") >= 0)
-                    {
-                        for (auto op : result)
-                        {
-                            output.push_back(op);
-                        }
-                    }
-                }
-                else if (m_selectionMode == OperatorMode::Terrain)
-                {
-                    QString file = asset->GetHdaFile().c_str();
-                    file = file.toLower();
-                    if (file.indexOf("terrain") >= 0)
-                    {
-                        for (auto op : result)
-                        {
-                            output.push_back(op);
-                        }
-                    }
-                }
-                else 
-                {
-                    for (auto op : result)
-                    {
-                        output.push_back(op);
-                    }
-                }
-            }
-        }
-
-        return output;
     }
 
     AZ::Crc32 HoudiniNodeComponentConfig::OnSelectOperator()
@@ -239,7 +181,7 @@ namespace HoudiniEngine
 
         if (m_nodeName.empty()) 
         {
-            AZ::ComponentApplicationBus::BroadcastResult(m_nodeName, &AZ::ComponentApplicationRequests::GetEntityName, m_entityId);            
+            AZ::ComponentApplicationBus::BroadcastResult(m_nodeName, &AZ::ComponentApplicationRequests::GetEntityName, m_entityId);
         }
 
         auto* result = LoadHda(m_operatorName, m_nodeName);
@@ -586,63 +528,34 @@ namespace HoudiniEngine
     {
         m_asset = asset;
 
+        HoudiniDigitalAsset* houdiniDigitalAsset = m_asset.GetAs<HoudiniDigitalAsset>();
+        if (!houdiniDigitalAsset->m_assetNames.empty())
+        {
+            m_operatorName = houdiniDigitalAsset->m_assetNames[0];
+
+            ExecuteCreate();
+
+        }
+
         return nullptr;
     }
 
-    IHoudiniNode* HoudiniNodeComponentConfig::LoadHda(const AZStd::string& operatorName, const AZStd::string& nodeName, AZStd::function<void(IHoudiniNode*)> onLoad)
+    void HoudiniNodeComponentConfig::ExecuteCreate()
     {
-        AZ_PROFILE_FUNCTION(Houdini);
-
-        if (m_creating || m_locked)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (!houdini || !houdini->IsActive())
         {
-            //Already creating:
-            return nullptr;
+            return;
         }
 
-        AZStd::string newName = nodeName;        
-        bool nameConflict = false;
-        do
-        {
-            AZ::EBusAggregateResults<AZ::EntityId> idsWithSameName;
-            HoudiniAssetRequestBus::BroadcastResult(idsWithSameName, &HoudiniAssetRequests::GetEntityIdFromNodeName, newName);
-            nameConflict = false;
+        //TODO: with support for groups this doesn't work anymore as we have properties from other groups.
+        auto propertiesCopy = m_properties.m_properties;
 
-            for (auto idWithSameName : idsWithSameName.values)
-            {
-                //If its valid and its not ours then its a conflict.
-                if (idWithSameName.IsValid() && idWithSameName != m_entityId)
-                {
-                    nameConflict = true;
-                }
-            }
+        //Update right now!
+        houdini->LookupId(m_entityId);
 
-            if (nameConflict)
-            {
-                newName += "_";
-            }
-        } while (nameConflict);
-
-        m_operatorName = operatorName;
-        m_nodeName = newName;
-        m_initialized = false;
-        
-        if (m_operatorName.length() > 0)
-        {
-            HoudiniPtr hou;
-            HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-            if (hou == nullptr || hou->IsActive() == false)
-            {        
-                return nullptr;
-            }
-
-            m_creating = true;
-            //TODO: with support for groups this doesn't work anymore as we have properties from other groups.
-            auto propertiesCopy = m_properties.m_properties;
-            
-            //Update right now!
-            hou->LookupId(m_entityId);
-                        
-            AZStd::function<bool()> createFunction = [this, hou, onLoad, propertiesCopy] () mutable
+        AZStd::function<bool()> createFunction = [this, houdini, propertiesCopy]() mutable
             {
                 AZStd::vector<AZ::ScriptProperty*> newProps;
 
@@ -654,19 +567,21 @@ namespace HoudiniEngine
                         propertiesCopy.clear();
                         m_properties.Clear();
                         m_node->DeleteNode();
-                        hou->RemoveNode(m_nodeName, m_node.get());
+
+                        houdini->RemoveNode(m_nodeName, m_node.get());
+
                         //try to remove spline component if any and reset the flag
                         HoudiniSplineTranslator::RemoveSplineComponent(m_entityId);
                         m_hasSpline = false; //reset to false since we switched HDA
-                    }                    
+                    }
                 }
-                
-                AZ::Transform transform = hou->LookupTransform(m_entityId);
-                AZStd::string entityName = hou->LookupEntityName(m_entityId);
 
-                m_node = hou->CreateNode(m_operatorName, m_nodeName);
+                AZ::Transform transform = houdini->LookupTransform(m_entityId);
+                AZStd::string entityName = houdini->LookupEntityName(m_entityId);
 
-                if (m_node == nullptr)
+                m_node = houdini->CreateNode(m_operatorName, m_nodeName);
+
+                if (!m_node)
                 {
                     AZ_Warning("Houdini", false, "Unable to load node %s as entity: %s ", m_operatorName.c_str(), m_nodeName.c_str());
                     return false;
@@ -677,23 +592,25 @@ namespace HoudiniEngine
 
                 m_node->UpdateParamInfoFromEngine();
                 m_node->UpdateEditableNodeFromEngine();
+
                 if (m_hasSpline) //we have a spline component added
                 {
                     m_node->SetEditableGeometryBuilt(true);
                     HAPI_GeoInfo geometryInfo = m_node->GetEditableGeometryInfo();
                     HoudiniSplineTranslator::HapiUpdateNodeForHoudiniSplineComponent(m_entityId, geometryInfo.nodeId, false);
                 }
+
                 m_properties.m_name = "Houdini Properties";
 
                 // TODO: check how this works
                 for (int i = 0; i < m_node->GetNodeInfo().inputCount; i++)
                 {
-                    AZ_PROFILE_SCOPE(Editor, "HoudiniNodeComponentConfig::LoadHda::BuildInputs");
+                    AZ_PROFILE_SCOPE(Editor, "HoudiniNodeComponentConfig::ExecuteCreate::BuildInputs");
                     //HoudiniScriptProperty * prop = nullptr;
 
                     HAPI_StringHandle nameHandle;
-                    HAPI_GetNodeInputName(&m_node->GetHou()->GetSession(), m_node->GetId(), i, &nameHandle);
-                    auto nameGen = m_node->GetHou()->GetString(nameHandle);
+                    HAPI_GetNodeInputName(&houdini->GetSession(), m_node->GetId(), i, &nameHandle);
+                    auto nameGen = houdini->GetString(nameHandle);
 
                     HoudiniScriptPropertyInput* propOld = azrtti_cast<HoudiniScriptPropertyInput*>(m_properties.GetProperty(nameGen.c_str()));
 
@@ -737,8 +654,8 @@ namespace HoudiniEngine
                         for (int i = 0; i < m_node->GetNodeInfo().inputCount; i++)
                         {
                             HAPI_StringHandle nameHandle;
-                            HAPI_GetNodeInputName(&m_node->GetHou()->GetSession(), m_node->GetId(), i, &nameHandle);
-                            auto nameGen = m_node->GetHou()->GetString(nameHandle);
+                            HAPI_GetNodeInputName(&houdini->GetSession(), m_node->GetId(), i, &nameHandle);
+                            auto nameGen = houdini->GetString(nameHandle);
 
                             if (oldProp->m_name == nameGen)
                             {
@@ -778,16 +695,16 @@ namespace HoudiniEngine
                 populateGroup(m_node, params, m_properties);
 
                 //You cannot set this while creating or you will break m_isAlreadyQueuedRefresh and you will not be able to select this object properly:
-                
-                if (hou->LookupIsSelected(m_entityId))
+
+                if (houdini->LookupIsSelected(m_entityId))
                 {
                     AZ::TickBus::QueueFunction([]()
-                    {
-                        AzToolsFramework::ToolsApplicationEvents::Bus::Broadcast(
-                            &AzToolsFramework::ToolsApplicationEvents::Bus::Events::InvalidatePropertyDisplay, AzToolsFramework::PropertyModificationRefreshLevel::Refresh_EntireTree);
-                    });
+                        {
+                            AzToolsFramework::ToolsApplicationEvents::Bus::Broadcast(
+                                &AzToolsFramework::ToolsApplicationEvents::Bus::Events::InvalidatePropertyDisplay, AzToolsFramework::PropertyModificationRefreshLevel::Refresh_EntireTree);
+                        });
                 }
-                
+
                 for (auto it = m_defaultEntities.begin(); it != m_defaultEntities.end(); it++)
                 {
                     auto propNameToSet = it->first;
@@ -798,27 +715,66 @@ namespace HoudiniEngine
                 m_defaultEntities.clear();
                 m_initialized = true;
                 m_creating = false;
-                
 
-                if (m_node != nullptr && onLoad)
-                {                    
-                    onLoad(m_node.get());
-                }
+
+                HoudiniNodeEventNotificationBus::Broadcast(&HoudiniNodeEventNotificationBus::Events::OnHDALoaded, m_node.get());
 
                 return m_node.get() != nullptr;
             };
-            
-            hou->ExecuteCommand(m_entityId, createFunction);
 
-            //Selected nodes get priority over other stuff.
-            bool isSelected = false;
-            AzToolsFramework::ToolsApplicationRequests::Bus::BroadcastResult(isSelected, &AzToolsFramework::ToolsApplicationRequests::IsSelected, m_entityId);
+        houdini->ExecuteCommand(m_entityId, createFunction);
 
-            if (isSelected)
+        //Selected nodes get priority over other stuff.
+        bool isSelected = false;
+        AzToolsFramework::ToolsApplicationRequests::Bus::BroadcastResult(isSelected, &AzToolsFramework::ToolsApplicationRequests::IsSelected, m_entityId);
+
+        if (isSelected)
+        {
+            houdini->RaiseCommandPriority(m_entityId);
+        }
+    }
+
+    IHoudiniNode* HoudiniNodeComponentConfig::LoadHda(const AZStd::string& operatorName, const AZStd::string& nodeName, AZStd::function<void(IHoudiniNode*)> onLoad)
+    {
+        AZ_PROFILE_FUNCTION(Houdini);
+
+        if (m_creating || m_locked)
+        {
+            //Already creating:
+            return nullptr;
+        }
+
+        AZStd::string newName = nodeName;
+        bool nameConflict = false;
+        do
+        {
+            AZ::EBusAggregateResults<AZ::EntityId> idsWithSameName;
+            HoudiniAssetRequestBus::BroadcastResult(idsWithSameName, &HoudiniAssetRequests::GetEntityIdFromNodeName, newName);
+            nameConflict = false;
+
+            for (auto idWithSameName : idsWithSameName.values)
             {
-                hou->RaiseCommandPriority(m_entityId);
+                //If its valid and its not ours then its a conflict.
+                if (idWithSameName.IsValid() && idWithSameName != m_entityId)
+                {
+                    nameConflict = true;
+                }
             }
-        }        
+
+            if (nameConflict)
+            {
+                newName += "_";
+            }
+        } while (nameConflict);
+
+        m_operatorName = operatorName;
+        m_nodeName = newName;
+        m_initialized = false;
+
+        if (m_operatorName.length() > 0)
+        {
+            ExecuteCreate();
+        }
 
         return nullptr;
     }

@@ -90,7 +90,6 @@ namespace HoudiniEngine
         HoudiniPropertyGroup m_properties;
         
         AZStd::string m_operatorName;
-        AZStd::vector<AZStd::string> getOperatorNames() override;
 
         AZ::EntityId CreateSplineEntity(const AZStd::string& name, AZ::EntityId parent);
 
@@ -125,6 +124,7 @@ namespace HoudiniEngine
 
         void BackupInputTypeProperties();
         void ReloadProperties();
+        void ExecuteCreate();
 
         bool m_viewReloadPropertiesButton = false;
         AZ::Crc32 OnReloadProperties();
