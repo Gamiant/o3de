@@ -70,7 +70,7 @@ namespace AZ
             m_swapChainBarrier.m_isValid = true;
         }
 
-        void SwapChain::ProcessRecreation()
+        bool SwapChain::ProcessRecreation()
         {
             if (m_pendingRecreation)
             {
@@ -82,7 +82,9 @@ namespace AZ
                 InitImages();
 
                 m_pendingRecreation = false;
+                return true;
             }
+            return false;
         }
 
         void SwapChain::SetVerticalSyncIntervalInternal(uint32_t previousVsyncInterval)
@@ -95,12 +97,9 @@ namespace AZ
             }
         }
 
-        void SwapChain::SetNameInternal(const AZStd::string_view& name)
+        void SwapChain::SetNameInternal([[maybe_unused]] const AZStd::string_view& name)
         {
-            if ((m_nativeSwapChain != VK_NULL_HANDLE) && IsInitialized() && !name.empty())
-            {
-                Debug::SetNameToObject(reinterpret_cast<uint64_t>(m_nativeSwapChain), name.data(), VK_OBJECT_TYPE_SWAPCHAIN_KHR, static_cast<Device&>(GetDevice()));
-            }
+            // On some GPUs, like the Adreno 740, setting the name of the swapchain causes a crash, so we don't do it.
         }
 
         RHI::ResultCode SwapChain::InitInternal(RHI::Device& baseDevice, const RHI::SwapChainDescriptor& descriptor, RHI::SwapChainDimensions* nativeDimensions)
@@ -270,9 +269,10 @@ namespace AZ
                     // We wait until the swapchain image has finished being rendered to initialize the
                     // ownership transfer.
                     vulkanQueue->SubmitCommandBuffers(
-                        AZStd::vector<RHI::Ptr<CommandList>>{commandList},
-                        AZStd::vector<Semaphore::WaitSemaphore>{AZStd::make_pair(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, presentSemaphore)},
-                        AZStd::vector< RHI::Ptr<Semaphore>>{transferSemaphore},
+                        AZStd::vector<RHI::Ptr<CommandList>>{ commandList },
+                        AZStd::vector<Semaphore::WaitSemaphore>{ AZStd::make_pair(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, presentSemaphore) },
+                        AZStd::vector<RHI::Ptr<Semaphore>>{ transferSemaphore },
+                        {},
                         nullptr);
 
                     // The presentation engine must wait until the ownership transfer has completed.
