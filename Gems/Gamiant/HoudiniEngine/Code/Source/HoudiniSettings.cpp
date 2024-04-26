@@ -11,6 +11,9 @@
 
 #include <Viewport/ViewportSettings.h>
 
+#include <AzCore/Settings/SettingsRegistry.h>
+#include <AzToolsFramework/API/SettingsRegistryUtils.h>
+
 namespace HoudiniEngine
 {
     void SessionSettings::SetServerHost(const AZStd::string& host)

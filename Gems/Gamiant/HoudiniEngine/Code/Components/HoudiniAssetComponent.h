@@ -97,9 +97,6 @@ namespace HoudiniEngine
         void OnVerticesSet(const AZStd::vector<AZ::Vector3>& vertices) override;
         void OnVerticesCleared() override;
 
-        //Houdini Mesh
-        //AZStd::vector<HoudiniMeshStatObject> GetStatObjects() override;
-        
         //Houdini Materials
         void SetMaterialPath(const AZStd::string& materialName, const AZStd::string& materialPath);
 

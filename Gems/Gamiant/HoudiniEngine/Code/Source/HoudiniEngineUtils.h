@@ -103,5 +103,7 @@ namespace HoudiniEngine
         static void ConvertHAPITransform(const HAPI_Transform& hapiTransform, AZ::Transform& transform);
         static void ConvertHAPIViewport(const HAPI_Viewport& viewport, AZ::Transform& transform);
         static void ConvertO3DEViewport(const AZ::Transform& o3deTransform, HAPI_Viewport& viewport);
+
+        static AZStd::string GetHoudiniResultByCode(int code);
     };
 }

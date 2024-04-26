@@ -226,9 +226,8 @@ namespace HoudiniEngine
         sessionResult = HAPI_GetSessionEnvInt(&m_session, HAPI_SESSIONENVINT_LICENSE, (int*)&m_licenseType);
         if (sessionResult != HAPI_RESULT_SUCCESS)
         {
-            AZStd::string codeString;
-            HoudiniEngineRequestBus::BroadcastResult(codeString, &HoudiniEngineRequests::GetHoudiniResultByCode, sessionResult);
-            AZ_Error("Houdini", false, "License verification failed: %s - %s", codeString.c_str(), HoudiniEngineUtils::GetLastError().c_str());
+            AZStd::string codeString = HoudiniEngineUtils::GetHoudiniResultByCode(sessionResult);
+            AZ_Error("Houdini", false, "License verification failed: %s - %s", codeString.c_str(), GetLastHoudiniError().c_str());
             return false;
         }
 
@@ -385,9 +384,8 @@ namespace HoudiniEngine
         SessionResult = HAPI_GetSessionEnvInt(&m_session, HAPI_SESSIONENVINT_LICENSE, (int*)&m_licenseType);
         if (SessionResult != HAPI_RESULT_SUCCESS)
         {
-            AZStd::string codeString;
-            HoudiniEngineRequestBus::BroadcastResult(codeString, &HoudiniEngineRequests::GetHoudiniResultByCode, SessionResult);
-            AZ_Error("Houdini", false, "HAPI_SESSIONENVINT_LICENSE failed: %s - %s", codeString.c_str(), HoudiniEngineUtils::GetLastError().c_str());
+            AZStd::string codeString = HoudiniEngineUtils::GetHoudiniResultByCode(SessionResult);
+            AZ_Error("Houdini", false, "HAPI_SESSIONENVINT_LICENSE failed: %s - %s", codeString.c_str(), GetLastHoudiniError().c_str());
             return false;
         }
 
@@ -421,6 +419,7 @@ namespace HoudiniEngine
         processLaunchInfo.m_commandlineParameters = AZStd::string::format("%shoudini %s", m_houdiniPath.c_str(), sessionArgs.c_str());
         processLaunchInfo.m_showWindow = true;
         processLaunchInfo.m_tetherLifetime = true;
+        processLaunchInfo.m_workingDirectory = m_houdiniPath;
         m_houdiniProcessWatcher = AZStd::unique_ptr<AzFramework::ProcessWatcher>(AzFramework::ProcessWatcher::LaunchProcess(processLaunchInfo, AzFramework::ProcessCommunicationType::COMMUNICATOR_TYPE_NONE));
 
         if (m_houdiniProcessWatcher && m_houdiniProcessWatcher->IsProcessRunning())

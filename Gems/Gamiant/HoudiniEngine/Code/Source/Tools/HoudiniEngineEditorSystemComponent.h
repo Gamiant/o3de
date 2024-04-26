@@ -79,8 +79,6 @@ namespace HoudiniEngine
         void CancelProcessorJob(AZ::EntityId entityToRemove) override;
         void JoinProcessorThread() override;
 
-        AZStd::string GetHoudiniResultByCode(int code) override;
-
     protected:
 
         HoudiniPtr m_houdiniInstance;

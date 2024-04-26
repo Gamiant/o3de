@@ -118,7 +118,12 @@ namespace HoudiniEngine
             HAPI_Result result = HAPI_LoadAssetLibraryFromFile(&houdini->GetSession(), absolutePath.c_str(), true, &id);
             if (result != HAPI_RESULT_SUCCESS)
             {
-                AZ_Error("Houdini", false, houdini->GetLastHoudiniError().c_str());
+                AZStd::string error = HoudiniEngineUtils::GetHoudiniResultByCode(result);
+                if (error.empty())
+                {
+                    error = houdini->GetLastHoudiniError();
+                }
+                AZ_Error("Houdini", false, error.c_str());
                 return AssetHandler::LoadResult::Error;
             }
 

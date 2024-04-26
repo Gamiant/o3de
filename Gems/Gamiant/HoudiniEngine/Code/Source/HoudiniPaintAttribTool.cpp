@@ -9,7 +9,7 @@
 #include <HoudiniCommon.h>
 #include "HoudiniPaintAttribTool.h"
 
-#include <Objects/DisplayContext.h>
+//#include <Objects/DisplayContext.h>
 #include "Util/EditorUtils.h"
 
 namespace HoudiniEngine

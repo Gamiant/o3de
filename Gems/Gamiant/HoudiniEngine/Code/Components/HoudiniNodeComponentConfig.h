@@ -90,7 +90,7 @@ namespace HoudiniEngine
         HoudiniPropertyGroup m_properties;
         
         AZStd::string m_operatorName;
-
+ 
         AZ::EntityId CreateSplineEntity(const AZStd::string& name, AZ::EntityId parent);
 
         //Presets:
