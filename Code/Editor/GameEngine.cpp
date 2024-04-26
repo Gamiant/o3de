@@ -319,7 +319,7 @@ AZ::Outcome<void, AZStd::string> CGameEngine::Init(
     constexpr const char* crySystemLibraryName = AZ_TRAIT_OS_DYNAMIC_LIBRARY_PREFIX  "CrySystem" AZ_TRAIT_OS_DYNAMIC_LIBRARY_EXTENSION;
 
     m_hSystemHandle = AZ::DynamicModuleHandle::Create(crySystemLibraryName);
-    if (!m_hSystemHandle->Load(true))
+    if (!m_hSystemHandle->Load(AZ::DynamicModuleHandle::LoadFlags::InitFuncRequired))
     {
         auto errorMessage = AZStd::string::format("%s Loading Failed", crySystemLibraryName);
         Error(errorMessage.c_str());
@@ -464,22 +464,6 @@ bool CGameEngine::LoadLevel(
     // The engine might have trouble to find some files when the current
     // directory is wrong
     QDir::setCurrent(GetIEditor()->GetPrimaryCDFolder());
-
-
-    bool usePrefabSystemForLevels = false;
-    AzFramework::ApplicationRequests::Bus::BroadcastResult(
-        usePrefabSystemForLevels, &AzFramework::ApplicationRequests::IsPrefabSystemEnabled);
-
-    if (!usePrefabSystemForLevels)
-    {
-        QString pakFile = m_levelPath + "/level.pak";
-
-        // Open Pak file for this level.
-        if (!m_pISystem->GetIPak()->OpenPack(m_levelPath.toUtf8().data(), pakFile.toUtf8().data()))
-        {
-            CryWarning(VALIDATOR_MODULE_EDITOR, VALIDATOR_WARNING, "Level Pack File %s Not Found", pakFile.toUtf8().data());
-        }
-    }
 
     // Audio: notify audio of level loading start?
     GetIEditor()->GetObjectManager()->SendEvent(EVENT_REFRESH);
