@@ -11,6 +11,8 @@
 
 #include <AzToolsFramework/API/EditorAssetSystemAPI.h>
 
+#include <HoudiniEngineUtils.h>
+
 namespace HoudiniEngine
 {
 
@@ -170,13 +172,13 @@ namespace HoudiniEngine
 
 
 
-    HoudiniAsset::HoudiniAsset(IHoudini* hou, HAPI_AssetLibraryId id, AZStd::string hdaFile, AZStd::string hdaName) :
-        m_hou(hou)
+    HoudiniAsset::HoudiniAsset(IHoudini* houdini, HAPI_AssetLibraryId id, AZStd::string hdaFile, AZStd::string hdaName) :
+        m_houdini(houdini)
         , m_id(id)
         , m_hdaFile(hdaFile)
         , m_hdaName(hdaName)
     {
-        m_session = const_cast<HAPI_Session*>(&hou->GetSession());
+        m_session = const_cast<HAPI_Session*>(&houdini->GetSession());
         m_assetCount = 0;
 
         if (m_id >= 0)
@@ -190,7 +192,7 @@ namespace HoudiniEngine
 
                 for (int i = 0; i < m_assetCount; i++)
                 {
-                    AZStd::string assetName = hou->GetString(assetNameHandles[i]);
+                    AZStd::string assetName = houdini->GetString(assetNameHandles[i]);
                     m_assets.push_back(assetName);
                 }
             }

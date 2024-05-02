@@ -585,9 +585,9 @@ namespace HoudiniEngine
         }
 
         //Check if we have Houdini setup:
-        HoudiniEngine::HoudiniPtr hou;
-        HoudiniEngine::HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngine::HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniEngine::HoudiniPtr houdini;
+        HoudiniEngine::HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngine::HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return;
         }
@@ -616,16 +616,16 @@ namespace HoudiniEngine
 
     void HoudiniEngineEditorSystemComponent::AddDynamicContextMenus(QMenu* menu, const AzToolsFramework::EntityIdList& selectedEntityList)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
         AZStd::vector<AZStd::string> output;
         output.push_back("");
 
-        if (hou != nullptr && hou->IsActive())
+        if (houdini != nullptr && houdini->IsActive())
         {
             QMenu* houMenu = new QMenu("Houdini");
 
-            auto assets = hou->GetAvailableAssets();
+            auto assets = houdini->GetAvailableAssets();
 
             for (auto asset : assets)
             {

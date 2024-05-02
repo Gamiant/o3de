@@ -40,7 +40,7 @@ namespace HoudiniEngine
         friend class HoudiniScriptPropertyButton;
 
         protected:
-            IHoudini* m_hou;
+            IHoudini* m_houdini;
             HAPI_Session* m_session;
             HoudiniNodePtr m_node;
             HoudiniParameterPtr m_parameter;            
@@ -86,7 +86,7 @@ namespace HoudiniEngine
 
             virtual void SetNode(HoudiniNodePtr node)
             {
-                m_hou = node->GetHou();
+                m_houdini = node->GetHoudini();
                 m_node = node;
             }
 
@@ -100,7 +100,7 @@ namespace HoudiniEngine
                 HAPI_Session* session = nullptr;
                 SessionRequestBus::BroadcastResult(session, &SessionRequests::GetSessionPtr);
 
-                m_hou = parm->GetHou();
+                m_houdini = parm->GetHoudini();
                 m_parameter = parm;
                 m_session = session;
                 m_name = parm->GetName();

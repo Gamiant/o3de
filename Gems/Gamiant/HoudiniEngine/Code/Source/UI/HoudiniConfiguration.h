@@ -38,12 +38,6 @@ namespace HoudiniEngine
 
     private Q_SLOTS:
 
-        //REGISTER_INT("hou_multi_threaded", 0, 0, "Out of process version of Houdini running on its own thread");
-        //REGISTER_INT("hou_state", 1, 0, "Houdini Enabled State");
-        //REGISTER_STRING("hou_otl_path", "@projectroot@/Assets/hda", 0, "Location to search for HDAs - semicolon separated, Example: @devassets@/../../techart/houdini/DigitalAssets");
-        //REGISTER_STRING("hou_named_pipe", "HOUDINI_O3DE", 0, "used for debug connections");
-        //REGISTER_FLOAT("hou_update_period", 0.25, 0, "Time between Houdini digital asset updates (valid range: 0.01 - 1.0 seconds, default = 0.25s)");
-
         void Apply();
         void Reset();
         void OnSessionTypeChanged(int index);

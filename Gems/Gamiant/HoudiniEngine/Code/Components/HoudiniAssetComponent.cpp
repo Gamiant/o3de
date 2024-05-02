@@ -332,10 +332,10 @@ namespace HoudiniEngine
 
             if ( m_updating == false )
             {
-                *m_config.GetNode()->GetHou() << "==========Update " << GetNodeName() << " ========" << "";
+                *m_config.GetNode()->GetHoudini() << "==========Update " << GetNodeName() << " ========" << "";
                 m_updating = true;                                
 
-                m_config.GetNode()->GetHou()->ExecuteCommand(myId, [this]()
+                m_config.GetNode()->GetHoudini()->ExecuteCommand(myId, [this]()
                 {
                     bool updated = m_config.UpdateNode();
 
@@ -349,7 +349,7 @@ namespace HoudiniEngine
 
                     if (updated && m_nodeExporter.IsDirty())
                     {
-                        AZ::Transform transform = m_config.GetNode()->GetHou()->LookupTransform(GetEntityId());
+                        AZ::Transform transform = m_config.GetNode()->GetHoudini()->LookupTransform(GetEntityId());
                         m_nodeExporter.UpdateWorldTransformData(transform);
                     }
 
@@ -359,7 +359,7 @@ namespace HoudiniEngine
 
                 if (isSelected)
                 {
-                    m_config.GetNode()->GetHou()->RaiseCommandPriority(myId);
+                    m_config.GetNode()->GetHoudini()->RaiseCommandPriority(myId);
                 }
             }
         }

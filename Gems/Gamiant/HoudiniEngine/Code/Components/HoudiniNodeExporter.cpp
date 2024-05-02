@@ -211,7 +211,7 @@ namespace HoudiniEngine
     {
         if (m_node != nullptr)
         {
-            m_node->GetHou()->CheckForErrors();
+            m_node->GetHoudini()->CheckForErrors();
         }
     }
 
@@ -280,11 +280,11 @@ namespace HoudiniEngine
         if (m_node == nullptr || m_node->HasCookingError())
             return false;
 
-        m_hou = m_node->GetHou();
-        if (m_hou == nullptr || m_hou->IsActive() == false)
+        m_houdini = m_node->GetHoudini();
+        if (m_houdini == nullptr || m_houdini->IsActive() == false)
             return false;
 
-        m_session = (HAPI_Session*)&m_hou->GetSession();
+        m_session = (HAPI_Session*)&m_houdini->GetSession();
 
         return true;
     }
@@ -316,14 +316,14 @@ namespace HoudiniEngine
         const AZStd::string& objOutputMergeName = "/obj/FBXs/" + objOutputName;
 
         //RemoveRootNode:
-        HAPI_NodeId fbxRootId = m_hou->FindNode(HAPI_NODETYPE_OBJ, "/obj/FBXs");
+        HAPI_NodeId fbxRootId = m_houdini->FindNode(HAPI_NODETYPE_OBJ, "/obj/FBXs");
         if (fbxRootId <= HOUDINI_ZERO_ID)
         {
             HAPI_CreateNode(m_session, -1, "Object/subnet", "FBXs", true, &fbxRootId);
         }
         
         //Remove any dups of this node:
-        HAPI_NodeId sceneRootId = m_hou->FindNode(HAPI_NODETYPE_OBJ, objOutputMergeName);
+        HAPI_NodeId sceneRootId = m_houdini->FindNode(HAPI_NODETYPE_OBJ, objOutputMergeName);
         if (sceneRootId > HOUDINI_ZERO_ID)
         {
             HAPI_DeleteNode(m_session, sceneRootId);
@@ -397,7 +397,7 @@ namespace HoudiniEngine
         HAPI_ConnectNodeInput(m_session, objTrans, 0, objMerge, 0);
         CheckForErrors();
 
-        m_hou->CookNode(objTrans, objOutputName);
+        m_houdini->CookNode(objTrans, objOutputName);
         CheckForErrors();
         ///////////////////////////
         // Transform the geo END //
@@ -418,7 +418,7 @@ namespace HoudiniEngine
         CheckForErrors();                
 
         // Setup ExportToFBX
-        HAPI_NodeId ropNode = m_hou->FindNode(HAPI_NODETYPE_ROP, "/out/ExportToFBX");
+        HAPI_NodeId ropNode = m_houdini->FindNode(HAPI_NODETYPE_ROP, "/out/ExportToFBX");
         if (ropNode <= HOUDINI_ZERO_ID)
         {
             HAPI_CreateNode(m_session, HOUDINI_ROOT_NODE_ID, "Driver/filmboxfbx", "ExportToFBX", true, &ropNode);
@@ -441,7 +441,7 @@ namespace HoudiniEngine
         }
 
         // Export each cluster
-        const AZStd::string& baseFileName = m_hou->GetString(m_node->GetNodeInfo().nameSH);
+        const AZStd::string& baseFileName = m_houdini->GetString(m_node->GetNodeInfo().nameSH);
         for (int clusterIndex = 0; clusterIndex < clusterCount; clusterIndex++)
         {
             const auto& clusterIndexString = AZStd::to_string(clusterIndex);
@@ -460,7 +460,7 @@ namespace HoudiniEngine
                 {
                     HAPI_StringHandle handle;
                     HAPI_GetAttributeStringData(m_session, objMerge, 0, "clusterName", &clusters_Name, &handle, 0, 1);
-                    clusterName = m_hou->GetString(handle);
+                    clusterName = m_houdini->GetString(handle);
                 }
             }
 
@@ -545,11 +545,11 @@ namespace HoudiniEngine
 
         AZStd::vector<HAPI_StringHandle> handles(groupCount);
         HAPI_GetGroupNames(m_session, m_node->GetGeometryInfo().nodeId, HAPI_GROUPTYPE_PRIM, &handles.front(), groupCount);
-        *m_hou << "HAPI_GetGroupNames: " << m_node->GetGeometryInfo().nodeId << " reading " << groupCount << " into buffer sized: " << handles.size() << "";
+        *m_houdini << "HAPI_GetGroupNames: " << m_node->GetGeometryInfo().nodeId << " reading " << groupCount << " into buffer sized: " << handles.size() << "";
                 
         for (auto& groupNameHandle : handles)
         {
-            auto groupName = m_hou->GetString(groupNameHandle);
+            auto groupName = m_houdini->GetString(groupNameHandle);
 
             if (groupName.starts_with("cluster"))
             {
@@ -573,18 +573,18 @@ namespace HoudiniEngine
         HAPI_NodeId newSceneRoot;
 
         //RemoveRootNode:
-        HAPI_NodeId fbxRootId = m_hou->FindNode(HAPI_NODETYPE_OBJ, ("/obj/" + rootName).c_str());
+        HAPI_NodeId fbxRootId = m_houdini->FindNode(HAPI_NODETYPE_OBJ, ("/obj/" + rootName).c_str());
         if (fbxRootId <= HOUDINI_ZERO_ID)
         {
             HAPI_CreateNode(m_session, -1, "Object/subnet", rootName.c_str(), true, &fbxRootId);
         }
 
         //Remove any dups of this node:
-        HAPI_NodeId sceneRootId = m_hou->FindNode(HAPI_NODETYPE_OBJ, clusterName);
+        HAPI_NodeId sceneRootId = m_houdini->FindNode(HAPI_NODETYPE_OBJ, clusterName);
         if (sceneRootId > HOUDINI_ZERO_ID)
         {
             HAPI_DeleteNode(m_session, sceneRootId);
-            *m_hou << "HAPI_DeleteNode: " << sceneRootId << "";
+            *m_houdini << "HAPI_DeleteNode: " << sceneRootId << "";
         }
 
         /////////////////////////////
@@ -604,12 +604,12 @@ namespace HoudiniEngine
             }
         }
 
-        *m_hou << "HAPI_CreateNode: " << fbxRootId << " " << clusterName << "";
-        *m_hou << "HAPI_GetDisplayGeoInfo: " << newSceneRoot << " " << clusterName << "";
+        *m_houdini << "HAPI_CreateNode: " << fbxRootId << " " << clusterName << "";
+        *m_houdini << "HAPI_GetDisplayGeoInfo: " << newSceneRoot << " " << clusterName << "";
         
         if (geoInfo.isDisplayGeo)
         {
-            *m_hou << "HAPI_DeleteNode (FILE/GEO): " << geoInfo.nodeId << " " << clusterName << "";
+            *m_houdini << "HAPI_DeleteNode (FILE/GEO): " << geoInfo.nodeId << " " << clusterName << "";
         }
         
         HAPI_NodeId objMerge;
@@ -617,12 +617,12 @@ namespace HoudiniEngine
         {
             AZ_PROFILE_SCOPE(Editor, ("Create object_merge: " + clusterName).c_str());
             HAPI_CreateNode(m_session, newSceneRoot, "object_merge", (clusterName + "_export_merged").c_str(), true, &objMerge);
-            *m_hou << "HAPI_CreateNode: " << objMerge << "object_merge : export_merged" << "";
+            *m_houdini << "HAPI_CreateNode: " << objMerge << "object_merge : export_merged" << "";
         }
 
         HAPI_GetNodeInfo(m_session, objMerge, &objMergeInfo);
         HAPI_SetParmNodeValue(m_session, objMerge, "objpath1", m_node->GetNodeInfo().id);
-        *m_hou << "HAPI_SetParmNodeValue: " << objMerge << " => objpath1 => " << m_node->GetNodeInfo().id << "";
+        *m_houdini << "HAPI_SetParmNodeValue: " << objMerge << " => objpath1 => " << m_node->GetNodeInfo().id << "";
 
         CheckForErrors();
 
@@ -636,14 +636,14 @@ namespace HoudiniEngine
 
             //Set the cluster group ID
             HAPI_SetParmStringValue(m_session, objMerge, clusterName.c_str(), objGroupParm, 0);
-            *m_hou << "HAPI_SetParmStringValue: " << objMerge << " " << clusterName << " grp:" << objGroupParm << "";            
+            *m_houdini << "HAPI_SetParmStringValue: " << objMerge << " " << clusterName << " grp:" << objGroupParm << "";            
 
             CheckForErrors();
         }
 
         {
             AZ_PROFILE_SCOPE(Editor, ("Cooking Cluster: " + clusterName).c_str());
-            m_hou->CookNode(objMerge, rootName + "_" + clusterName);
+            m_houdini->CookNode(objMerge, rootName + "_" + clusterName);
         }
 
         return objMerge;
@@ -660,12 +660,12 @@ namespace HoudiniEngine
             HAPI_GetAttributeNames(m_session, nodeId, partInfo.id, HAPI_ATTROWNER_DETAIL, &attributeList.front(), partInfo.attributeCounts[HAPI_ATTROWNER_DETAIL]);
 
 
-            *m_hou << "---ReadAttributeHints--- " << "";
-            *m_hou << "   HAPI_GetAttributeNames: " << nodeId << "";
+            *m_houdini << "---ReadAttributeHints--- " << "";
+            *m_houdini << "   HAPI_GetAttributeNames: " << nodeId << "";
 
             for (auto& attribHandle : attributeList)
             {
-                AZStd::string newAttrib = m_hou->GetString(attribHandle);
+                AZStd::string newAttrib = m_houdini->GetString(attribHandle);
 
                 if (AZStd::find(m_attributeHintNames.begin(), m_attributeHintNames.end(), newAttrib) == m_attributeHintNames.end())
                 {
@@ -678,17 +678,17 @@ namespace HoudiniEngine
     void HoudiniNodeExporter::ReadMaterialNameHints(HAPI_NodeId nodeId, HAPI_PartInfo& partInfo)
     {
         AZ_PROFILE_FUNCTION(Houdini);
-        *m_hou << "   ReadMaterialNameHints: " << nodeId << "";
+        *m_houdini << "   ReadMaterialNameHints: " << nodeId << "";
 
         HAPI_AttributeInfo materialsCount = HAPI_AttributeInfo_Create();
         HAPI_GetAttributeInfo(m_session, nodeId, partInfo.id, "Materials", HAPI_ATTROWNER_DETAIL, &materialsCount);
-        *m_hou << "   HAPI_GetAttributeInfo: " << " Materials " << nodeId << "";;
+        *m_houdini << "   HAPI_GetAttributeInfo: " << " Materials " << nodeId << "";;
 
         if (materialsCount.exists)
         {
             HAPI_StringHandle materialListHandle;
             HAPI_GetAttributeStringData(m_session, nodeId, partInfo.id, "Materials", &materialsCount, &materialListHandle, 0, 1);
-            AZStd::string materialList = m_hou->GetString(materialListHandle);
+            AZStd::string materialList = m_houdini->GetString(materialListHandle);
             QString qMaterialList = materialList.c_str();
             QStringList qMaterialNames = qMaterialList.split(",", Qt::SkipEmptyParts);
 
@@ -751,7 +751,7 @@ namespace HoudiniEngine
 
                     if (changed)
                     {
-                        if (m_hou->LookupIsSelected(m_entityId))
+                        if (m_houdini->LookupIsSelected(m_entityId))
                         {
                             AzToolsFramework::ToolsApplicationEvents::Bus::Broadcast(
                                 &AzToolsFramework::ToolsApplicationEvents::Bus::Events::InvalidatePropertyDisplay, AzToolsFramework::PropertyModificationRefreshLevel::Refresh_EntireTree);
@@ -769,7 +769,7 @@ namespace HoudiniEngine
         bool allSame = false;
         AZStd::vector<HAPI_NodeId> materialIds(partInfo.faceCount);
         HAPI_GetMaterialNodeIdsOnFaces(m_session, nodeId, partInfo.id, &allSame, &materialIds.front(), 0, partInfo.faceCount);
-        *m_hou << "   HAPI_GetMaterialNodeIdsOnFaces: " << nodeId << " Face Count: " << partInfo.faceCount << " into buffer sized: " << materialIds.size() << "";
+        *m_houdini << "   HAPI_GetMaterialNodeIdsOnFaces: " << nodeId << " Face Count: " << partInfo.faceCount << " into buffer sized: " << materialIds.size() << "";
 
         //Get the material applied by name or ID
         bool foundMaterial = false;
@@ -782,7 +782,7 @@ namespace HoudiniEngine
             {
                 AZStd::vector<int> materialPathIdx(shopMaterialPath.count);
                 HAPI_GetAttributeIntData(m_session, nodeId, partInfo.id, "shop_materialpath", &shopMaterialPath, 1, &materialPathIdx.front(), 0, shopMaterialPath.count);
-                *m_hou << "    HAPI_GetAttributeIntData:" << nodeId << " " << partInfo.id << " shop_materialpath Reading: " << shopMaterialPath.count << " into buffer sized: " << materialPathIdx.size() << "";
+                *m_houdini << "    HAPI_GetAttributeIntData:" << nodeId << " " << partInfo.id << " shop_materialpath Reading: " << shopMaterialPath.count << " into buffer sized: " << materialPathIdx.size() << "";
 
                 int index = materialPathIdx[0];
                 if (index >= 0) 
@@ -795,9 +795,9 @@ namespace HoudiniEngine
             {
                 AZStd::vector<HAPI_StringHandle> materialPathHandles(shopMaterialPath.count);
                 HAPI_GetAttributeStringData(m_session, nodeId, partInfo.id, "shop_materialpath", &shopMaterialPath, &materialPathHandles.front(), 0, shopMaterialPath.count);
-                *m_hou << "    HAPI_GetAttributeStringData:" << nodeId << " " << partInfo.id << " shop_materialpath Reading: " << shopMaterialPath.count << " into buffer sized: " << materialPathHandles.size() << "";
+                *m_houdini << "    HAPI_GetAttributeStringData:" << nodeId << " " << partInfo.id << " shop_materialpath Reading: " << shopMaterialPath.count << " into buffer sized: " << materialPathHandles.size() << "";
 
-                AZStd::string materialNameToSet = m_hou->GetString(materialPathHandles[0]);
+                AZStd::string materialNameToSet = m_houdini->GetString(materialPathHandles[0]);
                 
                 for (int i = 0; i < m_materialHintNames.size(); i++)
                 {
@@ -815,7 +815,7 @@ namespace HoudiniEngine
         {
             HAPI_MaterialInfo material_info;
             HAPI_GetMaterialInfo(m_session, materialIds[0], &material_info);
-            *m_hou << "   HAPI_GetMaterialInfo: " << materialIds[0] << " Mat: " << material_info.exists << " " << material_info.nodeId << "";
+            *m_houdini << "   HAPI_GetMaterialInfo: " << materialIds[0] << " Mat: " << material_info.exists << " " << material_info.nodeId << "";
 
             //Auto Assign materials if not found:
             if (foundMaterial == false)
@@ -957,8 +957,8 @@ namespace HoudiniEngine
 
                     HoudiniMeshData& meshData = m_modelData.m_meshes[index + count];
 
-                    AZStd::string objectName = m_hou->GetString(m_node->GetNodeInfo().nameSH);
-                    AZStd::string geomName = objectName + "/" + m_hou->GetString(nodeInfo.nameSH) + "_" + clusterId;
+                    AZStd::string objectName = m_houdini->GetString(m_node->GetNodeInfo().nameSH);
+                    AZStd::string geomName = objectName + "/" + m_houdini->GetString(nodeInfo.nameSH) + "_" + clusterId;
                     meshData.m_meshName = geomName;
                     //staticObject->SetGeoName(geomName.c_str());
                     AZ_PROFILE_SCOPE(Editor, geomName.c_str());
@@ -1015,7 +1015,7 @@ namespace HoudiniEngine
 
                     auto logger = [=](auto attribName, const HAPI_AttributeInfo& attribInfo, const AZStd::vector<float>& buffer)
                         {
-                            //*m_hou << "   HAPI_GetAttributeFloatData: " << clusterId << " " << nodeId << " " << partInfo.id << " " << attribName << " Reading:" << attribInfo.count * attribInfo.tupleSize << " into buffer size: " << buffer.size() << "";
+                            //*m_houdini << "   HAPI_GetAttributeFloatData: " << clusterId << " " << nodeId << " " << partInfo.id << " " << attribName << " Reading:" << attribInfo.count * attribInfo.tupleSize << " into buffer size: " << buffer.size() << "";
                         };
 
                     bool needsUnwind = false;
@@ -1117,7 +1117,7 @@ namespace HoudiniEngine
                     if (idx.empty() == false)
                     {
                         AZ_PROFILE_SCOPE(Editor, "ReadFaceVertexDataFromHOU");
-                        //*m_hou << "   HAPI_GetVertexList: " << nodeId << " " << partInfo.id << " idx Reading:" << partInfo.vertexCount << " into buffer size: " << idx.size() << "";
+                        //*m_houdini << "   HAPI_GetVertexList: " << nodeId << " " << partInfo.id << " idx Reading:" << partInfo.vertexCount << " into buffer size: " << idx.size() << "";
                         HAPI_GetVertexList(m_session, nodeId, partInfo.id, &idx.front(), 0, partInfo.vertexCount);
                     }
 
@@ -1155,7 +1155,7 @@ namespace HoudiniEngine
                             int lookup = id * 3 + 0;
                             if (lookup > p_info.count * p_info.tupleSize)
                             {
-                               // *m_hou << "ERROR index " << i << " out of bounds on read:  " << lookup << " into array of size: " << p_info.count * p_info.tupleSize << "";
+                               // *m_houdini << "ERROR index " << i << " out of bounds on read:  " << lookup << " into array of size: " << p_info.count * p_info.tupleSize << "";
                             }
 
                             if (n_info.exists || n_vinfo.exists)
@@ -1373,7 +1373,7 @@ namespace HoudiniEngine
 
                     count++;
 
-                    AZ::Transform transform = m_hou->LookupTransform(m_entityId);
+                    AZ::Transform transform = m_houdini->LookupTransform(m_entityId);
                     meshData.UpdateWorldTransform(transform);
 
                     meshData.CalculateAABB();
@@ -1454,7 +1454,7 @@ namespace HoudiniEngine
 
         auto clusters = GetClusters();
 
-        *m_hou << "--- GenerateMeshData --- " + m_hou->GetString(nodeInfo.nameSH) << " Clusters: " << clusters.size() << "";
+        *m_houdini << "--- GenerateMeshData --- " + m_houdini->GetString(nodeInfo.nameSH) << " Clusters: " << clusters.size() << "";
 
         if (clusters.size() == 0) 
         {
@@ -1473,7 +1473,7 @@ namespace HoudiniEngine
             {
                 usingCluster = true;
                 geomNodeId = CreateObjectMerge("ExportNodes", cluster);
-                *m_hou << "  --- CreateObjectMerge --- " << geomNodeId << " " << cluster << "";
+                *m_houdini << "  --- CreateObjectMerge --- " << geomNodeId << " " << cluster << "";
             }             
 
             //Reads the geometry data and loads it up into our mesh data.
@@ -1492,7 +1492,7 @@ namespace HoudiniEngine
                 }
 
                 HAPI_DeleteNode(m_session, geomNodeId);
-                *m_hou << "HAPI_DeleteNode: " << geomNodeId << " " << cluster << "";
+                *m_houdini << "HAPI_DeleteNode: " << geomNodeId << " " << cluster << "";
             }
         
             m_node->SetGeometryCached(true);

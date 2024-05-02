@@ -165,7 +165,7 @@ namespace HoudiniEngine
             m_config.UpdateWorldTransformData(transform);
 
             m_dirty = true;
-            m_config.m_node->GetHou()->GetInputNodeManager()->GetNodeIdFromEntity(GetEntityId());
+            m_config.m_node->GetHoudini()->GetInputNodeManager()->GetNodeIdFromEntity(GetEntityId());
             m_config.UpdateNode();
         }
     }
@@ -180,7 +180,7 @@ namespace HoudiniEngine
             m_config.UpdateNode();
             HoudiniEngineRequestBus::Broadcast(&HoudiniEngineRequestBus::Events::JoinProcessorThread);
 
-            const HAPI_Session* session = &(m_config.m_node->GetHou()->GetSession());
+            const HAPI_Session* session = &(m_config.m_node->GetHoudini()->GetSession());
 
             // Get the volume info.
             HAPI_VolumeInfo volume_info = HAPI_VolumeInfo_Create();
@@ -205,7 +205,7 @@ namespace HoudiniEngine
 
                 // Get the height field data.
                 AZStd::vector<float> heightfieldData(totalsize);
-                HAPI_GetHeightFieldData(&m_config.m_node->GetHou()->GetSession(), geo_info.nodeId, 0, heightfieldData.data(), 0, totalsize);
+                HAPI_GetHeightFieldData(&m_config.m_node->GetHoudini()->GetSession(), geo_info.nodeId, 0, heightfieldData.data(), 0, totalsize);
                 
                 HoudiniTerrain terrain(volume_info.xLength, volume_info.yLength, volume_info.tileSize, volume_info.tileSize);
                 terrain.LoadData(heightfieldData);

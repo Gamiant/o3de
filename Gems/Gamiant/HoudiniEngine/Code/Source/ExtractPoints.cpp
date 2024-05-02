@@ -111,21 +111,21 @@ namespace HoudiniEngine
 
     void ExtractPoints::LoadData()
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
         AZStd::vector<AZStd::string> output;
         output.push_back("");
 
-        if (hou != nullptr && hou->IsActive())
+        if (houdini != nullptr && houdini->IsActive())
         {
             HAPI_GeoInfo geoInfo = m_node->GetGeometryInfo();
             AZStd::vector<HAPI_StringHandle> groupNames(geoInfo.pointGroupCount);
-            HAPI_GetGroupNames(&hou->GetSession(), m_node->GetId(), HAPI_GROUPTYPE_POINT, groupNames.data(), geoInfo.pointGroupCount);
+            HAPI_GetGroupNames(&houdini->GetSession(), m_node->GetId(), HAPI_GROUPTYPE_POINT, groupNames.data(), geoInfo.pointGroupCount);
             
             for (auto& stringHandle : groupNames)
             {
                 QListWidgetItem * item = new QListWidgetItem(m_ui->listGroups);
-                item->setText(hou->GetString(stringHandle).c_str());
+                item->setText(houdini->GetString(stringHandle).c_str());
             }
         }
     }

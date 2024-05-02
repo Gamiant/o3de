@@ -47,10 +47,10 @@ namespace HoudiniEngine
         if (InNodeId < 0)
             return false;
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou == nullptr)
+        if (houdini == nullptr)
             return false;
 
         // No Cook Options were specified, use the default one
@@ -58,12 +58,12 @@ namespace HoudiniEngine
         {
             // Use the default cook options
             HAPI_CookOptions CookOptions = GetDefaultCookOptions();
-            HAPI_CookNode(&hou->GetSession(), InNodeId, &CookOptions);
+            HAPI_CookNode(&houdini->GetSession(), InNodeId, &CookOptions);
         }
         else
         {
             // Use the provided CookOptions
-            HAPI_CookNode(&hou->GetSession(), InNodeId, InCookOptions);
+            HAPI_CookNode(&houdini->GetSession(), InNodeId, InCookOptions);
         }
 
         // If we don't need to wait for completion, return now
@@ -75,7 +75,7 @@ namespace HoudiniEngine
         {
             // Get the current cook status
             int Status = HAPI_STATE_STARTING_COOK;
-            HAPI_GetStatus(&hou->GetSession(), HAPI_STATUS_COOK_STATE, &Status);
+            HAPI_GetStatus(&houdini->GetSession(), HAPI_STATUS_COOK_STATE, &Status);
 
             if (Status == HAPI_STATE_READY)
             {
@@ -97,16 +97,16 @@ namespace HoudiniEngine
 
     bool HoudiniEngineUtils::HapiGetParameterDataAsString(const HAPI_NodeId& NodeId, const AZStd::string& ParmName, const AZStd::string& DefaultValue, AZStd::string& OutValue)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
         OutValue = DefaultValue;
 
-        if (hou != nullptr)
+        if (houdini != nullptr)
         {
             // Try to find the parameter by name
             HAPI_ParmId ParmId = -1;
-            HAPI_GetParmIdFromName(&hou->GetSession(), NodeId, ParmName.c_str(), &ParmId);
+            HAPI_GetParmIdFromName(&houdini->GetSession(), NodeId, ParmName.c_str(), &ParmId);
 
             if (ParmId < 0)
                 return false;
@@ -114,11 +114,11 @@ namespace HoudiniEngine
             // Get the param info...
             HAPI_ParmInfo FoundParamInfo;
             HAPI_ParmInfo_Init(&FoundParamInfo);
-            HAPI_GetParmInfo(&hou->GetSession(), NodeId, ParmId, &FoundParamInfo);
+            HAPI_GetParmInfo(&houdini->GetSession(), NodeId, ParmId, &FoundParamInfo);
 
             // .. and value
             HAPI_StringHandle StringHandle;
-            HAPI_GetParmStringValues(&hou->GetSession(), NodeId, false, &StringHandle, FoundParamInfo.stringValuesIndex, 1);
+            HAPI_GetParmStringValues(&houdini->GetSession(), NodeId, false, &StringHandle, FoundParamInfo.stringValuesIndex, 1);
 
             // Convert the string handle to FString
             return HoudiniEngineString::ToAZString(StringHandle, OutValue);
@@ -132,10 +132,10 @@ namespace HoudiniEngine
         if (!InAttributeInfo.exists)
             return false;
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou != nullptr)
+        if (houdini != nullptr)
         {
             // Handle partial reading of attributes
             AZ::s32 Start = 0;
@@ -157,7 +157,7 @@ namespace HoudiniEngine
             for (AZ::s32 n = 0; n < StringHandles.size(); n++)
                 StringHandles[n] = -1;
 
-            HAPI_GetAttributeStringData(&hou->GetSession(), InGeoId, InPartId, InAttribName, &InAttributeInfo, &StringHandles[0], Start, Count);
+            HAPI_GetAttributeStringData(&houdini->GetSession(), InGeoId, InPartId, InAttribName, &InAttributeInfo, &StringHandles[0], Start, Count);
 
             // Set the output data size
             OutData.resize(StringHandles.size());
@@ -179,10 +179,10 @@ namespace HoudiniEngine
         // Reset container size.
         OutData.clear();
         
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou != nullptr)
+        if (houdini != nullptr)
         {
             AZ::s32 OriginalTupleSize = InTupleSize;
 
@@ -193,7 +193,7 @@ namespace HoudiniEngine
             {
                 for (AZ::s32 AttrIdx = 0; AttrIdx < HAPI_ATTROWNER_MAX; ++AttrIdx)
                 {
-                    HAPI_GetAttributeInfo(&hou->GetSession(), InGeoId, InPartId, InAttribName, (HAPI_AttributeOwner)AttrIdx, &AttributeInfo);
+                    HAPI_GetAttributeInfo(&houdini->GetSession(), InGeoId, InPartId, InAttribName, (HAPI_AttributeOwner)AttrIdx, &AttributeInfo);
 
                     if (AttributeInfo.exists)
                         break;
@@ -201,7 +201,7 @@ namespace HoudiniEngine
             }
             else
             {
-                HAPI_GetAttributeInfo(&hou->GetSession(), InGeoId, InPartId, InAttribName, InOwner, &AttributeInfo);
+                HAPI_GetAttributeInfo(&houdini->GetSession(), InGeoId, InPartId, InAttribName, InOwner, &AttributeInfo);
             }
 
             if (!AttributeInfo.exists)
@@ -233,7 +233,7 @@ namespace HoudiniEngine
                 OutData.resize(Count * AttributeInfo.tupleSize);
 
                 // Fetch the values
-                HAPI_GetAttributeFloatData(&hou->GetSession(), InGeoId, InPartId, InAttribName, &AttributeInfo, -1, &OutData[0], Start, Count);
+                HAPI_GetAttributeFloatData(&houdini->GetSession(), InGeoId, InPartId, InAttribName, &AttributeInfo, -1, &OutData[0], Start, Count);
 
                 return true;
             }
@@ -246,7 +246,7 @@ namespace HoudiniEngine
                 IntData.resize(Count * AttributeInfo.tupleSize);
 
                 // Fetch the values
-                if (HAPI_RESULT_SUCCESS == HAPI_GetAttributeIntData(&hou->GetSession(), InGeoId, InPartId, InAttribName, &AttributeInfo, -1, &IntData[0], Start, Count))
+                if (HAPI_RESULT_SUCCESS == HAPI_GetAttributeIntData(&houdini->GetSession(), InGeoId, InPartId, InAttribName, &AttributeInfo, -1, &IntData[0], Start, Count))
                 {
                     OutData.resize(IntData.size());
                     for (AZ::s32 Idx = 0; Idx < IntData.size(); Idx++)
@@ -290,16 +290,16 @@ namespace HoudiniEngine
 
     bool HoudiniEngineUtils::HapiGetParameterDataAsInteger(const HAPI_NodeId& NodeId, const AZStd::string& ParmName, const AZ::s32& DefaultValue, AZ::s32& OutValue)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
         OutValue = DefaultValue;
 
-        if (hou != nullptr)
+        if (houdini != nullptr)
         {
             // Try to find the parameter by its name
             HAPI_ParmId ParmId = -1;
-            HAPI_GetParmIdFromName(&hou->GetSession(), NodeId, ParmName.c_str(), &ParmId);
+            HAPI_GetParmIdFromName(&houdini->GetSession(), NodeId, ParmName.c_str(), &ParmId);
 
             if (ParmId < 0)
                 return false;
@@ -307,11 +307,11 @@ namespace HoudiniEngine
             // Get the param info...
             HAPI_ParmInfo FoundParmInfo;
             HAPI_ParmInfo_Init(&FoundParmInfo);
-            HAPI_GetParmInfo(&hou->GetSession(), NodeId, ParmId, &FoundParmInfo);
+            HAPI_GetParmInfo(&houdini->GetSession(), NodeId, ParmId, &FoundParmInfo);
 
             // .. and value
             AZ::s32 Value = DefaultValue;
-            HAPI_GetParmIntValues(&hou->GetSession(), NodeId, &Value, FoundParmInfo.intValuesIndex, 1);
+            HAPI_GetParmIntValues(&houdini->GetSession(), NodeId, &Value, FoundParmInfo.intValuesIndex, 1);
 
             OutValue = Value;
 
@@ -323,40 +323,40 @@ namespace HoudiniEngine
 
     HAPI_ParmId HoudiniEngineUtils::HapiFindParameterByName(const HAPI_NodeId& InNodeId, const AZStd::string& InParmName, HAPI_ParmInfo& OutFoundParmInfo)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr)
             return -1;
 
         // Try to find the parameter by its name
         HAPI_ParmId ParmId = -1;
-        HAPI_GetParmIdFromName(&hou->GetSession(), InNodeId, InParmName.c_str(), &ParmId);
+        HAPI_GetParmIdFromName(&houdini->GetSession(), InNodeId, InParmName.c_str(), &ParmId);
 
         if (ParmId < 0)
             return -1;
 
         HAPI_ParmInfo_Init(&OutFoundParmInfo);
-        HAPI_GetParmInfo(&hou->GetSession(), InNodeId, ParmId, &OutFoundParmInfo);
+        HAPI_GetParmInfo(&houdini->GetSession(), InNodeId, ParmId, &OutFoundParmInfo);
 
         return ParmId;
     }
 
     HAPI_ParmId HoudiniEngineUtils::HapiFindParameterByTag(const HAPI_NodeId& InNodeId, const AZStd::string& InParmTag, HAPI_ParmInfo& OutFoundParmInfo)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr)
             return -1;
 
         // Try to find the parameter by its tag
         HAPI_ParmId ParmId = -1;
-        HAPI_GetParmWithTag(&hou->GetSession(), InNodeId, InParmTag.c_str(), &ParmId);
+        HAPI_GetParmWithTag(&houdini->GetSession(), InNodeId, InParmTag.c_str(), &ParmId);
 
         if (ParmId < 0)
             return -1;
 
         HAPI_ParmInfo_Init(&OutFoundParmInfo);
-        HAPI_GetParmInfo(&hou->GetSession(), InNodeId, ParmId, &OutFoundParmInfo);
+        HAPI_GetParmInfo(&houdini->GetSession(), InNodeId, ParmId, &OutFoundParmInfo);
 
         return ParmId;
     }

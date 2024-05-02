@@ -15,11 +15,11 @@
 namespace HoudiniEngine
 {
     HoudiniScriptProperty::HoudiniScriptProperty(HoudiniParameterPtr parameter) : ScriptProperty(parameter->GetName().c_str()),
-        m_hou(parameter->GetHou())
+        m_houdini(parameter->GetHoudini())
         , m_parameter(parameter)
         , m_node(nullptr)
     {
-        m_session = const_cast<HAPI_Session*>(&m_hou->GetSession());
+        m_session = const_cast<HAPI_Session*>(&m_houdini->GetSession());
         m_name = parameter->GetName();
         m_label = parameter->GetLabel();
         m_help = parameter->GetHelp();
@@ -32,17 +32,17 @@ namespace HoudiniEngine
     }
 
     HoudiniScriptProperty::HoudiniScriptProperty(HoudiniNodePtr node, int index) : ScriptProperty((node->GetOperatorName() + AZStd::string::format("%d", index)).c_str()),
-        m_hou(node->GetHou())
+        m_houdini(node->GetHoudini())
         , m_parameter(nullptr)
         , m_node(node)
     {
-        m_session = const_cast<HAPI_Session*>(&m_hou->GetSession());
+        m_session = const_cast<HAPI_Session*>(&m_houdini->GetSession());
         m_help = "An input parameter to the node itself";
         m_desc = node->GetOperatorName() + ": " + m_help;
 
         HAPI_StringHandle nameHandle;
         HAPI_GetNodeInputName(m_session, node->GetId(), index, &nameHandle);
-        m_name = m_hou->GetString(nameHandle);
+        m_name = m_houdini->GetString(nameHandle);
         m_label = m_name;
 
         m_min_int = m_min = 0;
@@ -1002,21 +1002,23 @@ namespace HoudiniEngine
 
         if (serializeContext)
         {
-            serializeContext->Class<HoudiniMultiparamInstance, HoudiniScriptProperty>()->
-                Field("instanceNum", &HoudiniMultiparamInstance::m_instanceNum)->
-                Field("params", &HoudiniMultiparamInstance::m_params)->
-                Version(0);
+            serializeContext->Class<HoudiniMultiparamInstance, HoudiniScriptProperty>()
+                ->Field("instanceNum", &HoudiniMultiparamInstance::m_instanceNum)
+                ->Field("params", &HoudiniMultiparamInstance::m_params)
+                ->Version(0)
+                ;
 
             if (AZ::EditContext* ec = serializeContext->GetEditContext())
             {
-                ec->Class<HoudiniMultiparamInstance>("Multiparam Instance", "Multiparam Instance")->
-                    ClassElement(AZ::Edit::ClassElements::EditorData, "Attributes")->
-                    Attribute(AZ::Edit::Attributes::NameLabelOverride, &HoudiniMultiparamInstance::GetLabelOverride)->
-                DataElement(0, &HoudiniMultiparamInstance::m_params, "", "")->
-                    Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)->
-                    Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniMultiparamInstance::ScriptHasChanged)->
-                    Attribute(AZ::Edit::Attributes::Suffix, " ")->
-                    Attribute("ContainerCanBeModified", false);
+                ec->Class<HoudiniMultiparamInstance>("Multiparam Instance", "Multiparam Instance")
+                    ->ClassElement(AZ::Edit::ClassElements::EditorData, "Attributes")
+                    ->Attribute(AZ::Edit::Attributes::NameLabelOverride, &HoudiniMultiparamInstance::GetLabelOverride)
+                    ->DataElement(0, &HoudiniMultiparamInstance::m_params, "", "")
+                    ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniMultiparamInstance::ScriptHasChanged)
+                    ->Attribute(AZ::Edit::Attributes::Suffix, " ")
+                    ->Attribute("ContainerCanBeModified", false)
+                    ;
             }
         }
     }
@@ -1181,7 +1183,7 @@ namespace HoudiniEngine
 
     void HoudiniScriptPropertyMultiparm::SetNode(HoudiniNodePtr node)
     {
-        m_hou = node->GetHou();
+        m_houdini = node->GetHoudini();
         m_node = node;
 
         for (auto instance : m_instances)

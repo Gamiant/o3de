@@ -149,12 +149,12 @@ namespace HoudiniEngine
     {
         AZ_PROFILE_FUNCTION(Houdini);
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou != nullptr && hou->IsActive())
+        if (houdini != nullptr && houdini->IsActive())
         {
-            hou->SaveDebugFile();
+            houdini->SaveDebugFile();
         }
 
         return AZ::Edit::PropertyRefreshLevels::AttributesAndValues;
@@ -233,17 +233,17 @@ namespace HoudiniEngine
 
     AZ::Crc32 HoudiniNodeComponentConfig::OnExtractGroupPoints()
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou == nullptr || hou->IsActive() == false)
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return AZ::Edit::PropertyRefreshLevels::None;
         }
         
         HE_Viewer * viewer = new HE_Viewer();
         viewer->SetNode(this->m_node->GetId());
-        viewer->SetSession(&hou->GetSession());
+        viewer->SetSession(&houdini->GetSession());
         viewer->Refresh();
         viewer->show();
         
@@ -389,10 +389,10 @@ namespace HoudiniEngine
             return;
         }  
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou == nullptr || hou->IsActive() == false)
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return;
         }
@@ -404,24 +404,24 @@ namespace HoudiniEngine
             if (parentId != HOUDINI_ROOT_NODE_ID)
             {
                 HAPI_NodeInfo parentInfo;
-                HAPI_GetNodeInfo(&hou->GetSession(), parentId, &parentInfo);
-                auto parentName = hou->GetString(parentInfo.nameSH);
+                HAPI_GetNodeInfo(&houdini->GetSession(), parentId, &parentInfo);
+                auto parentName = houdini->GetString(parentInfo.nameSH);
 
                 if (parentName == oldName)
                 {
-                    HAPI_RenameNode(&hou->GetSession(), parentId, newName.c_str());
+                    HAPI_RenameNode(&houdini->GetSession(), parentId, newName.c_str());
                 }
             }
 
-            HAPI_RenameNode(&hou->GetSession(), GetNode()->GetId(), newName.c_str());
+            HAPI_RenameNode(&houdini->GetSession(), GetNode()->GetId(), newName.c_str());
             
             GetNode()->Cook();
             GetNode()->SetDirty();
 
             //Names must be unique in Houdini:
-            m_nodeName = hou->GetString(GetNode()->GetNodeInfo().nameSH);
+            m_nodeName = houdini->GetString(GetNode()->GetNodeInfo().nameSH);
             
-            hou->RenameNode(oldName, m_node.get());
+            houdini->RenameNode(oldName, m_node.get());
         }
         
         HoudiniAssetRequestBus::Broadcast(&HoudiniAssetRequests::FixEntityPointers);
@@ -1047,8 +1047,8 @@ namespace HoudiniEngine
         for (int i = 0; i < m_node->GetNodeInfo().inputCount; i++)
         {
             HAPI_StringHandle nameHandle;
-            HAPI_GetNodeInputName(&m_node->GetHou()->GetSession(), m_node->GetId(), i, &nameHandle);
-            auto nameGen = m_node->GetHou()->GetString(nameHandle);
+            HAPI_GetNodeInputName(&m_node->GetHoudini()->GetSession(), m_node->GetId(), i, &nameHandle);
+            auto nameGen = m_node->GetHoudini()->GetString(nameHandle);
 
             HoudiniScriptPropertyInput* prop = aznew HoudiniScriptPropertyInput(m_node, i);
 

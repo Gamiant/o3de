@@ -35,10 +35,10 @@ namespace HoudiniEngine
 
     bool HoudiniSplineTranslator::UpdateHoudiniCurveLegacy(AZ::EntityId entityId, const AZ::s32& GeoId)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
         
-        if (hou == nullptr)
+        if (houdini == nullptr)
             return false;
 
         // check if spline is created; if not create one, if yes pull the point data, if 
@@ -82,7 +82,7 @@ namespace HoudiniEngine
 
         HAPI_NodeInfo NodeInfo;
         HAPI_NodeInfo_Init(&NodeInfo);
-        HAPI_GetNodeInfo(&hou->GetSession(), GeoId, &NodeInfo);
+        HAPI_GetNodeInfo(&houdini->GetSession(), GeoId, &NodeInfo);
 
         AZStd::vector<float> RefinedCurvePositions;
         HAPI_AttributeInfo AttributeRefinedCurvePositions;
@@ -122,10 +122,10 @@ namespace HoudiniEngine
         if (InNodeId < 0)
             return false;
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou == nullptr)
+        if (houdini == nullptr)
             return false;
 
         if (bLegacyNode)
@@ -134,7 +134,7 @@ namespace HoudiniEngine
             // Check if the input node has a curve "coords" params.
             // If it doesn't, then the node is not a valid legacy curve1.0 node
             HAPI_ParmId ParmId = -1;
-            if (HAPI_GetParmIdFromName(&hou->GetSession(), InNodeId, "coords", &ParmId) != HAPI_RESULT_SUCCESS
+            if (HAPI_GetParmIdFromName(&houdini->GetSession(), InNodeId, "coords", &ParmId) != HAPI_RESULT_SUCCESS
                 || ParmId < 0)
             {
                 return false;
@@ -146,7 +146,7 @@ namespace HoudiniEngine
             // First, check that the geo type is a curve
             HAPI_GeoInfo InputGeoInfo;
             HAPI_GeoInfo_Init(&InputGeoInfo);
-            if (HAPI_GetGeoInfo(&hou->GetSession(), InNodeId, &InputGeoInfo) != HAPI_RESULT_SUCCESS)
+            if (HAPI_GetGeoInfo(&houdini->GetSession(), InNodeId, &InputGeoInfo) != HAPI_RESULT_SUCCESS)
                 return false;
 
             if (InputGeoInfo.type != HAPI_GEOTYPE_CURVE)
@@ -155,7 +155,7 @@ namespace HoudiniEngine
             // Check that the part type is a curve
             HAPI_PartInfo InputPartInfo;
             HAPI_PartInfo_Init(&InputPartInfo);
-            if (HAPI_GetPartInfo(&hou->GetSession(), InNodeId, 0, &InputPartInfo) != HAPI_RESULT_SUCCESS)
+            if (HAPI_GetPartInfo(&houdini->GetSession(), InNodeId, 0, &InputPartInfo) != HAPI_RESULT_SUCCESS)
                 return false;
 
             if (InputPartInfo.type != HAPI_PARTTYPE_CURVE)
@@ -164,7 +164,7 @@ namespace HoudiniEngine
             // Check if the input node has a curve "coords" params.
             // If it does, then the node a legacy curve1.0 node, so we need to recreate the input node!
             HAPI_ParmId ParmId = -1;
-            if (HAPI_GetParmIdFromName(&hou->GetSession(), InNodeId, "coords", &ParmId) == HAPI_RESULT_SUCCESS
+            if (HAPI_GetParmIdFromName(&houdini->GetSession(), InNodeId, "coords", &ParmId) == HAPI_RESULT_SUCCESS
                 && ParmId >= 0)
                 return false;
 
@@ -223,10 +223,10 @@ namespace HoudiniEngine
         if (NumberOfCVs < 2)
             return false;
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou == nullptr)
+        if (houdini == nullptr)
             return false;
 
         // Check if connected asset id is valid, if it is not, we need to create an input asset.
@@ -269,7 +269,7 @@ namespace HoudiniEngine
         {
             // We have to revert the Geo to its original state so we can use the Curve SOP:
             // adding parameters to the Curve SOP locked it, preventing its parameters (type, method, isClosed) from working
-            HAPI_RevertGeo(&hou->GetSession(), CurveNodeId);
+            HAPI_RevertGeo(&houdini->GetSession(), CurveNodeId);
         }
 
         //
@@ -285,16 +285,16 @@ namespace HoudiniEngine
 
         // Set the curve type and curve method parameters for the curve node
         AZ::s32 CurveTypeValue = (AZ::s32)InCurveType;
-        HAPI_SetParmIntValue(&hou->GetSession(), CurveNodeId, "type", 0, CurveTypeValue);
+        HAPI_SetParmIntValue(&houdini->GetSession(), CurveNodeId, "type", 0, CurveTypeValue);
 
         AZ::s32 CurveMethodValue = (AZ::s32)InCurveMethod;
-        HAPI_SetParmIntValue(&hou->GetSession(), CurveNodeId, "method", 0, CurveMethodValue);
+        HAPI_SetParmIntValue(&houdini->GetSession(), CurveNodeId, "method", 0, CurveMethodValue);
 
         AZ::s32 CurveClosed = InClosed ? 1 : 0;
-        HAPI_SetParmIntValue(&hou->GetSession(), CurveNodeId, "close", 0, CurveClosed);
+        HAPI_SetParmIntValue(&houdini->GetSession(), CurveNodeId, "close", 0, CurveClosed);
 
         AZ::s32 CurveReversed = InReversed ? 1 : 0;
-        HAPI_SetParmIntValue(&hou->GetSession(), CurveNodeId, "reverse", 0, CurveReversed);
+        HAPI_SetParmIntValue(&houdini->GetSession(), CurveNodeId, "reverse", 0, CurveReversed);
 
         // Reading the curve parameters
         HoudiniEngineUtils::HapiGetParameterDataAsInteger(CurveNodeId, "type", 0, CurveTypeValue);
@@ -305,7 +305,7 @@ namespace HoudiniEngine
         if (InForceClose)
         {
             // We need to update the closed parameter
-            HAPI_SetParmIntValue(&hou->GetSession(), CurveNodeId, "close", 0, 1);
+            HAPI_SetParmIntValue(&houdini->GetSession(), CurveNodeId, "close", 0, 1);
 
             CurveClosed = 1;
         }
@@ -316,7 +316,7 @@ namespace HoudiniEngine
         if (CurveClosed && (CurveTypeValue == HAPI_CURVETYPE_NURBS) && (CurveMethodValue != 2))
         {
             // The curve is not closed anymore
-            if (HAPI_RESULT_SUCCESS == HAPI_SetParmIntValue(&hou->GetSession(), CurveNodeId, "close", 0, 0))
+            if (HAPI_RESULT_SUCCESS == HAPI_SetParmIntValue(&houdini->GetSession(), CurveNodeId, "close", 0, 0))
             {
 //                bCloseCurveManually = true;
 
@@ -335,12 +335,12 @@ namespace HoudiniEngine
 
         // Get param id for the PositionString and modify it
         HAPI_ParmId ParmId = -1;
-        if (HAPI_GetParmIdFromName(&hou->GetSession(), CurveNodeId, "coords", &ParmId) != HAPI_RESULT_SUCCESS)
+        if (HAPI_GetParmIdFromName(&houdini->GetSession(), CurveNodeId, "coords", &ParmId) != HAPI_RESULT_SUCCESS)
         {
             return false;
         }
 
-        HAPI_SetParmStringValue(&hou->GetSession(), CurveNodeId, PositionString.c_str(), ParmId, 0);
+        HAPI_SetParmStringValue(&houdini->GetSession(), CurveNodeId, PositionString.c_str(), ParmId, 0);
 
         // If we don't want to add rotations or scale attributes to the curve, 
         // we can just cook the node normally and stop here.
@@ -414,15 +414,15 @@ namespace HoudiniEngine
         if (GeoId < 0)
             return;
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou == nullptr)
+        if (houdini == nullptr)
             return;
 
         bool IsLegacyCurve = false;
         AZ::s32 ParmId = -1;
-        if (HAPI_GetParmIdFromName(&hou->GetSession(), GeoId, "coords", &ParmId) == HAPI_RESULT_SUCCESS && ParmId > 0)
+        if (HAPI_GetParmIdFromName(&houdini->GetSession(), GeoId, "coords", &ParmId) == HAPI_RESULT_SUCCESS && ParmId > 0)
         {
             IsLegacyCurve = true;
         }

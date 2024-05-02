@@ -151,7 +151,7 @@ namespace HoudiniEngine
             virtual const AZStd::vector<HAPI_PartInfo>& GetGeometryParts() = 0;
 
             //Getters:
-            virtual IHoudini* GetHou() = 0;
+            virtual IHoudini* GetHoudini() = 0;
             virtual HAPI_NodeId GetId() = 0;
             virtual const AZStd::string& GetOperatorName() = 0;
             virtual const AZStd::string& GetNodeName() = 0;
@@ -193,7 +193,7 @@ namespace HoudiniEngine
     class IHoudiniParameter
     {
         public:
-            virtual IHoudini* GetHou() = 0;
+            virtual IHoudini* GetHoudini() = 0;
             virtual HAPI_ParmId GetId() = 0;
             virtual HAPI_ParmId GetParentId() = 0;
             virtual AZStd::string GetLabel() = 0;

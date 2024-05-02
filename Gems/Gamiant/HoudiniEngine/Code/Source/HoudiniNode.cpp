@@ -17,14 +17,14 @@
 
 namespace HoudiniEngine
 {
-    HoudiniNode::HoudiniNode(IHoudini* hou, HoudiniNodePtr parent, HAPI_NodeId id, AZStd::string operatorName, AZStd::string nodeName) :
-        m_hou(hou)
+    HoudiniNode::HoudiniNode(IHoudini* houdini, HoudiniNodePtr parent, HAPI_NodeId id, AZStd::string operatorName, AZStd::string nodeName) :
+        m_houdini(houdini)
         , m_nodeId(id)
         , m_parent(parent)
         , m_operatorName(operatorName)
         , m_nodeName(nodeName)
     {
-        m_session = const_cast<HAPI_Session*>(&hou->GetSession());
+        m_session = const_cast<HAPI_Session*>(&houdini->GetSession());
         m_nodeInfo = HAPI_NodeInfo_Create();
         m_geoInfo = HAPI_GeoInfo_Create();
         m_assetInfo = HAPI_AssetInfo_Create();
@@ -43,7 +43,7 @@ namespace HoudiniEngine
             
             if (assetInfo.helpTextSH > 0)
             {
-                m_helpText = m_hou->GetString(assetInfo.helpTextSH);
+                m_helpText = m_houdini->GetString(assetInfo.helpTextSH);
             }
 
             if (m_nodeInfo.isValid)
@@ -91,7 +91,7 @@ namespace HoudiniEngine
                         }
                             
                         // Adding new params
-                        HoudiniParameterPtr parm(new HoudiniParameter(m_hou, parms[i], this));
+                        HoudiniParameterPtr parm(new HoudiniParameter(m_houdini, parms[i], this));
                         m_parameters.push_back(parm);
                     }
                 }
@@ -151,7 +151,7 @@ namespace HoudiniEngine
                     //HACK: 
                     if (CurrentEditableGeoInfo.partCount <= 0)
                     {
-                        m_hou->CookNode(CurrentEditableGeoInfo.nodeId, "");
+                        m_houdini->CookNode(CurrentEditableGeoInfo.nodeId, "");
                         HAPI_GetGeoInfo(m_session, CurrentEditableGeoInfo.nodeId, &CurrentEditableGeoInfo);
                     }
 
@@ -169,13 +169,13 @@ namespace HoudiniEngine
 
     HoudiniNodePtr HoudiniNode::CreateNode(const AZStd::string& operatorName, const AZStd::string& nodeName)
     {
-        HoudiniNodePtr node = m_hou->CreateNode(operatorName, nodeName, this);
+        HoudiniNodePtr node = m_houdini->CreateNode(operatorName, nodeName, this);
         return node;
     }
 
     HoudiniNodePtr HoudiniNode::CreateCurve(const AZStd::string& nodeName)
     {
-        HoudiniNodePtr node = m_hou->CreateNode("sop/curve", nodeName, this);
+        HoudiniNodePtr node = m_houdini->CreateNode("sop/curve", nodeName, this);
         return node;
     }
 
@@ -296,13 +296,13 @@ namespace HoudiniEngine
 
             if (top.type != HAPI_NODETYPE_NONE)
             {
-                path = "/" + GetHou()->GetString(top.nameSH) + path;
+                path = "/" + GetHoudini()->GetString(top.nameSH) + path;
             }
 
             if (top.parentId != HOUDINI_ROOT_NODE_ID)
             {
                 HAPI_NodeInfo parent;
-                HAPI_GetNodeInfo(&m_hou->GetSession(), top.parentId, &parent);
+                HAPI_GetNodeInfo(&m_houdini->GetSession(), top.parentId, &parent);
                 stack.push(parent);
             }
         }
@@ -312,13 +312,13 @@ namespace HoudiniEngine
 
     void HoudiniNode::SetInputEntity(const AZStd::string& name, const AZ::EntityId& entityId)
     {
-        m_hou->ExecuteCommand(m_entityId, [this, name, entityId]
+        m_houdini->ExecuteCommand(m_entityId, [this, name, entityId]
         {
             for (int i = 0; i < GetNodeInfo().inputCount; i++)
             {
                 HAPI_StringHandle nameHandle;
                 HAPI_GetNodeInputName(m_session, GetId(), i, &nameHandle);
-                AZStd::string inputName = m_hou->GetString(nameHandle);
+                AZStd::string inputName = m_houdini->GetString(nameHandle);
 
                 if (inputName == name)
                 {
@@ -333,7 +333,7 @@ namespace HoudiniEngine
 
     void HoudiniNode::SetInputEntity(int index, const AZ::EntityId& entityId)
     {
-        m_hou->ExecuteCommand(m_entityId, [this, index, entityId]
+        m_houdini->ExecuteCommand(m_entityId, [this, index, entityId]
         {
             if (entityId.IsValid() == false)
             {
@@ -342,7 +342,7 @@ namespace HoudiniEngine
                 return false;
             }
 
-            HAPI_NodeId valueId = m_hou->GetInputNodeManager()->GetNodeIdFromEntity(entityId);
+            HAPI_NodeId valueId = m_houdini->GetInputNodeManager()->GetNodeIdFromEntity(entityId);
             if (valueId == HOUDINI_NOT_READY_ID)
             {
                 //In this case, the node is valid, but its just not ready yet.  Return true to signal to try again later.
@@ -359,9 +359,9 @@ namespace HoudiniEngine
                 HAPI_DisconnectNodeInput(m_session, GetId(), index);
             }
 
-            if (m_hou->CheckForErrors(true, false /*NOT IncludeCookingErrors*/))
+            if (m_houdini->CheckForErrors(true, false /*NOT IncludeCookingErrors*/))
             {
-                AZStd::string entityName = m_hou->LookupEntityName(entityId);
+                AZStd::string entityName = m_houdini->LookupEntityName(entityId);
 
                 AZ_Warning("Houdini", false, "[Entity: %s][Node: %s] - Error setting input to %s"
                     , (entityName + " " + entityId.ToString()).c_str()
@@ -381,7 +381,7 @@ namespace HoudiniEngine
 
     void HoudiniNode::Cook()
     {
-        if (m_hou != nullptr)
+        if (m_houdini != nullptr)
         {
 
             //Check to see if we have any inputs that were missing earlier that might be ready now!
@@ -391,7 +391,7 @@ namespace HoudiniEngine
 
                 for (auto& retryEntity : m_retryDependentInput)
                 {
-                    HAPI_NodeId valueId = m_hou->GetInputNodeManager()->GetNodeIdFromEntity(retryEntity.second);
+                    HAPI_NodeId valueId = m_houdini->GetInputNodeManager()->GetNodeIdFromEntity(retryEntity.second);
                     if (valueId != HOUDINI_NOT_READY_ID)
                     {
                         keysFound.push_back(retryEntity.first);
@@ -405,16 +405,16 @@ namespace HoudiniEngine
                 }
             }
 
-            AZStd::string entityName = m_hou->LookupEntityName(m_entityId);
+            AZStd::string entityName = m_houdini->LookupEntityName(m_entityId);
 
             m_hasCookingError = false;
             m_lastCookError = "";
 
-            AZStd::string error = m_hou->GetLastHoudiniCookError();
-            m_hou->CookNode(GetNodeInfo().id, entityName);
-            m_hou->CheckForErrors(false);
+            AZStd::string error = m_houdini->GetLastHoudiniCookError();
+            m_houdini->CookNode(GetNodeInfo().id, entityName);
+            m_houdini->CheckForErrors(false);
 
-            error = m_hou->GetLastHoudiniCookError();
+            error = m_houdini->GetLastHoudiniCookError();
             if (error.length() > 0)
             {
                 m_hasCookingError = true;
@@ -451,7 +451,7 @@ namespace HoudiniEngine
         {
             HAPI_StringHandle nameHandle;
             HAPI_GetNodeInputName(m_session, GetId(), i, &nameHandle);
-            AZStd::string inputName = m_hou->GetString(nameHandle);
+            AZStd::string inputName = m_houdini->GetString(nameHandle);
 
             output.push_back(inputName);
         }
@@ -484,7 +484,7 @@ namespace HoudiniEngine
             HAPI_AttributeInfo attr_info;
             attr_info.exists = false;
             HAPI_GetAttributeInfo(m_session, node_id, partInfo.id, attributeName.c_str(), HAPI_ATTROWNER_POINT, &attr_info);
-            m_hou->CheckForErrors();
+            m_houdini->CheckForErrors();
 
             if (attr_info.exists && attr_info.tupleSize == 1)
             {
@@ -492,7 +492,7 @@ namespace HoudiniEngine
 
                 AZStd::vector<int> v = AZStd::vector<int>(attr_info.count * attr_info.tupleSize);
                 HAPI_GetAttributeIntData(m_session, node_id, partInfo.id, attributeName.c_str(), &attr_info, attr_info.tupleSize, &v[0], 0, attr_info.count);
-                m_hou->CheckForErrors();
+                m_houdini->CheckForErrors();
 
                 for (int i = 0; i < attr_info.count; ++i)
                 {                    
@@ -516,7 +516,7 @@ namespace HoudiniEngine
             HAPI_AttributeInfo attr_info;
             attr_info.exists = false;
             HAPI_GetAttributeInfo(m_session, node_id, partInfo.id, attributeName.c_str(), HAPI_ATTROWNER_POINT, &attr_info);
-            m_hou->CheckForErrors();
+            m_houdini->CheckForErrors();
 
             if (attr_info.exists && attr_info.tupleSize == 1)
             {
@@ -524,7 +524,7 @@ namespace HoudiniEngine
 
                 AZStd::vector<float> v = AZStd::vector<float>(attr_info.count * attr_info.tupleSize);
                 HAPI_GetAttributeFloatData(m_session, node_id, partInfo.id, attributeName.c_str(), &attr_info, attr_info.tupleSize, &v[0], 0, attr_info.count);
-                m_hou->CheckForErrors();
+                m_houdini->CheckForErrors();
 
                 for (int i = 0; i < attr_info.count; ++i)
                 {
@@ -548,7 +548,7 @@ namespace HoudiniEngine
             HAPI_AttributeInfo attr_info;
             attr_info.exists = false;
             HAPI_GetAttributeInfo(m_session, node_id, partInfo.id, attributeName.c_str(), HAPI_ATTROWNER_POINT, &attr_info);
-            m_hou->CheckForErrors();
+            m_houdini->CheckForErrors();
 
             if (attr_info.exists && attr_info.tupleSize == 9)
             {
@@ -556,7 +556,7 @@ namespace HoudiniEngine
 
                 AZStd::vector<float> v = AZStd::vector<float>(attr_info.count * attr_info.tupleSize);
                 HAPI_GetAttributeFloatData(m_session, node_id, partInfo.id, attributeName.c_str(), &attr_info, attr_info.tupleSize, &v[0], 0, attr_info.count);
-                m_hou->CheckForErrors();
+                m_houdini->CheckForErrors();
 
                 for (int i = 0; i < attr_info.count; ++i)
                 {
@@ -587,7 +587,7 @@ namespace HoudiniEngine
             HAPI_AttributeInfo attr_info;
             attr_info.exists = false;
             HAPI_GetAttributeInfo(m_session, node_id, partInfo.id, "P", HAPI_ATTROWNER_POINT, &attr_info);
-            m_hou->CheckForErrors();
+            m_houdini->CheckForErrors();
 
             if (attr_info.exists)
             {
@@ -595,7 +595,7 @@ namespace HoudiniEngine
 
                 AZStd::vector<float> v = AZStd::vector<float>(attr_info.count * attr_info.tupleSize);
                 HAPI_GetAttributeFloatData(m_session, node_id, partInfo.id, "P", &attr_info, attr_info.tupleSize, &v[0], 0, attr_info.count);
-                m_hou->CheckForErrors();
+                m_houdini->CheckForErrors();
 
                 for (int i = 0; i < attr_info.count; ++i)
                 {
@@ -621,7 +621,7 @@ namespace HoudiniEngine
             HAPI_AttributeInfo attr_info;
             attr_info.exists = false;
             HAPI_GetAttributeInfo(m_session, node_id, partInfo.id, "P", HAPI_ATTROWNER_POINT, &attr_info);
-            m_hou->CheckForErrors();
+            m_houdini->CheckForErrors();
 
             if (attr_info.exists)
             {
@@ -641,7 +641,7 @@ namespace HoudiniEngine
                 
                 AZStd::vector<float> v = AZStd::vector<float>(attr_info.count * attr_info.tupleSize);
                 HAPI_GetAttributeFloatData(m_session, node_id, partInfo.id, "P", &attr_info, attr_info.tupleSize, &v[0], 0, attr_info.count);
-                m_hou->CheckForErrors();
+                m_houdini->CheckForErrors();
 
                 for (int i = 0; i < attr_info.count; ++i)
                 {

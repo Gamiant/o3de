@@ -35,7 +35,7 @@ namespace HoudiniEngine
         public:
             AZ::EntityId m_entityId;
             
-            IHoudini* m_hou;
+            IHoudini* m_houdini;
             HAPI_Session* m_session;
 
             IHoudiniNode * m_node = nullptr;

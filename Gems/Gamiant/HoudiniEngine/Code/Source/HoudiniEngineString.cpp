@@ -60,10 +60,10 @@ namespace HoudiniEngine
     bool
     HoudiniEngineString::ToAZString(AZStd::string& String) const
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou == nullptr)
+        if (houdini == nullptr)
         {
             return false;
         }
@@ -78,7 +78,7 @@ namespace HoudiniEngine
         }
 
         AZ::s32 NameLength = 0;
-        if (HAPI_RESULT_SUCCESS != HAPI_GetStringBufLength(&hou->GetSession(), StringId, &NameLength))
+        if (HAPI_RESULT_SUCCESS != HAPI_GetStringBufLength(&houdini->GetSession(), StringId, &NameLength))
         {
             return false;
         }
@@ -87,7 +87,7 @@ namespace HoudiniEngine
             return false;
 
         std::vector<char> NameBuffer(NameLength, '\0');
-        if (HAPI_RESULT_SUCCESS != HAPI_GetString(&hou->GetSession(), StringId, &NameBuffer[0], NameLength))
+        if (HAPI_RESULT_SUCCESS != HAPI_GetString(&houdini->GetSession(), StringId, &NameBuffer[0], NameLength))
         {
             return false;
         }
@@ -116,10 +116,10 @@ namespace HoudiniEngine
     {
         bool bReturn = true;
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
-        if (hou == nullptr)
+        if (houdini == nullptr)
         {
             return bReturn;
         }
@@ -135,7 +135,7 @@ namespace HoudiniEngine
         AZStd::vector<AZ::s32> UniqueSHArray(UniqueSH.begin(), UniqueSH.end());
 
         AZ::s32 BufferSize = 0;
-        if (HAPI_RESULT_SUCCESS != HAPI_GetStringBatchSize(&hou->GetSession(), UniqueSHArray.data(), aznumeric_cast<int>(UniqueSHArray.size()), &BufferSize))
+        if (HAPI_RESULT_SUCCESS != HAPI_GetStringBatchSize(&houdini->GetSession(), UniqueSHArray.data(), aznumeric_cast<int>(UniqueSHArray.size()), &BufferSize))
             return false;
 
         if (BufferSize <= 0)
@@ -143,7 +143,7 @@ namespace HoudiniEngine
 
         AZStd::string Buffer;
         Buffer.resize(BufferSize);
-        if (HAPI_RESULT_SUCCESS != HAPI_GetStringBatch(&hou->GetSession(), &Buffer[0], BufferSize))
+        if (HAPI_RESULT_SUCCESS != HAPI_GetStringBatch(&houdini->GetSession(), &Buffer[0], BufferSize))
             return false;
 
         // Parse the buffer to a string array

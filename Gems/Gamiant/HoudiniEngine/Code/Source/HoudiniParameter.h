@@ -21,7 +21,7 @@ namespace HoudiniEngine
         friend class HoudiniNode;
 
         protected:
-            IHoudini* m_hou;
+            IHoudini* m_houdini;
             HAPI_Session* m_session;
             IHoudiniNode* m_node;
             HAPI_ParmInfo m_info;
@@ -51,7 +51,7 @@ namespace HoudiniEngine
             AZ::Color m_valueColor = AZ::Color::CreateZero();
             int m_multiParamValue{ 0 };
 
-            HoudiniParameter(IHoudini* hou, HAPI_ParmInfo info, IHoudiniNode* node);
+            HoudiniParameter(IHoudini* houdini, HAPI_ParmInfo info, IHoudiniNode* node);
             
         public:
             virtual ~HoudiniParameter() = default;
@@ -106,9 +106,9 @@ namespace HoudiniEngine
                 return m_size;
             }
 
-            IHoudini* GetHou() override
+            IHoudini* GetHoudini() override
             {
-                return m_hou;
+                return m_houdini;
             }
 
             HAPI_ParmId GetId() override

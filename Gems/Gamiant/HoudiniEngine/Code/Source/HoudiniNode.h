@@ -18,7 +18,7 @@
 namespace HoudiniEngine
 {
     class HoudiniNode
-        : public IHoudiniNode        
+        : public IHoudiniNode
     {
         friend class Houdini;
         friend class HoudiniParameter;
@@ -26,7 +26,7 @@ namespace HoudiniEngine
 
         protected:
             int m_deleteCount = 0;
-            IHoudini * m_hou;
+            IHoudini * m_houdini;
             HAPI_Session* m_session;
             HAPI_NodeId m_nodeId;
             HAPI_NodeInfo m_nodeInfo;
@@ -50,14 +50,14 @@ namespace HoudiniEngine
             AZStd::string m_helpText;
 
             AZStd::vector<HoudiniParameterPtr> m_parameters;
-            AZStd::vector<HoudiniParameterPtr> m_parameterInputs;            
-            AZStd::vector<HAPI_NodeId> m_children;        
+            AZStd::vector<HoudiniParameterPtr> m_parameterInputs;
+            AZStd::vector<HAPI_NodeId> m_children;
             AZStd::vector<HAPI_GeoInfo> m_editableGeoInfo;
             bool m_hasEditableGeometryBuilt = false;
             AZStd::unordered_map<int, AZ::EntityId> m_retryDependentInput;
 
-            HoudiniNode(IHoudini* hou, HoudiniNodePtr parent, HAPI_NodeId id, AZStd::string operatorName, AZStd::string nodeName);
-                        
+            HoudiniNode(IHoudini* houdini, HoudiniNodePtr parent, HAPI_NodeId id, AZStd::string operatorName, AZStd::string nodeName);
+
         public:
             
             virtual ~HoudiniNode();
@@ -81,10 +81,10 @@ namespace HoudiniEngine
 
             void DeleteNode() override
             {      
-                if (m_hou != nullptr && m_hou->IsActive())
+                if (m_houdini != nullptr && m_houdini->IsActive())
                 {
                     HAPI_DeleteNode(m_session, GetNodeInfo().id);
-                    m_hou->RemoveNode(m_nodeName, this);
+                    m_houdini->RemoveNode(m_nodeName, this);
                 }
 
                 m_nodeId = -1;
@@ -97,7 +97,7 @@ namespace HoudiniEngine
                 HAPI_GetNodeInfo(m_session, m_nodeId, &m_nodeInfo);
                 if (m_nodeInfo.isValid && m_nodeName.empty()) 
                 {
-                    m_nodeName = GetHou()->GetString(m_nodeInfo.nameSH);
+                    m_nodeName = GetHoudini()->GetString(m_nodeInfo.nameSH);
                 }
                 return m_nodeInfo;
             }
@@ -154,7 +154,7 @@ namespace HoudiniEngine
             void SetObjectTransform(const AZ::Transform& transform) override;
 
             //Getters:
-            IHoudini* GetHou() override { return m_hou; }
+            IHoudini* GetHoudini() override { return m_houdini; }
             HAPI_NodeId GetId() override { return m_nodeId; }
             const AZStd::string& GetOperatorName() override { return m_operatorName; }
             const AZStd::string& GetNodeName() override { GetNodeInfo(); return m_nodeName; }

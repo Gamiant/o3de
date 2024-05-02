@@ -28,9 +28,9 @@ namespace HoudiniEngine
         if (InUniqueMaterialInfos.size() != InUniqueMaterialIds.size())
             return false;
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return false;
         }
@@ -64,7 +64,7 @@ namespace HoudiniEngine
             // Get the material node's node information.
             HAPI_NodeInfo NodeInfo;
             HAPI_NodeInfo_Init(&NodeInfo);
-            if (HAPI_RESULT_SUCCESS != HAPI_GetNodeInfo(&hou->GetSession(),MaterialInfo.nodeId, &NodeInfo))
+            if (HAPI_RESULT_SUCCESS != HAPI_GetNodeInfo(&houdini->GetSession(),MaterialInfo.nodeId, &NodeInfo))
             {
                 continue;
             }
@@ -236,9 +236,9 @@ namespace HoudiniEngine
         if (InAssetId < 0 || !InMaterialInfo.exists)
             return false;
 
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return false;
         }
@@ -248,11 +248,11 @@ namespace HoudiniEngine
         {
             HAPI_AssetInfo AssetInfo;
             HAPI_AssetInfo_Init(&AssetInfo);
-            HAPI_GetAssetInfo(&hou->GetSession(), InAssetId, &AssetInfo);
+            HAPI_GetAssetInfo(&houdini->GetSession(), InAssetId, &AssetInfo);
 
             HAPI_NodeInfo AssetNodeInfo;
             HAPI_NodeInfo_Init(&AssetNodeInfo);
-            HAPI_GetNodeInfo(&hou->GetSession(), AssetInfo.nodeId, &AssetNodeInfo);
+            HAPI_GetNodeInfo(&houdini->GetSession(), AssetInfo.nodeId, &AssetNodeInfo);
 
             HoudiniEngineString::ToAZString(AssetNodeInfo.internalNodePathSH, AssetNodeName);
         }
@@ -262,7 +262,7 @@ namespace HoudiniEngine
         {
             HAPI_NodeInfo MaterialNodeInfo;
             HAPI_NodeInfo_Init(&MaterialNodeInfo);
-            HAPI_GetNodeInfo(&hou->GetSession(), InMaterialInfo.nodeId, &MaterialNodeInfo);
+            HAPI_GetNodeInfo(&houdini->GetSession(), InMaterialInfo.nodeId, &MaterialNodeInfo);
 
             HoudiniEngineString::ToAZString(MaterialNodeInfo.internalNodePathSH, MaterialNodeName);
         }
@@ -296,9 +296,9 @@ namespace HoudiniEngine
 
     bool HoudiniMaterialTranslator::FindTextureParamByNameOrTag(const HAPI_NodeId& InNodeId, const AZStd::string& InTextureParmName, const AZStd::string& InUseTextureParmName, const bool& bFindByTag, HAPI_ParmId& OutParmId, HAPI_ParmInfo& OutParmInfo)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return false;
         }
@@ -329,7 +329,7 @@ namespace HoudiniEngine
             // We found a valid "use" parameter, check if it is disabled
             // Get the param value
             int UseValue = 0;
-            if (HAPI_RESULT_SUCCESS == HAPI_GetParmIntValues(&hou->GetSession(), InNodeId, &UseValue, FoundUseParmInfo.intValuesIndex, 1))
+            if (HAPI_RESULT_SUCCESS == HAPI_GetParmIntValues(&houdini->GetSession(), InNodeId, &UseValue, FoundUseParmInfo.intValuesIndex, 1))
             {
                 if (UseValue == 0)
                 {
@@ -344,7 +344,7 @@ namespace HoudiniEngine
         // Finally, make sure that the found texture Parm is not empty!        
         AZStd::string ParmValue;
         HAPI_StringHandle StringHandle;
-        if (HAPI_RESULT_SUCCESS == HAPI_GetParmStringValues(&hou->GetSession(), InNodeId, false, &StringHandle, OutParmInfo.stringValuesIndex, 1))
+        if (HAPI_RESULT_SUCCESS == HAPI_GetParmStringValues(&houdini->GetSession(), InNodeId, false, &StringHandle, OutParmInfo.stringValuesIndex, 1))
         {
             // Convert the string handle to FString
             HoudiniEngineString::ToAZString(StringHandle, ParmValue);
@@ -363,9 +363,9 @@ namespace HoudiniEngine
 
     bool HoudiniMaterialTranslator::CreateMaterialComponentDiffuse([[maybe_unused]] const HAPI_NodeId& InAssetId, const HAPI_MaterialInfo& InMaterialInfo, AZStd::string& propertyValue)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return false;
         }
@@ -401,7 +401,7 @@ namespace HoudiniEngine
             AZ::Color Color = AZ::Colors::White;
             float colorValues[4];
 
-            if (HAPI_GetParmFloatValues(&hou->GetSession(), InMaterialInfo.nodeId, colorValues, ParmDiffuseColorInfo.floatValuesIndex, ParmDiffuseColorInfo.size) == HAPI_RESULT_SUCCESS)
+            if (HAPI_GetParmFloatValues(&houdini->GetSession(), InMaterialInfo.nodeId, colorValues, ParmDiffuseColorInfo.floatValuesIndex, ParmDiffuseColorInfo.size) == HAPI_RESULT_SUCCESS)
             {
                 Color.Set(colorValues);
                 if (ParmDiffuseColorInfo.size == 3)
@@ -422,9 +422,9 @@ namespace HoudiniEngine
 
     bool HoudiniMaterialTranslator::CreateMaterialComponentSpecular(const HAPI_NodeId& /*InAssetId*/, const HAPI_MaterialInfo& InMaterialInfo, AZStd::string& propertyValue)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return false;
         }
@@ -458,7 +458,7 @@ namespace HoudiniEngine
             float colorValues[4];
 
             //TODO: Unreal uses a specular color but O3DE only has a specular.factor
-            if (HAPI_GetParmFloatValues(&hou->GetSession(), InMaterialInfo.nodeId, colorValues, ParmSpecularColorInfo.floatValuesIndex, ParmSpecularColorInfo.size) == HAPI_RESULT_SUCCESS)
+            if (HAPI_GetParmFloatValues(&houdini->GetSession(), InMaterialInfo.nodeId, colorValues, ParmSpecularColorInfo.floatValuesIndex, ParmSpecularColorInfo.size) == HAPI_RESULT_SUCCESS)
             {
                 Color.Set(colorValues);
                 if (ParmSpecularColorInfo.size == 3)
@@ -473,9 +473,9 @@ namespace HoudiniEngine
 
     bool HoudiniMaterialTranslator::CreateMaterialComponentRoughness(const HAPI_NodeId& /*InAssetId*/, const HAPI_MaterialInfo& InMaterialInfo, AZStd::string& propertyValue)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return false;
         }
@@ -508,7 +508,7 @@ namespace HoudiniEngine
             // Metallic value is available.
             float RoughnessValue = 0.0f;
 
-            if (HAPI_GetParmFloatValues(&hou->GetSession(), InMaterialInfo.nodeId, (float*)&RoughnessValue, ParmRoughnessValueInfo.floatValuesIndex, 1) == HAPI_RESULT_SUCCESS)
+            if (HAPI_GetParmFloatValues(&houdini->GetSession(), InMaterialInfo.nodeId, (float*)&RoughnessValue, ParmRoughnessValueInfo.floatValuesIndex, 1) == HAPI_RESULT_SUCCESS)
             {
                 // Clamp retrieved value.
                 RoughnessValue = AZStd::clamp(RoughnessValue, 0.0f, 1.0f);
@@ -523,9 +523,9 @@ namespace HoudiniEngine
 
     bool HoudiniMaterialTranslator::CreateMaterialComponentMetallic(const HAPI_NodeId& /*InAssetId*/, const HAPI_MaterialInfo& InMaterialInfo, AZStd::string& propertyValue)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return false;
         }
@@ -558,7 +558,7 @@ namespace HoudiniEngine
             // Metallic value is available.
             float MetallicValue = 0.0f;
 
-            if (HAPI_GetParmFloatValues(&hou->GetSession(), InMaterialInfo.nodeId, (float*)&MetallicValue, ParmMetallicValueInfo.floatValuesIndex, 1) == HAPI_RESULT_SUCCESS)
+            if (HAPI_GetParmFloatValues(&houdini->GetSession(), InMaterialInfo.nodeId, (float*)&MetallicValue, ParmMetallicValueInfo.floatValuesIndex, 1) == HAPI_RESULT_SUCCESS)
             {
                 // Clamp retrieved value.
                 MetallicValue = AZStd::clamp(MetallicValue, 0.0f, 1.0f);
@@ -573,9 +573,9 @@ namespace HoudiniEngine
 
     bool HoudiniMaterialTranslator::CreateMaterialComponentEmissive(const HAPI_NodeId& /*InAssetId*/, const HAPI_MaterialInfo& InMaterialInfo, AZStd::string& propertyValue)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return false;
         }
@@ -606,7 +606,7 @@ namespace HoudiniEngine
         float EmmissiveIntensity = 0.0f;
         if (ParmEmissiveIntensityId >= 0)
         {
-            if (HAPI_GetParmFloatValues(&hou->GetSession(), InMaterialInfo.nodeId, &EmmissiveIntensity, ParmEmissiveIntensityInfo.floatValuesIndex, 1) == HAPI_RESULT_SUCCESS)
+            if (HAPI_GetParmFloatValues(&houdini->GetSession(), InMaterialInfo.nodeId, &EmmissiveIntensity, ParmEmissiveIntensityInfo.floatValuesIndex, 1) == HAPI_RESULT_SUCCESS)
             {
                 propertyValue += AZStd::string::format(", \"emissive.intensity\": %.17f", EmmissiveIntensity);
                 bExpressionCreated = true;
@@ -618,9 +618,9 @@ namespace HoudiniEngine
 
     bool HoudiniMaterialTranslator::CreateMaterialComponentOpacity(const HAPI_NodeId& /*InAssetId*/, const HAPI_MaterialInfo& InMaterialInfo, AZStd::string& propertyValue)
     {
-        HoudiniPtr hou;
-        HoudiniEngineRequestBus::BroadcastResult(hou, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
-        if (hou == nullptr || hou->IsActive() == false)
+        HoudiniPtr houdini;
+        HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
+        if (houdini == nullptr || houdini->IsActive() == false)
         {
             return false;
         }
@@ -640,7 +640,7 @@ namespace HoudiniEngine
         {
             if (ParmOpacityValueInfo.size > 0 && ParmOpacityValueInfo.floatValuesIndex >= 0)
             {
-                if (HAPI_GetParmFloatValues(&hou->GetSession(), InMaterialInfo.nodeId, &OpacityValueRetrieved, ParmOpacityValueInfo.floatValuesIndex, 1) == HAPI_RESULT_SUCCESS)
+                if (HAPI_GetParmFloatValues(&houdini->GetSession(), InMaterialInfo.nodeId, &OpacityValueRetrieved, ParmOpacityValueInfo.floatValuesIndex, 1) == HAPI_RESULT_SUCCESS)
                 {
                     // Clamp retrieved value.
                     OpacityValueRetrieved = AZStd::clamp(OpacityValueRetrieved, 0.0f, 1.0f);

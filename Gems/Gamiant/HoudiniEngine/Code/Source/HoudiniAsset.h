@@ -78,7 +78,7 @@ namespace HoudiniEngine
     class HoudiniAsset : public IHoudiniAsset
     {
         protected:
-            IHoudini* m_hou;
+            IHoudini* m_houdini;
             HAPI_Session* m_session;
             HAPI_AssetLibraryId m_id;
             AZStd::string m_hdaFile;
@@ -88,7 +88,7 @@ namespace HoudiniEngine
             AZStd::vector<AZStd::string> m_assets;
         public:
 
-            HoudiniAsset(IHoudini* hou, HAPI_AssetLibraryId id, AZStd::string hdaFile, AZStd::string hdaName);
+            HoudiniAsset(IHoudini* houdini, HAPI_AssetLibraryId id, AZStd::string hdaFile, AZStd::string hdaName);
             virtual ~HoudiniAsset() = default;
 
             const AZStd::string& GetHdaName()

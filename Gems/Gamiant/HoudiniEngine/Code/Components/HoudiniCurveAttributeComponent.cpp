@@ -30,7 +30,7 @@ namespace HoudiniEngine
             serialize->Class<HoudiniCurveAttributeComponent, AzToolsFramework::Components::EditorComponentBase>()
                 ->Version(1)
                 ->Field("LiveEdit", &HoudiniCurveAttributeComponent::m_liveEdit)
-                ->Field("Name", &HoudiniCurveAttributeComponent::m_name)                
+                ->Field("Name", &HoudiniCurveAttributeComponent::m_name)
                 ->Field("CurveAttribute", &HoudiniCurveAttributeComponent::m_attribute)
                 ->Field("Paint Value", &HoudiniCurveAttributeComponent::m_paintValue)
                 ->Field("On Copy Values", &HoudiniCurveAttributeComponent::m_cmdCopyValues)

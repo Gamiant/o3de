@@ -10,20 +10,20 @@
 
 namespace HoudiniEngine
 {
-    HoudiniParameter::HoudiniParameter(IHoudini* hou, HAPI_ParmInfo info, IHoudiniNode* node):
-        m_hou(hou)
+    HoudiniParameter::HoudiniParameter(IHoudini* houdini, HAPI_ParmInfo info, IHoudiniNode* node):
+        m_houdini(houdini)
         , m_id(info.id)
         , m_node(node)
         , m_info(info)
     {
-        m_session = const_cast<HAPI_Session*>(&hou->GetSession());
+        m_session = const_cast<HAPI_Session*>(&houdini->GetSession());
 
         if (m_id >= 0)
         {
-            m_name = hou->GetString( info.nameSH);
-            m_label = hou->GetString(info.labelSH);
-            m_typeInfo = hou->GetString(info.typeInfoSH);
-            m_help = hou->GetString(info.helpSH);
+            m_name = houdini->GetString( info.nameSH);
+            m_label = houdini->GetString(info.labelSH);
+            m_typeInfo = houdini->GetString(info.typeInfoSH);
+            m_help = houdini->GetString(info.helpSH);
             m_type = info.type;
             m_size = info.size;
             m_choiceCount = info.choiceCount;
@@ -101,7 +101,7 @@ namespace HoudiniEngine
         {
             for (int i = 0; i < count; i++)
             {
-                choiceLabels[i] = m_hou->GetString(ChoiceInfos[i].labelSH);
+                choiceLabels[i] = m_houdini->GetString(ChoiceInfos[i].labelSH);
             }
         }
 
@@ -113,7 +113,7 @@ namespace HoudiniEngine
     {        
         HAPI_StringHandle handle;
         HAPI_GetParmStringValue(m_session, GetNode()->GetId(), GetName().c_str(), 0, true, &handle);
-        m_valueString = m_hou->GetString(handle);
+        m_valueString = m_houdini->GetString(handle);
 
         return m_valueString;
     }
@@ -215,7 +215,7 @@ namespace HoudiniEngine
         {
             HAPI_StringHandle handle;
             HAPI_GetParmStringValue(m_session, GetNode()->GetId(), GetName().c_str(), 0, true, &handle);
-            AZStd::string previousStringData = m_hou->GetString(handle);
+            AZStd::string previousStringData = m_houdini->GetString(handle);
 
             if (value != previousStringData)
             {
@@ -236,7 +236,7 @@ namespace HoudiniEngine
             return true;
         }
 
-        HAPI_NodeId nodeId = m_hou->GetInputNodeManager()->GetNodeIdFromEntity(value);
+        HAPI_NodeId nodeId = m_houdini->GetInputNodeManager()->GetNodeIdFromEntity(value);
         if (nodeId == HOUDINI_NOT_READY_ID)
         {
             //In this case, the node is valid, but its just not ready yet.  Return false to signal to try again later.
@@ -250,9 +250,9 @@ namespace HoudiniEngine
         if (previousId != nodeId)
         {
             HAPI_SetParmNodeValue(m_session, GetNode()->GetId(), GetName().c_str(), nodeId);
-            if (m_hou->CheckForErrors())
+            if (m_houdini->CheckForErrors())
             {
-                AZStd::string entityName = m_hou->LookupEntityName(m_node->GetEntityId());
+                AZStd::string entityName = m_houdini->LookupEntityName(m_node->GetEntityId());
 
                 AZ_Warning("Houdini", false, "[Entity: %s][Node: %s][Prop: %s] - Error setting entity to %s"
                     , (entityName + " " + m_node->GetEntityId().ToString()).c_str()
