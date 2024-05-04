@@ -114,5 +114,55 @@ namespace HoudiniEngine
 
         static bool GatherImmediateOutputGeoInfos(HAPI_Session* session, const HAPI_NodeId& nodeId, const bool useOutputNodes, const bool gatherTemplateNodes, AZStd::vector<HAPI_GeoInfo>& geoInfos, AZStd::unordered_set<HAPI_NodeId>& forceNodesCook);
         static bool CookNode(HAPI_Session* session, const HAPI_NodeId& InNodeId, HAPI_CookOptions* InCookOptions, const bool& bWaitForCompletion);
+        static const AZStd::string GetStatusString(HAPI_StatusType status_type, HAPI_StatusVerbosity verbosity);
+        static bool GatherAllAssetOutputs(HAPI_Session* session, const HAPI_NodeId& AssetId, const bool bUseOutputNodes, const bool bOutputTemplatedGeos, AZStd::vector<HAPI_NodeId>& OutOutputNodes);
     };
 }
+
+
+// Error checking - this macro will check the status and return specified parameter.
+#define HOUDINI_CHECK_ERROR_RETURN_HELPER( HAPI_PARAM_CALL, HAPI_PARAM_RETURN ) \
+    do \
+    { \
+        HAPI_Result result = HAPI_PARAM_CALL; \
+        if ( result != HAPI_RESULT_SUCCESS ) \
+        { \
+            AZ_Error("Houdini", false, "HAPI failure: %s (%s:%d)", HoudiniEngineUtils::GetHoudiniResultByCode((int)result).c_str(), TEXT(__FILE__), __LINE__); \
+            return HAPI_PARAM_RETURN; \
+        } \
+    } \
+    while ( 0 )
+
+#define HOUDINI_CHECK_ERROR_RETURN( HAPI_PARAM_CALL, HAPI_PARAM_RETURN ) \
+    HOUDINI_CHECK_ERROR_RETURN_HELPER( HAPI_PARAM_CALL, HAPI_PARAM_RETURN )
+
+// Simple Error checking - this macro will check the status.
+#define HOUDINI_CHECK_ERROR_HELPER( HAPI_PARAM_CALL ) \
+    do \
+    { \
+        HAPI_Result result = HAPI_PARAM_CALL; \
+        if ( result != HAPI_RESULT_SUCCESS ) \
+        { \
+            AZ_Error("Houdini", false, "HAPI failure: %s", HoudiniEngineUtils::GetHoudiniResultByCode((int)result).c_str()); \
+        } \
+    } \
+    while ( 0 )
+
+#define HOUDINI_CHECK_ERROR( HAPI_PARAM_CALL ) \
+    HOUDINI_CHECK_ERROR_HELPER( HAPI_PARAM_CALL )
+
+// Error checking - this macro will check the status and returns it.
+#define HOUDINI_CHECK_ERROR_GET_HELPER( HAPI_PARAM_RESULT, HAPI_PARAM_CALL ) \
+    do \
+    { \
+        *HAPI_PARAM_RESULT = HAPI_PARAM_CALL; \
+        if ( *HAPI_PARAM_RESULT != HAPI_RESULT_SUCCESS ) \
+        { \
+            AZ_Error("Houdini", false, "HAPI failure: %s", HoudiniEngineUtils::GetHoudiniResultByCode((int)result).c_str()); \
+        } \
+    } \
+    while ( 0 )
+
+#define HOUDINI_CHECK_ERROR_GET( HAPI_PARAM_RESULT, HAPI_PARAM_CALL ) \
+    HOUDINI_CHECK_ERROR_GET_HELPER( HAPI_PARAM_RESULT, HAPI_PARAM_CALL )
+

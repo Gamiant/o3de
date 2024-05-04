@@ -72,6 +72,8 @@ set(FILES
     Source/HoudiniNode.cpp
     Source/HoudiniOutput.h
     Source/HoudiniOutput.cpp
+    Source/HoudiniPackageParams.h
+    Source/HoudiniPackageParams.cpp
     Source/HoudiniParameter.h
     Source/HoudiniParameter.cpp
     Source/HoudiniPropertyGroup.h
@@ -96,7 +98,11 @@ set(FILES
     Source/Translators/HoudiniSplineTranslator.h
     Source/Translators/HoudiniSplineTranslator.cpp
 
-    # UI
+# Importers
+    Source/Importers/HoudiniGeoImporter.h
+    Source/Importers/HoudiniGeoImporter.cpp
+
+# UI
     Source/UI/HoudiniStatusPanel.h
     Source/UI/HoudiniStatusPanel.cpp
     Source/UI/HoudiniStatusPanel.ui

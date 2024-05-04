@@ -10,5 +10,10 @@
 
 namespace HoudiniEngine
 {
+    class HoudiniOutput
+    {
+    public:
 
+
+    };
 }

@@ -716,12 +716,7 @@ namespace HoudiniEngine
     {
         int childCount = 0;
 
-        HAPI_Result result = HAPI_ComposeChildNodeList(session, nodeId, HAPI_NODETYPE_SOP, HAPI_NODEFLAGS_ANY, false, &childCount);
-        if (result != HAPI_RESULT_SUCCESS)
-        {
-            AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
-            return false;
-        }
+        HOUDINI_CHECK_ERROR_RETURN(HAPI_ComposeChildNodeList(session, nodeId, HAPI_NODETYPE_SOP, HAPI_NODEFLAGS_ANY, false, &childCount), false);
 
         return childCount > 0;
     }
@@ -917,23 +912,12 @@ namespace HoudiniEngine
 
             // Use the default cook options
             HAPI_CookOptions options = settings->GetDefaultCookOptions();
-            HAPI_Result result = HAPI_CookNode(session, nodeId, &options);
-            if (result != HAPI_RESULT_SUCCESS)
-            {
-                AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
-                return false;
-            }
-
+            HOUDINI_CHECK_ERROR_RETURN(HAPI_CookNode(session, nodeId, cookOptions), false);
         }
         else
         {
             // Use the provided CookOptions
-            HAPI_Result result = HAPI_CookNode(session, nodeId, cookOptions);
-            if (result != HAPI_RESULT_SUCCESS)
-            {
-                AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
-                return false;
-            }
+            HOUDINI_CHECK_ERROR_RETURN(HAPI_CookNode(session, nodeId, cookOptions), false);
         }
 
         // If we don't need to wait for completion, return now
@@ -966,6 +950,229 @@ namespace HoudiniEngine
 
         }
     }
+
+    const AZStd::string HoudiniEngineUtils::GetStatusString(HAPI_StatusType status_type, HAPI_StatusVerbosity verbosity)
+    {
+        HAPI_Session* session = nullptr;
+        SessionRequestBus::BroadcastResult(session, &SessionRequests::GetSessionPtr);
+        if (!session)
+        {
+            return "No active Houdini session";
+        }
+
+        int statusBufferLength = 0;
+        HAPI_Result result = HAPI_GetStatusStringBufLength(session, status_type, verbosity, &statusBufferLength);
+
+        if (result == HAPI_RESULT_INVALID_SESSION)
+        {
+            // Let FHoudiniEngine know that the sesion is now invalid to "Stop" the invalid session
+            // and clean things up
+            // OnSessionLost();
+        }
+
+        if (statusBufferLength > 0)
+        {
+            AZStd::vector< char > statusStringBuffer;
+            statusStringBuffer.resize_no_construct(statusBufferLength);
+            HAPI_GetStatusString(session, status_type, &statusStringBuffer[0], statusBufferLength);
+
+            return &statusStringBuffer[0];
+        }
+
+        return {};
+    }
+
+    bool HoudiniEngineUtils::GatherAllAssetOutputs(HAPI_Session* session, const HAPI_NodeId& assetId, const bool bUseOutputNodes, const bool outputTemplatedGeos, AZStd::vector<HAPI_NodeId>& outputNodes)
+    {
+        outputNodes.clear();
+
+        // Ensure the asset has a valid node ID
+        if (assetId < 0)
+        {
+            return false;
+        }
+
+        // Get the AssetInfo
+        HAPI_AssetInfo assetInfo;
+        HAPI_AssetInfo_Init(&assetInfo);
+        bool assetInfoResult = HAPI_RESULT_SUCCESS == HAPI_GetAssetInfo(session, assetId, &assetInfo);
+
+        // Get the Asset NodeInfo
+        HAPI_NodeInfo assetNodeInfo;
+        HAPI_NodeInfo_Init(&assetNodeInfo);
+        HOUDINI_CHECK_ERROR_RETURN(HAPI_GetNodeInfo(session, assetId, &assetNodeInfo), false);
+
+        AZStd::string currentAssetName;
+        {
+            HoudiniEngineString hapiSTR(assetInfoResult ? assetInfo.nameSH : assetNodeInfo.nameSH);
+            hapiSTR.ToAZString(currentAssetName);
+        }
+
+        //// In certain cases, such as PDG output processing we might end up with a SOP node instead of a
+        //// container. In that case, don't try to run child queries on this node. They will fail.
+        const bool assetHasChildren = !(assetNodeInfo.type == HAPI_NODETYPE_SOP && assetNodeInfo.childNodeCount == 0);
+
+        //// Retrieve information about each object contained within our asset.
+        AZStd::vector<HAPI_ObjectInfo> objectInfos;
+        AZStd::vector<HAPI_Transform> objectTransforms;
+        if (!HoudiniEngineUtils::HapiGetObjectInfos(session, assetId, objectInfos, objectTransforms))
+        {
+            return false;
+        }
+
+        // Find the editable nodes in the asset.
+        AZStd::vector<HAPI_GeoInfo> editableGeoInfos;
+        int editableNodeCount = 0;
+        if (assetHasChildren)
+        {
+            HOUDINI_CHECK_ERROR(HAPI_ComposeChildNodeList(session, assetId, HAPI_NODETYPE_SOP, HAPI_NODEFLAGS_EDITABLE, true, &editableNodeCount));
+        }
+
+        // All editable nodes will be output, regardless of whether the subnet is considered visible or not.
+        if (editableNodeCount > 0)
+        {
+            AZStd::vector<HAPI_NodeId> editableNodeIds;
+            editableNodeIds.resize_no_construct(editableNodeCount);
+            HOUDINI_CHECK_ERROR(HAPI_GetComposedChildNodeList(session, assetId, editableNodeIds.data(), editableNodeCount));
+
+            for (int i = 0; i < editableNodeCount; ++i)
+            {
+                HAPI_GeoInfo currentEditableGeoInfo;
+                HAPI_GeoInfo_Init(&currentEditableGeoInfo);
+                HOUDINI_CHECK_ERROR(HAPI_GetGeoInfo(session, editableNodeIds[i], &currentEditableGeoInfo));
+
+                // TODO: Check whether this display geo is actually being output
+                //       Just because this is a display node doesn't mean that it will be output (it
+                //       might be in a hidden subnet)
+
+                // Do not process the main display geo twice!
+                if (currentEditableGeoInfo.isDisplayGeo)
+                {
+                    continue;
+                }
+
+                // We only handle editable curves for now
+                if (currentEditableGeoInfo.type != HAPI_GEOTYPE_CURVE)
+                {
+                    continue;
+                }
+
+                // Add this geo to the geo info array
+                editableGeoInfos.push_back(currentEditableGeoInfo);
+            }
+        }
+
+        const bool isSopAsset = assetInfoResult ? (assetInfo.nodeId != assetInfo.objectNodeId) : assetNodeInfo.type == HAPI_NODETYPE_SOP;
+        bool useOutputFromSubnets = true;
+        if (assetHasChildren)
+        {
+            if (HoudiniEngineUtils::ContainsSOPNodes(session, assetInfoResult ? assetInfo.nodeId : assetNodeInfo.id))
+            {
+                // This HDA contains immediate SOP nodes. Don't look for subnets to output.
+                useOutputFromSubnets = false;
+            }
+            else
+            {
+                // Assume we're using a subnet-based HDA
+                useOutputFromSubnets = true;
+            }
+        }
+        else
+        {
+            // This asset doesn't have any children. Don't try to find subnets.
+            useOutputFromSubnets = false;
+        }
+
+        // Before we can perform visibility checks on the Object nodes, we have
+        // to build a set of all the Object node ids. The 'AllObjectIds' act
+        // as a visibility filter. If an Object node is not present in this
+        // list, the content of that node will not be displayed (display / output / templated nodes).
+        // NOTE that if the HDA contains immediate SOP nodes we will ignore
+        // all subnets and only use the data outputs directly from the HDA.
+
+        AZStd::unordered_set<HAPI_NodeId> allObjectIds;
+        if (useOutputFromSubnets)
+        {
+            int numObjSubnets = 0;
+            AZStd::vector<HAPI_NodeId> objectIds;
+            HOUDINI_CHECK_ERROR_RETURN(HAPI_ComposeChildNodeList(session, assetId, HAPI_NODETYPE_OBJ, HAPI_NODEFLAGS_OBJ_SUBNET, true, &numObjSubnets), false);
+
+            objectIds.resize_no_construct(numObjSubnets);
+            HOUDINI_CHECK_ERROR_RETURN(HAPI_GetComposedChildNodeList(session, assetId, objectIds.data(), numObjSubnets), false);
+            allObjectIds.insert_range(objectIds);
+        }
+        else
+        {
+            allObjectIds.insert(assetInfo.objectNodeId);
+        }
+
+        // Iterate through all objects to determine visibility and
+        // gather output nodes that needs to be cooked.
+        for (int i = 0; i < objectInfos.size(); ++i)
+        {
+            // Retrieve the object info
+            const HAPI_ObjectInfo& currentHapiObjectInfo = objectInfos[i];
+
+            // Determine whether this object node is fully visible.
+            bool objectIsVisible = false;
+            HAPI_NodeId gatherOutputsNodeId = -1; // Outputs will be gathered from this node.
+            if (!assetHasChildren)
+            {
+                // If the asset doesn't have children, we have to gather outputs from the asset's parent in order to output
+                // this asset node
+                objectIsVisible = true;
+                gatherOutputsNodeId = assetNodeInfo.parentId;
+            }
+            else if (isSopAsset && currentHapiObjectInfo.nodeId == assetInfo.objectNodeId)
+            {
+                // When dealing with a SOP asset, be sure to gather outputs from the SOP node, not the
+                // outer object node.
+                objectIsVisible = true;
+                gatherOutputsNodeId = assetInfo.nodeId;
+            }
+            else
+            {
+                objectIsVisible = HoudiniEngineUtils::IsOBJNodeFullyVisible(session, allObjectIds, assetId, currentHapiObjectInfo.nodeId);
+                gatherOutputsNodeId = currentHapiObjectInfo.nodeId;
+            }
+
+            // Build an array of the geos we'll need to process
+            // In most case, it will only be the display geo, 
+            // but we may also want to process editable geos as well
+            AZStd::vector<HAPI_GeoInfo> geoInfos;
+
+            // These node ids may need to be cooked in order to extract part counts.
+            AZStd::unordered_set<HAPI_NodeId> forceNodesToCook;
+
+            // Append the initial set of editable geo infos here
+            // then clear the editable geo infos array since we
+            // only want to process them once.
+            geoInfos.append_range(editableGeoInfos);
+            editableGeoInfos.clear();
+
+            if (objectIsVisible)
+            {
+                // NOTE: The HAPI_GetDisplayGeoInfo will not always return the expected Geometry subnet's
+                //     Display flag geometry. If the Geometry subnet contains an Object subnet somewhere, the
+                //     GetDisplayGeoInfo will sometimes fetch the display SOP from within the subnet which is
+                //     not what we want.
+
+                // Resolve and gather outputs (display / output / template nodes) from the GatherOutputsNodeId.
+                HoudiniEngineUtils::GatherImmediateOutputGeoInfos(session, gatherOutputsNodeId, bUseOutputNodes, outputTemplatedGeos, geoInfos, forceNodesToCook);
+
+            } // if (bObjectIsVisible)
+
+            for (const HAPI_NodeId& nodeId : forceNodesToCook)
+            {
+                if (AZStd::find(outputNodes.begin(), outputNodes.end(), nodeId) == outputNodes.end())
+                {
+                    outputNodes.push_back(nodeId);
+                }
+            }
+        }
+        return true;
+    }
+
 
 }
 

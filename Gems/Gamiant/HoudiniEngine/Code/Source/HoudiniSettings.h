@@ -212,6 +212,47 @@ namespace HoudiniEngine
     using SessionNotificationBus = AZ::EBus<SessionNotifications>;
 
 
+    class StaticMeshGenerationSettings
+    {
+    public:
+        /** If true, the physics triangle mesh will use double sided faces when doing scene queries. */
+        bool m_generatedDoubleSidedGeometry;
 
+        /** Physical material to use for simple collision on this body. Encodes information about density, friction etc. */
+        //PhysicalMaterial* GeneratedPhysMaterial;
+
+        /** Default properties of the body instance, copied into objects on instantiation, was URB_BodyInstance */
+        //struct BodyInstance DefaultBodyInstance;
+
+        /** Collision Trace behavior - by default, it will keep simple(convex)/complex(per-poly) separate. */
+        //EnumAsByte<enum ECollisionTraceFlag> GeneratedCollisionTraceFlag;
+
+        /** Resolution of lightmap. */
+        AZ::u32 m_generatedLightMapResolution;
+
+        /** Custom walkable slope setting for generated mesh's body. */
+        //WalkableSlopeOverride GeneratedWalkableSlopeOverride;
+
+        /** The light map coordinate index. */
+        int GeneratedLightMapCoordinateIndex;
+
+        /** True if mesh should use a less-conservative method of mip LOD texture factor computation. */
+        bool m_generatedUseMaximumStreamingTexelRatio;
+
+        /** Allows artists to adjust the distance where textures using UV 0 are streamed in/out. */
+        float m_generatedStreamingDistanceMultiplier;
+
+        /** Default settings when using this mesh for instanced foliage. */
+        //FoliageType_InstancedStaticMesh* GeneratedFoliageDefaultSettings = nullptr;
+
+        /** Array of user data stored with the asset. */
+        //AZStd::vector<AssetUserData*> GeneratedAssetUserData;
+    };
+
+    class MeshBuildSettings
+    {
+    public:
+
+    };
 
 }

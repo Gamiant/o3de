@@ -1481,9 +1481,8 @@ namespace HoudiniEngine
 
             (void)currentNodeId;
         }
-
+        /*
         // We use the BGEO importer when Fetching to the contentbrowser
-/*
         bool useBGEOImport = !settings->GetFetchToWorld();
         bool success = false;
         if (useBGEOImport)

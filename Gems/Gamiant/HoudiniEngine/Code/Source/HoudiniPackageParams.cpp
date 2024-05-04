@@ -6,10 +6,13 @@
  *
  */
 
-#include "HoudiniOutput.h"
+#pragma once
+
+#include <HAPI/HAPI.h>
 
 namespace HoudiniEngine
 {
-
-
+    class HoudiniPackageParams
+    {
+    };
 }
