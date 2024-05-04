@@ -16,6 +16,7 @@
 #if defined (AZ_PLATFORM_WINDOWS)
 #include <processenv.h>
 #endif
+#include <HoudiniSettings.h>
 
 namespace HoudiniEngine
 {
@@ -570,4 +571,401 @@ namespace HoudiniEngine
 
         return {};
     }
+
+    bool HoudiniEngineUtils::HapiGetObjectInfos(HAPI_Session* session, const HAPI_NodeId& nodeId, AZStd::vector<HAPI_ObjectInfo>& objectInfos, AZStd::vector<HAPI_Transform>& objectTransforms)
+    {
+        HAPI_NodeInfo nodeInfo;
+        HAPI_NodeInfo_Init(&nodeInfo);
+        HAPI_Result result = HAPI_GetNodeInfo(session, nodeId, &nodeInfo);
+        if (result != HAPI_RESULT_SUCCESS)
+        {
+            AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+            return false;
+        }
+
+        int objectCount = 0;
+        if (nodeInfo.type == HAPI_NODETYPE_SOP)
+        {
+            objectCount = 1;
+            objectInfos.reserve(1);
+            HAPI_ObjectInfo_Init(&objectInfos[0]);
+
+            result = HAPI_GetObjectInfo(session, nodeId, &objectInfos[0]);
+            if (result != HAPI_RESULT_SUCCESS)
+            {
+                AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                return false;
+            }
+
+            // Use the identity transform
+            objectTransforms.reserve(1);
+            HAPI_Transform_Init(&objectTransforms[0]);
+
+            objectTransforms[0].rotationQuaternion[3] = 1.0f;
+            objectTransforms[0].scale[0] = 1.0f;
+            objectTransforms[0].scale[1] = 1.0f;
+            objectTransforms[0].scale[2] = 1.0f;
+            objectTransforms[0].rstOrder = HAPI_SRT;
+        }
+        else if (nodeInfo.type == HAPI_NODETYPE_OBJ)
+        {
+            result = HAPI_ComposeObjectList(session, nodeId, nullptr, &objectCount);
+            if (result != HAPI_RESULT_SUCCESS)
+            {
+                AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                return false;
+            }
+
+            if (objectCount <= 0)
+            {
+                // This asset is an OBJ that has no object as children, use the object itself
+                objectCount = 1;
+                objectInfos.reserve(1);
+                HAPI_ObjectInfo_Init(&objectInfos[0]);
+
+                result = HAPI_GetObjectInfo(session, nodeId, &objectInfos[0]);
+                if (result != HAPI_RESULT_SUCCESS)
+                {
+                    AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                    return false;
+                }
+
+                // Use the identity transform
+                objectTransforms.reserve(1);
+                HAPI_Transform_Init(&objectTransforms[0]);
+
+                objectTransforms[0].rotationQuaternion[3] = 1.0f;
+                objectTransforms[0].scale[0] = 1.0f;
+                objectTransforms[0].scale[1] = 1.0f;
+                objectTransforms[0].scale[2] = 1.0f;
+                objectTransforms[0].rstOrder = HAPI_SRT;
+            }
+            else
+            {
+                // This OBJ has children
+                // See if we should add ourself by looking for immediate display SOP 
+                int immediateSOP = 0;
+                result = HAPI_ComposeChildNodeList(session, nodeInfo.id, HAPI_NODETYPE_SOP, HAPI_NODEFLAGS_DISPLAY, false, &immediateSOP);
+                if (result != HAPI_RESULT_SUCCESS)
+                {
+                    AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                    return false;
+                }
+
+                result = HAPI_ComposeObjectList(session, nodeId, nullptr, &objectCount);
+                if (result != HAPI_RESULT_SUCCESS)
+                {
+                    AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                    return false;
+                }
+
+                bool addSelf = immediateSOP > 0;
+                int count = addSelf ? objectCount + 1 : objectCount;
+                objectInfos.reserve(count);
+                objectTransforms.reserve(count);
+
+                for (int i = 0; i < objectInfos.size(); ++i)
+                {
+                    HAPI_ObjectInfo_Init(&objectInfos[i]);
+                    HAPI_Transform_Init(&objectTransforms[i]);
+                }
+
+                // Get our object info in 0 if needed
+                if (addSelf)
+                {
+                    result = HAPI_GetObjectInfo(session, nodeId, &objectInfos[0]);
+                    if (result != HAPI_RESULT_SUCCESS)
+                    {
+                        AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                        return false;
+                    }
+
+                    // Use the identity transform
+                    objectTransforms[0].rotationQuaternion[3] = 1.0f;
+                    objectTransforms[0].scale[0] = 1.0f;
+                    objectTransforms[0].scale[1] = 1.0f;
+                    objectTransforms[0].scale[2] = 1.0f;
+                    objectTransforms[0].rstOrder = HAPI_SRT;
+                }
+
+                // Get the other object infos
+                result = HAPI_GetComposedObjectList(session, nodeId, &objectInfos[addSelf ? 1 : 0], 0, objectCount);
+                if (result != HAPI_RESULT_SUCCESS)
+                {
+                    AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                    return false;
+                }
+
+                result = HAPI_GetComposedObjectTransforms(session, nodeId, HAPI_SRT, &objectTransforms[addSelf ? 1 : 0], 0, objectCount);
+                if (result != HAPI_RESULT_SUCCESS)
+                {
+                    AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool HoudiniEngineUtils::ContainsSOPNodes(HAPI_Session* session, const HAPI_NodeId& nodeId)
+    {
+        int childCount = 0;
+
+        HAPI_Result result = HAPI_ComposeChildNodeList(session, nodeId, HAPI_NODETYPE_SOP, HAPI_NODEFLAGS_ANY, false, &childCount);
+        if (result != HAPI_RESULT_SUCCESS)
+        {
+            AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+            return false;
+        }
+
+        return childCount > 0;
+    }
+
+    bool HoudiniEngineUtils::IsOBJNodeFullyVisible(HAPI_Session* session, const AZStd::unordered_set<HAPI_NodeId>& allObjectIds, const HAPI_NodeId& rootNodeId, const HAPI_NodeId& childNodeId)
+    {
+        // Walk up the hierarchy from child to root.
+        // If any node in that hierarchy is not in the "AllObjectIds" set, the OBJ node is considered to
+        // be hidden.
+
+        if (childNodeId == rootNodeId)
+            return true;
+
+        HAPI_NodeId currentChildNodeId = childNodeId;
+
+        HAPI_ObjectInfo childObjInfo;
+        HAPI_NodeInfo childNodeInfo;
+
+        HAPI_ObjectInfo_Init(&childObjInfo);
+        HAPI_NodeInfo_Init(&childNodeInfo);
+
+        do
+        {
+            if (HAPI_RESULT_SUCCESS != HAPI_GetObjectInfo(session, childNodeId, &childObjInfo))
+            {
+                // If can't get info for this object, we can't say whether it's visible (or not).
+                return false;
+            }
+
+            if (!childObjInfo.isVisible || childObjInfo.nodeId < 0)
+            {
+                // We have an object in the chain that is not visible. Return false immediately!
+                return false;
+            }
+
+            if (childNodeId != childNodeId)
+            {
+                // Only perform this check for 'parents' of the incoming child node
+                if (!allObjectIds.contains(currentChildNodeId))
+                {
+                    // There is a non-object node in the hierarchy between the child and asset root, rendering the
+                    // child object node invisible.
+                    return false;
+                }
+            }
+
+            if (HAPI_RESULT_SUCCESS != HAPI_GetNodeInfo(session, currentChildNodeId, &childNodeInfo))
+            {
+                // Could not retrieve node info.
+                return false;
+            }
+
+            // Go up the hierarchy.
+            currentChildNodeId = childNodeInfo.parentId;
+
+        } while (currentChildNodeId != rootNodeId && currentChildNodeId >= 0);
+
+        // We have traversed the whole hierarchy up to the root and nothing indicated that
+        // we _shouldn't_ be visible.
+        return true;
+    }
+
+    bool HoudiniEngineUtils::GatherImmediateOutputGeoInfos(HAPI_Session* session, const HAPI_NodeId& nodeId, const bool useOutputNodes, const bool gatherTemplateNodes, AZStd::vector<HAPI_GeoInfo>& geoInfos, AZStd::unordered_set<HAPI_NodeId>& forceNodesCook)
+    {
+        AZStd::unordered_set<HAPI_NodeId> gatheredNodeIds;
+
+        // NOTE: This function assumes that the incoming node is a Geometry container that contains immediate outputs / display nodes / template nodes.
+
+        // First we look for (immediate) output nodes (if bUseOutputNodes have been enabled). If we didn't find an output node, we'll look for a display node.
+
+        bool hasOutputs = false;
+        if (useOutputNodes)
+        {
+            int numOutputs = -1;
+            HAPI_GetOutputGeoCount(session, nodeId, &numOutputs);
+
+            if (numOutputs > 0)
+            {
+                hasOutputs = true;
+
+                // Extract GeoInfo from the immediate output nodes.
+                AZStd::vector<HAPI_GeoInfo> outputGeoInfos;
+
+                outputGeoInfos.reserve(numOutputs);
+
+                if (HAPI_RESULT_SUCCESS == HAPI_GetOutputGeoInfos(session, nodeId, outputGeoInfos.data(), numOutputs))
+                {
+                    // Gather all the output nodes
+                    for (HAPI_GeoInfo& OutputGeoInfo : outputGeoInfos)
+                    {
+                        // This geo should be output. Be sure to ignore any template flags. 
+                        OutputGeoInfo.isTemplated = false;
+                        geoInfos.push_back(OutputGeoInfo);
+                        gatheredNodeIds.insert(OutputGeoInfo.nodeId);
+                        forceNodesCook.insert(OutputGeoInfo.nodeId); // Ensure this output node gets cooked
+                    }
+                }
+            }
+        }
+
+        if (!hasOutputs)
+        {
+            // If we didn't get any output data, pull our output data directly from the Display node.
+
+            // Look for display nodes.
+            int displayNodeCount = 0;
+            if (HAPI_RESULT_SUCCESS == HAPI_ComposeChildNodeList(session, nodeId, HAPI_NODETYPE_SOP, HAPI_NODEFLAGS_DISPLAY, false, &displayNodeCount))
+            {
+                if (displayNodeCount > 0)
+                {
+                    // Retrieve all the display node ids
+                    AZStd::vector<HAPI_NodeId> displayNodeIds;
+                    displayNodeIds.reserve(displayNodeCount);
+                    if (HAPI_RESULT_SUCCESS == HAPI_GetComposedChildNodeList(session, nodeId, displayNodeIds.data(), displayNodeCount))
+                    {
+                        HAPI_GeoInfo geoInfo;
+                        HAPI_GeoInfo_Init(&geoInfo);
+                        // Retrieve the Geo Infos for each display node
+                        for (const HAPI_NodeId& displayNodeId : displayNodeIds)
+                        {
+                            if (gatheredNodeIds.contains(displayNodeId))
+                                continue; // This node has already been gathered from this subnet.
+
+                            if (HAPI_RESULT_SUCCESS == HAPI_GetGeoInfo(session, displayNodeId, &geoInfo))
+                            {
+                                // This geo should be output. Be sure to ignore any templated flags.
+                                geoInfo.isTemplated = false;
+                                geoInfos.push_back(geoInfo);
+                                gatheredNodeIds.insert(displayNodeId);
+                                // If this node doesn't have a part_id count, ensure it gets cooked.
+                                forceNodesCook.insert(displayNodeId);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Gather templated nodes.
+        if (gatherTemplateNodes)
+        {
+            int numTemplateNodes = 0;
+
+            // Gather all template nodes
+            if (HAPI_RESULT_SUCCESS == HAPI_ComposeChildNodeList(session, nodeId,HAPI_NODETYPE_SOP, HAPI_NODEFLAGS_TEMPLATED, false, &numTemplateNodes))
+            {
+                AZStd::vector<HAPI_NodeId> templateNodeIds;
+
+                templateNodeIds.reserve(numTemplateNodes);
+                if (HAPI_RESULT_SUCCESS == HAPI_GetComposedChildNodeList(session, nodeId,templateNodeIds.data(), numTemplateNodes))
+                {
+                    for (const HAPI_NodeId& templateNodeId : templateNodeIds)
+                    {
+                        if (gatheredNodeIds.contains(templateNodeId))
+                        {
+                            continue; // This geometry has already been gathered.
+                        }
+
+                        HAPI_GeoInfo geoInfo;
+                        HAPI_GeoInfo_Init(&geoInfo);
+                        HAPI_GetGeoInfo(session, templateNodeId, &geoInfo);
+
+                        // For some reason the return type is always "HAPI_RESULT_INVALID_ARGUMENT", so we
+                        // just check the GeoInfo.type manually.
+                        if (geoInfo.type != HAPI_GEOTYPE_INVALID)
+                        {
+                            // Add this template node to the gathered outputs.
+                            gatheredNodeIds.insert(templateNodeId);
+                            geoInfos.push_back(geoInfo);
+                            // If this node doesn't have a part_id count, ensure it gets cooked.
+                            forceNodesCook.insert(templateNodeId);
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+
+    bool HoudiniEngineUtils::CookNode(HAPI_Session* session, const HAPI_NodeId& nodeId, HAPI_CookOptions* cookOptions, const bool& waitForCompletion)
+    {
+        // Check for an invalid node id
+        if (nodeId < 0)
+            return false;
+
+        // No Cook Options were specified, use the default one
+        if (cookOptions == nullptr)
+        {
+            SessionSettings* settings = nullptr;
+            SettingsBus::BroadcastResult(settings, &SettingsBus::Events::GetSessionSettings);
+            AZ_Assert(settings, "Settings cannot be null");
+
+            // Use the default cook options
+            HAPI_CookOptions options = settings->GetDefaultCookOptions();
+            HAPI_Result result = HAPI_CookNode(session, nodeId, &options);
+            if (result != HAPI_RESULT_SUCCESS)
+            {
+                AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                return false;
+            }
+
+        }
+        else
+        {
+            // Use the provided CookOptions
+            HAPI_Result result = HAPI_CookNode(session, nodeId, cookOptions);
+            if (result != HAPI_RESULT_SUCCESS)
+            {
+                AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                return false;
+            }
+        }
+
+        // If we don't need to wait for completion, return now
+        if (!waitForCompletion)
+        {
+            return true;
+        }
+
+        // Wait for the cook to finish
+        HAPI_Result result = HAPI_RESULT_SUCCESS;
+        while (true)
+        {
+            // Get the current cook status
+            int status = HAPI_STATE_STARTING_COOK;
+
+            result = HAPI_GetStatus(session, HAPI_STATUS_COOK_STATE, &status);
+            if (status == HAPI_STATE_READY)
+            {
+                return true;
+            }
+            else
+            if (status == HAPI_STATE_READY_WITH_FATAL_ERRORS || status == HAPI_STATE_READY_WITH_COOK_ERRORS)
+            {
+                // TODO-GMT: GetCookResults
+                AZ_Error("Houdini", false, "There was an error while cooking the node");
+                return false;
+            }
+
+            AZStd::this_thread::sleep_for(AZStd::chrono::milliseconds(100));
+
+        }
+    }
+
 }
+

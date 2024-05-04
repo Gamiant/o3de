@@ -7,10 +7,13 @@
  */
 
 #include <HoudiniCommon.h>
-#include <HoudiniEngine/HoudiniVersion.h>
+#include <HoudiniOutput.h>
 #include <HoudiniSettings.h>
 
-#include <Util/EditorUtils.h>
+#include <HoudiniEngine/HoudiniPlatform.h>
+#include <HoudiniEngine/HoudiniVersion.h>
+
+#include <AtomLyIntegration/CommonFeatures/Mesh/MeshComponentBus.h>
 
 #include <AzCore/IO/FileIO.h>
 #include <AzFramework/IO/LocalFileIO.h>
@@ -22,9 +25,7 @@
 #include <Shlobj.h>
 #endif
 
-#include <AtomLyIntegration/CommonFeatures/Mesh/MeshComponentBus.h>
-
-#include <HoudiniEngine/HoudiniPlatform.h>
+#include <Util/EditorUtils.h>
 
 AZ_DEFINE_BUDGET(Houdini);
 
@@ -620,10 +621,6 @@ namespace HoudiniEngine
         return m_sessionStatus;
     }
 
-    void Houdini::FetchFromHoudini()
-    {
-    }
-
     void Houdini::ExecuteCommand(AZ::EntityId newId, AZStd::function<bool()> functionToCall)
     {
         auto thisThreadId = AZStd::this_thread::get_id();
@@ -1017,7 +1014,7 @@ namespace HoudiniEngine
             QString error = err.c_str();
             if (error.contains("No geometry generated!", Qt::CaseInsensitive) == false)
             {
-                AZ_Warning("Houdini", printErrors == false, err.c_str());                
+                AZ_Warning("Houdini", printErrors == false, err.c_str());
             }
 
             if (includeCookingErrors)
@@ -1400,7 +1397,6 @@ namespace HoudiniEngine
         SettingsBus::BroadcastResult(settings, &SettingsBus::Events::GetSessionSettings);
         AZ_Assert(settings, "Settings cannot be null");
 
-
         // Go through the list of selected entities in O3DE
 
         AzToolsFramework::EntityIdList selectedEntityList;
@@ -1436,6 +1432,458 @@ namespace HoudiniEngine
             }
         }
     }
+
+    void Houdini::FetchFromHoudini()
+    {
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBus::Events::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        // Get the path to fetch into
+
+        // Make sure we're not trying to fetch /obj, as this seems to crash HE
+        const AZStd::string fetchPath = settings->GetFetchPath();
+        if (AzFramework::StringFunc::Equal(fetchPath, "/obj"))
+        {
+            // TODO-GMT: Capture status
+            AZ_Error("Houdini", false, "Cannot fetch /obj/");
+            return;
+        }
+
+        HAPI_NodeId fetchNodeId = -1;
+        HAPI_Result result = HAPI_RESULT_FAILURE;
+        result = HAPI_GetNodeFromPath(&m_session, -1, fetchPath.c_str(), &fetchNodeId);
+
+        if ((result != HAPI_RESULT_SUCCESS) || (fetchNodeId < 0))
+        {
+            // TODO-GMT: Capture status
+            AZ_Error("Houdini", false, "Fetch Failed - The Fetch node path is invalid");
+            return;
+        }
+
+        AZStd::vector<HAPI_NodeId> fetchNodeIds;
+        if (!GatherAllFetchNodeIds(fetchNodeId, settings->GetUseOutputNodes(), fetchNodeIds))
+        {
+            AZ_Error("Houdini", false, " Failed to gather fetch nodes.");
+            return;
+
+        }
+
+        // Make sure that the output nodes have been cooked
+        // This ensure that we'll be able to get the proper number of parts for them
+        HAPI_CookOptions cookOptions = settings->GetDefaultCookOptions();
+        for (auto currentNodeId : fetchNodeIds)
+        {
+            if (!HoudiniEngineUtils::CookNode(&m_session, fetchNodeId, &cookOptions, true))
+            {
+                AZ_Warning("Houdini", false, "Failed to cook NodeSyncFetch node");
+            }
+
+            (void)currentNodeId;
+        }
+
+        // We use the BGEO importer when Fetching to the contentbrowser
+/*
+        bool useBGEOImport = !settings->GetFetchToWorld();
+        bool success = false;
+        if (useBGEOImport)
+        {
+            // Parent obj node that will contain all the merge nodes used for the import
+            // This will make cleaning up the fetch node easier
+            AZStd::vector<HAPI_NodeId> createdNodeIds;
+
+            // Create a new Geo importer
+            AZStd::vector<HoudiniOutput*> DummyOldOutputs;
+            AZStd::vector<HoudiniOutput*> NewOutputs;
+            UHoudiniGeoImporter* HoudiniGeoImporter = NewObject<UHoudiniGeoImporter>(this);
+            HoudiniGeoImporter->AddToRoot();
+
+            // Clean up lambda
+            auto CleanUp = [&NewOutputs, &HoudiniGeoImporter, &CreatedNodeIds]()
+            {
+                // Remove the importer and output objects from the root set
+                HoudiniGeoImporter->RemoveFromRoot();
+                for (auto Out : NewOutputs)
+                    Out->RemoveFromRoot();
+
+                // Delete the nodes created for the import
+                for(auto CurrentNodeId : CreatedNodeIds)
+                {
+                    // Delete the parent node of the created nodes
+                    FHoudiniEngineUtils::DeleteHoudiniNode(
+                        FHoudiniEngineUtils::HapiGetParentNodeId(CurrentNodeId)
+                    );
+                }
+            };
+
+            // Failure lambda
+            auto FailImportAndReturn = [this, &CleanUp, &NewOutputs, &HoudiniGeoImporter]()
+            {
+                CleanUp();
+
+                this->LastFetchStatus = EHoudiniNodeSyncStatus::Failed;
+                this->FetchStatusMessage = "Failed";
+                this->FetchStatusDetails = "Houdini Node Sync - Fetch Failed.";
+
+                // TODO: Improve me!
+                FString Notification = TEXT("Houdini Node Sync - Fetch failed!");
+                FHoudiniEngineUtils::CreateSlateNotification(Notification);
+
+                return;
+            };
+
+            // Process each fetch node with the GeoImporter
+            for (auto CurrentFetchId : FetchNodeIds)
+            {
+                FString CurrentFetchPath;
+                if (!FHoudiniEngineUtils::HapiGetAbsNodePath(CurrentFetchId, CurrentFetchPath))
+                    continue;
+
+                // Create the fetch(object merge) node for the geo importer
+                HAPI_NodeId CurrentFetchNodeId = -1;
+                if (!HoudiniGeoImporter->MergeGeoFromNode(CurrentFetchPath, CurrentFetchNodeId))
+                    return FailImportAndReturn();
+
+                // 4. Get the output from the Fetch node
+                //AZStd::vector<UHoudiniOutput*> CurrentOutputs;
+                if (!HoudiniGeoImporter->BuildOutputsForNode(CurrentFetchNodeId, DummyOldOutputs, NewOutputs, NodeSyncOptions.bUseOutputNodes))
+                    return FailImportAndReturn();
+
+                // Keep track of the created merge node so we can delete it later on
+                CreatedNodeIds.Add(CurrentFetchNodeId);
+            }
+
+            // Prepare the package used for creating the mesh, landscape and instancer pacakges
+            FHoudiniPackageParams PackageParams;
+            PackageParams.PackageMode = EPackageMode::Bake;
+            PackageParams.TempCookFolder = FHoudiniEngineRuntime::Get().GetDefaultTemporaryCookFolder();
+            PackageParams.HoudiniAssetName = FString();
+            PackageParams.BakeFolder = InPackageFolder;//FPackageName::GetLongPackagePath(InParent->GetOutermost()->GetName());
+            PackageParams.ObjectName = InPackageName;// FPaths::GetBaseFilename(InParent->GetName());
+
+            if (NodeSyncOptions.bReplaceExisting)
+            {
+                PackageParams.ReplaceMode = EPackageReplaceMode::ReplaceExistingAssets;
+            }
+            else
+            {
+                PackageParams.ReplaceMode = EPackageReplaceMode::CreateNewAssets;
+            }
+
+            // 5. Create the static meshes in the outputs
+            const FHoudiniStaticMeshGenerationProperties& StaticMeshGenerationProperties = FHoudiniEngineRuntimeUtils::GetDefaultStaticMeshGenerationProperties();
+            const FMeshBuildSettings& MeshBuildSettings = FHoudiniEngineRuntimeUtils::GetDefaultMeshBuildSettings();
+            if (!HoudiniGeoImporter->CreateStaticMeshes(NewOutputs, PackageParams, StaticMeshGenerationProperties, MeshBuildSettings))
+                return FailImportAndReturn();
+
+            // 6. Create the curves in the outputs
+            if (!HoudiniGeoImporter->CreateCurves(NewOutputs, PackageParams))
+                return FailImportAndReturn();
+
+            // 7. Create the landscapes in the outputs
+            if (!HoudiniGeoImporter->CreateLandscapes(NewOutputs, PackageParams))
+                return FailImportAndReturn();
+
+            // 8. Create the instancers in the outputs
+            if (!HoudiniGeoImporter->CreateInstancers(NewOutputs, PackageParams))
+                return FailImportAndReturn();
+
+            // Get our result object and "finalize" them
+            AZStd::vector<UObject*> Results = HoudiniGeoImporter->GetOutputObjects();
+            for (UObject* Object : Results)
+            {
+                if (!IsValid(Object))
+                    continue;
+
+                //GEditor->GetEditorSubsystem<UImportSubsystem>()->BroadcastAssetPostImport(this, Object);
+                Object->MarkPackageDirty();
+                Object->PostEditChange();
+            }
+
+            CleanUp();
+
+            // Sync the content browser to the newly created assets
+            if (GEditor)
+                GEditor->SyncBrowserToObjects(Results);
+
+            bSuccess = Results.Num() > 0;
+        }
+        else
+        {
+            // Spawn a new HoudiniActor with a HoudiniNodeSyncComponent
+            AActor* CreatedActor = nullptr;
+
+            // Clean up lambda
+            auto CleanUp = [&CreatedActor]()
+            {
+                if (IsValid(CreatedActor))
+                {
+                    CreatedActor->Destroy();
+                }
+            };
+
+            // Failure lambda
+            auto FailImportAndReturn = [this, &CleanUp, &CreatedActor]()
+            {
+                CleanUp();
+
+                this->LastFetchStatus = EHoudiniNodeSyncStatus::Failed;
+                this->FetchStatusMessage = "Failed";
+                this->FetchStatusDetails = "Houdini Node Sync - Fetch Failed.";
+
+                // TODO: Improve me!
+                FString Notification = TEXT("Houdini Node Sync - Fetch failed!");
+                FHoudiniEngineUtils::CreateSlateNotification(Notification);
+
+                return;
+            };
+
+            // Create a new HoudiniAssetActor
+            // Get the asset Factory
+            UActorFactory* Factory = GEditor->FindActorFactoryForActorClass(AHoudiniAssetActor::StaticClass());
+            if (!Factory)
+                return FailImportAndReturn();
+
+            // Spawn in the current world/level
+            ULevel* LevelToSpawnIn = GEditor->GetEditorWorldContext().World()->GetCurrentLevel();
+            CreatedActor = Factory->CreateActor(nullptr, LevelToSpawnIn, FHoudiniEngineEditorUtils::GetDefaulAssetSpawnTransform());
+            if (!CreatedActor)
+                return FailImportAndReturn();
+
+            // Ensure spawn was successful
+            AHoudiniAssetActor* HACActor = Cast<AHoudiniAssetActor>(CreatedActor);
+            if (!IsValid(HACActor))
+                return FailImportAndReturn();
+
+            UHoudiniAssetComponent* HAC = Cast<UHoudiniAssetComponent>(HACActor->GetRootComponent());
+            if (!IsValid(HAC))
+                return FailImportAndReturn();
+
+            // Remove the H logo here
+            FHoudiniEngineUtils::RemoveHoudiniLogoFromComponent(HAC);
+
+            // This will convert the HoudiniAssetActor to a NodeSync one
+            HACActor->SetNodeSyncActor(true);
+
+            // Check that we have a valid NodeSync component
+            UHoudiniNodeSyncComponent* HNSC = Cast<UHoudiniNodeSyncComponent>(HACActor->GetHoudiniAssetComponent());
+            if(!IsValid(HNSC))
+                return FailImportAndReturn();
+
+            // Add the Houdini logo back to the NodeSync component
+            FHoudiniEngineUtils::AddHoudiniLogoToComponent(HNSC);
+
+            // Set the Node Sync options
+            // Fetch node path
+            HNSC->SetFetchNodePath(FetchNodePath);
+            HNSC->SetHoudiniAssetState(EHoudiniAssetState::NewHDA);
+
+            // Disable proxies
+            HNSC->bOverrideGlobalProxyStaticMeshSettings = true;
+            HNSC->bEnableProxyStaticMeshOverride = false;
+            //HNSC->StaticMeshMethod = EHoudiniStaticMeshMethod::FMeshDescription;
+
+            // AutoBake?
+            HNSC->SetBakeAfterNextCook(NodeSyncOptions.bAutoBake ? EHoudiniBakeAfterNextCook::Always : EHoudiniBakeAfterNextCook::Disabled);
+            HNSC->bRemoveOutputAfterBake = true;
+
+            // Other ptions
+            HNSC->bUseOutputNodes = NodeSyncOptions.bUseOutputNodes;
+            HNSC->bReplacePreviousBake = NodeSyncOptions.bReplaceExisting;
+            HNSC->BakeFolder.Path = NodeSyncOptions.UnrealAssetFolder;
+            HACActor->SetActorLabel(NodeSyncOptions.UnrealActorName);
+
+            // Get the NodeId of the node we want to fetch
+            HAPI_NodeId FetchNodeId;
+            bSuccess = (HAPI_RESULT_SUCCESS == FHoudiniApi::GetNodeFromPath(FHoudiniEngine::Get().GetSession(), -1, TCHAR_TO_ANSI(*HNSC->GetFetchNodePath()), &FetchNodeId));
+
+            // Get its transform
+            FTransform FetchTransform;
+            if (FHoudiniEngineUtils::HapiGetAssetTransform(FetchNodeId, FetchTransform))
+            {
+                // Assign the transform to the actor
+                HACActor->SetActorTransform(FetchTransform);
+            }
+
+            // Select the Actor we just created
+            if (GEditor->CanSelectActor(CreatedActor, true, true))
+            {
+                GEditor->SelectNone(true, true, false);
+                GEditor->SelectActor(CreatedActor, true, true, true);
+            }
+
+            // Update the status message to fetching
+            this->LastFetchStatus = EHoudiniNodeSyncStatus::Running;
+            this->FetchStatusMessage = "Fetching";
+            this->FetchStatusDetails = "Houdini Node Sync - Fetching data from Houdini Node \"" + FetchNodePath + "\".";
+
+            bSuccess = true;
+        }
+
+        if (bSuccess)
+        {
+            // TODO: Improve me!
+            Notification = TEXT("Houdini Node Sync success!");
+            FHoudiniEngineUtils::CreateSlateNotification(Notification);
+
+            LastFetchStatus = EHoudiniNodeSyncStatus::Success;
+            FetchStatusMessage = "Fetch Success";
+            FetchStatusDetails = "Houdini Node Sync - Succesfully fetched data from Houdini";
+        }
+        else
+        {
+            // TODO: Improve me!
+            Notification = TEXT("Houdini Node Sync failed!");
+            FHoudiniEngineUtils::CreateSlateNotification(Notification);
+
+            LastFetchStatus = EHoudiniNodeSyncStatus::Failed;
+            FetchStatusMessage = "Fetch Failed";
+            FetchStatusDetails = "Houdini Node Sync - Failed fetching data from Houdini";
+        }
+        */
+    }
+
+    bool Houdini::GatherAllFetchNodeIds(HAPI_NodeId fetchNodeId, const bool useOutputNodes, AZStd::vector<HAPI_NodeId>& outputNodes)
+    {
+
+        HAPI_NodeInfo fetchNodeInfo;
+        HAPI_NodeInfo_Init(&fetchNodeInfo);
+        HAPI_Result result = HAPI_GetNodeInfo(&m_session, fetchNodeId, &fetchNodeInfo);
+        if (result != HAPI_RESULT_SUCCESS)
+        {
+            AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+            return false;
+        }
+
+        // Only fetch SOP or OBJ types
+        if (fetchNodeInfo.type != HAPI_NODETYPE_SOP && fetchNodeInfo.type != HAPI_NODETYPE_OBJ)
+        {
+            AZ_Error("Houdini", false, "Houdini Node Sync: Invalid fetch node type - only SOP or OBJ nodes can be fetched");
+            return false;
+        }
+
+        // If the node is a SOP instead of an OBJ/container node, then we won't need to run child queries on this node. They will fail.
+        const bool bAssetHasChildren = !(fetchNodeInfo.type == HAPI_NODETYPE_SOP && fetchNodeInfo.childNodeCount == 0);
+
+        // For non-container/subnet SOP nodes, no need to look further, just use the current SOP node
+        if (!bAssetHasChildren)
+        {
+            outputNodes.push_back(fetchNodeId);
+            return true;
+        }
+
+        // Retrieve information about each object contained within our asset.
+        AZStd::vector<HAPI_ObjectInfo> objectInfos;
+        AZStd::vector<HAPI_Transform> objectTransforms;
+        if (!HoudiniEngineUtils::HapiGetObjectInfos(&m_session, fetchNodeId, objectInfos, objectTransforms))
+        {
+            AZ_Error("Houdini", false, "Houdini Node Sync: Unable to get object infos for the node");
+            return false;
+        }
+
+        bool bUseOutputFromSubnets = false;
+        if (bAssetHasChildren && !HoudiniEngineUtils::ContainsSOPNodes(&m_session, fetchNodeId))
+        {
+            // Assume we're using a subnet-based HDA
+            bUseOutputFromSubnets = true;
+        }
+
+        // Before we can perform visibility checks on the Object nodes, we have
+        // to build a set of all the Object node ids. The 'AllObjectIds' act
+        // as a visibility filter. If an Object node is not present in this
+        // list, the content of that node will not be displayed (display / output / templated nodes).
+        // NOTE that if the HDA contains immediate SOP nodes we will ignore
+        // all subnets and only use the data outputs directly from the HDA.
+        AZStd::unordered_set<HAPI_NodeId> allObjectIds;
+        if (bUseOutputFromSubnets)
+        {
+            int numObjSubnets;
+            AZStd::vector<HAPI_NodeId> objectIds;
+
+
+            result = HAPI_ComposeChildNodeList(&m_session, fetchNodeId, HAPI_NODETYPE_OBJ, HAPI_NODEFLAGS_OBJ_SUBNET, true, &numObjSubnets);
+            if (result != HAPI_RESULT_SUCCESS)
+            {
+                AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                return false;
+            }
+
+            objectIds.reserve(numObjSubnets);
+            result = HAPI_GetComposedChildNodeList(&m_session, fetchNodeId, objectIds.data(), numObjSubnets);
+            if (result != HAPI_RESULT_SUCCESS)
+            {
+                AZ_Error("Houdini", false, HoudiniEngineUtils::GetHoudiniResultByCode(result).c_str());
+                return false;
+            }
+
+            allObjectIds.insert_range(objectIds);
+        }
+        else
+        {
+            allObjectIds.insert(fetchNodeId);
+        }
+
+        // Iterate through all objects to determine visibility and gather output nodes that needs to be cooked.
+        const bool bIsSopAsset = fetchNodeInfo.type == HAPI_NODETYPE_SOP;
+        for (int32 i = 0; i < objectInfos.size(); i++)
+        {
+            // Retrieve the object info
+            const HAPI_ObjectInfo& currentHapiObjectInfo = objectInfos[i];
+
+            // Determine whether this object node is fully visible.
+            bool objectIsVisible = false;
+            HAPI_NodeId gatherOutputsNodeId = -1; // Outputs will be gathered from this node.
+            if (!bAssetHasChildren)
+            {
+                // If the asset doesn't have children, we have to gather outputs from the asset's parent in order to output
+                // this asset node
+                objectIsVisible = true;
+                gatherOutputsNodeId = fetchNodeInfo.parentId;
+            }
+            else if (bIsSopAsset)
+            {
+                // When dealing with a SOP asset, be sure to gather outputs from the SOP node, not the
+                // outer object node.
+                objectIsVisible = true;
+                gatherOutputsNodeId = fetchNodeId;
+            }
+            else
+            {
+                objectIsVisible = HoudiniEngineUtils::IsOBJNodeFullyVisible(&m_session, allObjectIds, fetchNodeId, currentHapiObjectInfo.nodeId);
+                gatherOutputsNodeId = currentHapiObjectInfo.nodeId;
+            }
+
+            // Build an array of the geos we'll need to process
+            // In most case, it will only be the display geo
+            AZStd::vector<HAPI_GeoInfo> geoInfos;
+
+            // These node ids may need to be cooked in order to extract part counts.
+            AZStd::unordered_set<HAPI_NodeId> currentOutGeoNodeIds;
+            if (objectIsVisible)
+            {
+                // NOTE: The HAPI_GetDisplayGeoInfo will not always return the expected Geometry subnet's
+                //     Display flag geometry. If the Geometry subnet contains an Object subnet somewhere, the
+                //     GetDisplayGeoInfo will sometimes fetch the display SOP from within the subnet which is
+                //     not what we want.
+
+                // Resolve and gather outputs (display / output / template nodes) from the GatherOutputsNodeId.
+                HoudiniEngineUtils::GatherImmediateOutputGeoInfos(&m_session, gatherOutputsNodeId, useOutputNodes, false, geoInfos, currentOutGeoNodeIds);
+
+            }
+
+            // Add them to our global output node list
+            for (const HAPI_NodeId& nodeId : currentOutGeoNodeIds)
+            {
+                if (AZStd::find(currentOutGeoNodeIds.begin(), currentOutGeoNodeIds.end(), nodeId) == currentOutGeoNodeIds.end())
+                {
+                    outputNodes.push_back(nodeId);
+                }
+            }
+        }
+
+        return true;
+    }
+
 
     HoudiniAssetPtr Houdini::LoadHoudiniDigitalAsset(const AZStd::string& hdaName)
     {

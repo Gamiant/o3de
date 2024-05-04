@@ -64,6 +64,24 @@ namespace HoudiniEngine
     constexpr AZStd::string_view UseLegacyInputCurves = "/Houdini/Settings/NodeSync/UseLegacyInputCurves";
     constexpr AZStd::string_view SplineResolution = "/Houdini/Settings/NodeSync/SplineResolution";
     constexpr AZStd::string_view SendNodePath = "/Houdini/Settings/NodeSync/SendNodePath";
+    constexpr AZStd::string_view FetchAssetPath = "/Houdini/Settings/NodeSync/FetchAssetPath";
+    constexpr AZStd::string_view DefaultAssetName = "/Houdini/Settings/NodeSync/DefaultAssetName";
+    constexpr AZStd::string_view UseOutputNodes = "/Houdini/Settings/NodeSync/UseOutputNodes";
+    constexpr AZStd::string_view FetchToWorld = "/Houdini/Settings/NodeSync/FetchToWorld";
+
+    // Cook Options
+    constexpr AZStd::string_view CurveRefineLOD = "/Houdini/Settings/Cook/CurveRefineLOD";
+    constexpr AZStd::string_view ClearErrorsAndWarnings = "/Houdini/Settings/Cook/ClearErrorsAndWarnings";
+    constexpr AZStd::string_view MaxVerticesPerPrimitive = "/Houdini/Settings/Cook/MaxVerticesPerPrimitive";
+    constexpr AZStd::string_view SplitGeosByGroup = "/Houdini/Settings/Cook/SplitGeosByGroup";
+    constexpr AZStd::string_view SplitGeosByAttribute = "/Houdini/Settings/Cook/SplitGeosByAttribute";
+    constexpr AZStd::string_view SplitAttrSH = "/Houdini/Settings/Cook/SplitAttrSH";
+    constexpr AZStd::string_view RefineCurveToLinear = "/Houdini/Settings/Cook/RefineCurveToLinear";
+    constexpr AZStd::string_view HandleBoxPartTypes = "/Houdini/Settings/Cook/HandleBoxPartTypes";
+    constexpr AZStd::string_view HandleSpherePartTypes = "/Houdini/Settings/Cook/HandleSpherePartTypes";
+    constexpr AZStd::string_view SplitPointsByVertexAttributes = "/Houdini/Settings/Cook/SplitPointsByVertexAttributes";
+    constexpr AZStd::string_view PackedPrimInstancingMode = "/Houdini/Settings/Cook/PackedPrimInstancingMode";
+    constexpr AZStd::string_view CookTemplatedGeos = "/Houdini/Settings/Cook/CookTemplatedGeos";
 
     class SessionSettings
     {
@@ -156,8 +174,23 @@ namespace HoudiniEngine
         void SetSendNodePath(const AZStd::string& path);
         AZStd::string GetSendNodePath() const;
 
+        void SetFetchPath(const AZStd::string& path);
+        AZStd::string GetFetchPath() const;
+
+        void SetDefaultAssetName(const AZStd::string& path);
+        AZStd::string GetDefaultAssetName() const;
+
+        void SetUseOutputNodes(bool useOutputNodes);
+        bool GetUseOutputNodes() const;
+
+        void SetFetchToWorld(bool fetchToWorld);
+        bool GetFetchToWorld() const;
+
         void SetUpdatePeriod(float updatePeriod);
         float GetUpdatePeriod() const;
+
+        const HAPI_CookOptions GetDefaultCookOptions();
+
 
     };
 

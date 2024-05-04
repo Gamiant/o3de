@@ -101,7 +101,7 @@ namespace HoudiniEngine
         AZStd::shared_ptr<AZ::Data::AssetDataStream>,
         const AZ::Data::AssetFilterCB&)
     {
-        HoudiniPtr houdini;
+        HoudiniPtr houdini = nullptr;
         HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
 
         if (houdini && houdini->IsActive())
@@ -151,8 +151,6 @@ namespace HoudiniEngine
         }
         else
         {
-            // Need to figure out how to do this, I may need to register assets like this
-            // so that they're loaded when a Houdini session is established
             return AssetHandler::LoadResult::MoreDataRequired;
         }
 

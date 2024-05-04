@@ -105,5 +105,14 @@ namespace HoudiniEngine
         static void ConvertO3DEViewport(const AZ::Transform& o3deTransform, HAPI_Viewport& viewport);
 
         static AZStd::string GetHoudiniResultByCode(int code);
+
+        static bool HapiGetObjectInfos(HAPI_Session* session, const HAPI_NodeId& InNodeId, AZStd::vector<HAPI_ObjectInfo>& objectInfos, AZStd::vector<HAPI_Transform>& objectTransforms);
+
+        static bool ContainsSOPNodes(HAPI_Session* session, const HAPI_NodeId& NodeId);
+
+        static bool IsOBJNodeFullyVisible(HAPI_Session* session, const AZStd::unordered_set<HAPI_NodeId>& allObjectIds, const HAPI_NodeId& rootNodeId, const HAPI_NodeId& childNodeId);
+
+        static bool GatherImmediateOutputGeoInfos(HAPI_Session* session, const HAPI_NodeId& nodeId, const bool useOutputNodes, const bool gatherTemplateNodes, AZStd::vector<HAPI_GeoInfo>& geoInfos, AZStd::unordered_set<HAPI_NodeId>& forceNodesCook);
+        static bool CookNode(HAPI_Session* session, const HAPI_NodeId& InNodeId, HAPI_CookOptions* InCookOptions, const bool& bWaitForCompletion);
     };
 }

@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -38,10 +38,10 @@
     <widget class="QWidget" name="verticalLayoutWidget">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>10</x>
        <y>10</y>
-       <width>361</width>
-       <height>101</height>
+       <width>341</width>
+       <height>91</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
@@ -55,7 +55,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPlainTextEdit" name="plainTextEdit_3"/>
+         <widget class="QPlainTextEdit" name="pteAssetImportFolder"/>
         </item>
        </layout>
       </item>
@@ -69,7 +69,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPlainTextEdit" name="plainTextEdit"/>
+         <widget class="QPlainTextEdit" name="pteHoudiniPath"/>
         </item>
        </layout>
       </item>
@@ -83,17 +83,30 @@
          </widget>
         </item>
         <item>
-         <widget class="QPlainTextEdit" name="plainTextEdit_2"/>
+         <widget class="QPlainTextEdit" name="pteAssetName"/>
         </item>
        </layout>
       </item>
      </layout>
     </widget>
-    <widget class="QCheckBox" name="checkBox">
+    <widget class="QCheckBox" name="cbReplaceExisting">
      <property name="geometry">
       <rect>
-       <x>0</x>
-       <y>120</y>
+       <x>10</x>
+       <y>160</y>
+       <width>191</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Replace Existing Entities</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="cbUseOutputNodes">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>140</y>
        <width>131</width>
        <height>17</height>
       </rect>
@@ -101,18 +114,8 @@
      <property name="text">
       <string>Use Output Nodes</string>
      </property>
-    </widget>
-    <widget class="QCheckBox" name="checkBox_2">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>140</y>
-       <width>121</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Replace Existing</string>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
    </widget>
@@ -123,10 +126,10 @@
     <widget class="QWidget" name="horizontalLayoutWidget_4">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>8</x>
        <y>20</y>
-       <width>359</width>
-       <height>31</height>
+       <width>331</width>
+       <height>21</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -138,15 +141,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QPlainTextEdit" name="plainTextEdit_4">
-        <property name="placeholderText">
-         <string>/obj/O3DE</string>
-        </property>
-       </widget>
+       <widget class="QPlainTextEdit" name="pteSendPath"/>
       </item>
      </layout>
     </widget>
-    <widget class="QCheckBox" name="checkBox_3">
+    <widget class="QCheckBox" name="cbKeepWorldTransform">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -159,7 +158,7 @@
       <string>Keep World Transform</string>
      </property>
     </widget>
-    <widget class="QCheckBox" name="checkBox_4">
+    <widget class="QCheckBox" name="cbPackGeometryBeforeMerge">
      <property name="geometry">
       <rect>
        <x>10</x>

@@ -70,6 +70,8 @@ set(FILES
     Source/HoudiniEngineUtils.cpp
     Source/HoudiniNode.h
     Source/HoudiniNode.cpp
+    Source/HoudiniOutput.h
+    Source/HoudiniOutput.cpp
     Source/HoudiniParameter.h
     Source/HoudiniParameter.cpp
     Source/HoudiniPropertyGroup.h

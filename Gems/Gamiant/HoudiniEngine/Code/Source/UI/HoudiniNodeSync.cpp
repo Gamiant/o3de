@@ -28,6 +28,16 @@ namespace HoudiniEngine
         SessionRequestBus::BroadcastResult(status, &SessionRequests::GetSessionStatus);
         OnSessionStatusChange(status);
 
+        SessionSettings* settings = nullptr;
+        SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
+        AZ_Assert(settings, "Settings cannot be null");
+
+        m_ui->pteSendPath->setPlainText(settings->GetSendNodePath().c_str());
+        m_ui->pteAssetImportFolder->setPlainText(settings->GetFetchPath().c_str());
+        m_ui->pteHoudiniPath->setPlainText(settings->GetSendNodePath().c_str());
+        m_ui->pteAssetName->setPlainText    (settings->GetDefaultAssetName().c_str());
+
+
         SessionNotificationBus::Handler::BusConnect();
     }
     

@@ -219,6 +219,10 @@ namespace HoudiniEngine
 
             bool InitializeHAPISession();
             void ConfigureSession();
+
+        private:
+
+            bool GatherAllFetchNodeIds(HAPI_NodeId inFetchNodeId, const bool useOutputNodes, AZStd::vector<HAPI_NodeId>& outputNodes);
     };
 
 

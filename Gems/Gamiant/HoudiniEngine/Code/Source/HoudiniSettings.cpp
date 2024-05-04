@@ -311,6 +311,58 @@ namespace HoudiniEngine
         return AzToolsFramework::GetRegistry<AZStd::string>(SendNodePath, "/obj/O3DEContent");
     }
 
+    void SessionSettings::SetFetchPath(const AZStd::string& path)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(SendNodePath, path);
+        }
+    }
+
+    AZStd::string SessionSettings::GetFetchPath() const
+    {
+        return AzToolsFramework::GetRegistry<AZStd::string>(SendNodePath, "/Assets/obj");
+    }
+
+    void SessionSettings::SetDefaultAssetName(const AZStd::string& path)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(DefaultAssetName, path);
+        }
+    }
+
+    AZStd::string SessionSettings::GetDefaultAssetName() const
+    {
+        return AzToolsFramework::GetRegistry<AZStd::string>(SendNodePath, "MyAsset");
+    }
+
+    void SessionSettings::SetUseOutputNodes(bool useOutputNodes)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(UseOutputNodes, useOutputNodes);
+        }
+    }
+
+    bool SessionSettings::GetUseOutputNodes() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(UseOutputNodes, true);
+    }
+
+    void SessionSettings::SetFetchToWorld(bool fetchToWorld)
+    {
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Set(FetchToWorld, fetchToWorld);
+        }
+    }
+
+    bool SessionSettings::GetFetchToWorld() const
+    {
+        return AzToolsFramework::GetRegistry<bool>(FetchToWorld, false);
+    }
+
     void SessionSettings::SetUpdatePeriod(float updatePeriod)
     {
         if (auto* registry = AZ::SettingsRegistry::Get())
@@ -324,4 +376,25 @@ namespace HoudiniEngine
         return AzToolsFramework::GetRegistry<double>(UpdatePeriod, 0.5);
     }
 
+    const HAPI_CookOptions SessionSettings::GetDefaultCookOptions()
+    {
+        // Default CookOptions
+        HAPI_CookOptions cookOptions;
+        HAPI_CookOptions_Init(&cookOptions);
+
+        cookOptions.curveRefineLOD = aznumeric_cast<float>(AzToolsFramework::GetRegistry<double>(CurveRefineLOD, 8.f));
+        cookOptions.clearErrorsAndWarnings = AzToolsFramework::GetRegistry<bool>(ClearErrorsAndWarnings, false);
+        cookOptions.maxVerticesPerPrimitive = AzToolsFramework::GetRegistry<AZ::u64>(MaxVerticesPerPrimitive, 3);
+        cookOptions.splitGeosByGroup = AzToolsFramework::GetRegistry<bool>(SplitGeosByGroup, false);
+        cookOptions.splitGeosByAttribute = AzToolsFramework::GetRegistry<bool>(SplitGeosByAttribute, false);
+        cookOptions.splitAttrSH = AzToolsFramework::GetRegistry<AZ::u64>(SplitAttrSH, 0);
+        cookOptions.refineCurveToLinear = AzToolsFramework::GetRegistry<bool>(RefineCurveToLinear, true);
+        cookOptions.handleBoxPartTypes = AzToolsFramework::GetRegistry<bool>(HandleBoxPartTypes, false);
+        cookOptions.handleSpherePartTypes = AzToolsFramework::GetRegistry<bool>(HandleSpherePartTypes, false);
+        cookOptions.splitPointsByVertexAttributes = AzToolsFramework::GetRegistry<bool>(SplitPointsByVertexAttributes, false);
+        cookOptions.packedPrimInstancingMode = static_cast<HAPI_PackedPrimInstancingMode>(AzToolsFramework::GetRegistry<AZ::u64>(PackedPrimInstancingMode, HAPI_PACKEDPRIM_INSTANCING_MODE_FLAT));
+        cookOptions.cookTemplatedGeos = AzToolsFramework::GetRegistry<bool>(CookTemplatedGeos, false);
+
+        return cookOptions;
+    }
 }
