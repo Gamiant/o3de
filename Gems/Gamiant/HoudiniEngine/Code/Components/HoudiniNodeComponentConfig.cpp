@@ -55,9 +55,13 @@ namespace HoudiniEngine
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)
 
-                    /*->DataElement(AZ::Edit::UIHandlers::MultiLineEdit, &HoudiniNodeComponentConfig::m_helpTextField, "Help Text", "Useful information")
-                    ->Attribute(AZ_CRC("PlaceholderText", 0xa23ec278), &HoudiniNodeComponentConfig::GetHelpText)
-                    ->Attribute(AZ::Edit::Attributes::ReadOnly, true)*/
+                    ->UIElement(AZ::Edit::UIHandlers::Label, "Status")
+                        ->Attribute(AZ::Edit::Attributes::ReadOnly, true)
+                        ->Attribute(AZ::Edit::Attributes::ContainerCanBeModified, false)
+                        ->Attribute(AZ::Edit::Attributes::ReadOnly, true)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::HideChildren)
+                        ->Attribute(AZ::Edit::Attributes::NameLabelOverride, "")
+                        ->Attribute(AZ::Edit::Attributes::ValueText, &HoudiniNodeComponentConfig::UpdateHoudiniStatus)
 
                     ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniNodeComponentConfig::m_nodeName, "Node Name", "This must be unique per file.  The cache files will be generated with this name.")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniNodeComponentConfig::OnNodeNameChanged)
@@ -1011,6 +1015,29 @@ namespace HoudiniEngine
         {
             m_node->SetObjectTransform(transform);
         }
+    }
+
+    AZStd::string HoudiniNodeComponentConfig::UpdateHoudiniStatus()
+    {
+        SessionRequests::ESessionStatus status = SessionRequests::ESessionStatus::Offline;
+        SessionRequestBus::BroadcastResult(status, &SessionRequests::GetSessionStatus);
+
+        AZStd::string label;
+        switch (status)
+        {
+        case SessionRequests::ESessionStatus::Ready:
+            label = "<div style='color:lime; text-align: center;'><h3>Houdini is ready!</h3></div>";
+            break;
+        case SessionRequests::ESessionStatus::Connecting:
+            label = "<div style='color:gold; text-align: center;'><h3>Houdini is connecting...</h3></div>";
+            break;
+        case SessionRequests::ESessionStatus::Offline:
+        default:
+            label = "<div style='color:maroon; text-align: center;'><h3>Houdini is not connected</h3></div>";
+            break;
+        }
+
+        return label;
     }
 
     void HoudiniNodeComponentConfig::BackupInputTypeProperties()

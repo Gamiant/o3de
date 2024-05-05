@@ -95,6 +95,8 @@ set(FILES
 # Translators
     Source/Translators/HoudiniMaterialTranslator.h
     Source/Translators/HoudiniMaterialTranslator.cpp
+    Source/Translators/HoudiniOutputTranslator.h
+    Source/Translators/HoudiniOutputTranslator.cpp
     Source/Translators/HoudiniSplineTranslator.h
     Source/Translators/HoudiniSplineTranslator.cpp
 

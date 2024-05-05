@@ -21,7 +21,9 @@ namespace HoudiniEngine
     class HoudiniNodeComponentConfig
         : public AZ::ComponentConfig
         , public IHoudiniNodeComponentConfig
+        
     {
+    
     public:
         AZ_CLASS_ALLOCATOR(HoudiniNodeComponentConfig, AZ::SystemAllocator);
         AZ_RTTI(HoudiniNodeComponentConfig, HOUDINI_CONFIG_GUID, AZ::ComponentConfig);
@@ -69,6 +71,8 @@ namespace HoudiniEngine
 
         void UpdateWorldTransformData(const AZ::Transform& transform);
 
+        AZStd::string UpdateHoudiniStatus();
+
         IHoudiniNode* GetNode() override { return m_node.get(); }
         virtual const AZStd::string& GetNodeName() { return m_nodeName; }
         virtual const AZStd::string& GetOperatorName() { return m_operatorName; }
@@ -93,13 +97,12 @@ namespace HoudiniEngine
  
         AZ::EntityId CreateSplineEntity(const AZStd::string& name, AZ::EntityId parent);
 
-        //Presets:
+        // Presets:
         AZStd::unordered_map<AZStd::string, AZ::EntityId> m_defaultEntities;
 
-        //BUTTONS:
+        // Buttons
 
         AZ::Crc32 OnSelectOperator();
-
         AZ::Crc32 OnNodeNameChanged();
 
         bool m_viewButton = false;

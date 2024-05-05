@@ -71,15 +71,17 @@ namespace HoudiniEngine
                     ->Attribute(AZ::Edit::Attributes::ViewportIcon, "Editor/Icons/Houdini.png")
                     ->Attribute(AZ::Edit::Attributes::RuntimeExportCallback, &HoudiniAssetComponent::ExportMeshComponent)
 
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniAssetComponent::m_nodeExporter, "Material Settings", "")
-                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues"))
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "")
+                        ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniAssetComponent::m_config, "Houdini", "")
+                            ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues"))
 
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniAssetComponent::m_config, "Houdini", "")
-                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues"))
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Material Settings")
+                        ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniAssetComponent::m_nodeExporter, "Material Settings", "")
+                            ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ_CRC_CE("RefreshAttributesAndValues"))
 
-                    ->DataElement(0, &HoudiniAssetComponent::m_fbxConfig, "Bake Settings", "")
-                    //->Attribute(AZ::Edit::Attributes::ChangeNotify, &EditorDebugDrawLineComponent::OnPropertyUpdate)
-                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Bake Settings")
+                        ->DataElement(0, &HoudiniAssetComponent::m_fbxConfig, "Bake Settings", "")
+                            ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ;
             }
         }
@@ -176,6 +178,18 @@ namespace HoudiniEngine
         AZ::Data::AssetBus::MultiHandler::BusDisconnect(asset->GetId());
     }
 
+    void HoudiniAssetComponent::OnSessionStatusChange(SessionRequests::ESessionStatus)
+    {
+        m_config.UpdateHoudiniStatus();
+
+        AZ::TickBus::QueueFunction([]()
+        {
+            AzToolsFramework::ToolsApplicationEvents::Bus::Broadcast(
+                &AzToolsFramework::ToolsApplicationEvents::Bus::Events::InvalidatePropertyDisplay, AzToolsFramework::PropertyModificationRefreshLevel::Refresh_AttributesAndValues);
+        });
+
+    }
+
 
     void HoudiniAssetComponent::Activate()
     {
@@ -183,6 +197,7 @@ namespace HoudiniEngine
 
         const AZ::EntityId& entityId = GetEntityId();
 
+        SessionNotificationBus::Handler::BusConnect();
         HoudiniAssetRequestBus::Handler::BusConnect(entityId);
         //HoudiniMeshRequestBus::Handler::BusConnect(entityId);
         HoudiniMaterialRequestBus::Handler::BusConnect(entityId);
@@ -225,6 +240,7 @@ namespace HoudiniEngine
         
         //HoudiniMeshRequestBus::Handler::BusDisconnect();
 
+        SessionNotificationBus::Handler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
         AZ::TransformNotificationBus::Handler::BusDisconnect(GetEntityId());
         AzFramework::EntityDebugDisplayEventBus::Handler::BusDisconnect();

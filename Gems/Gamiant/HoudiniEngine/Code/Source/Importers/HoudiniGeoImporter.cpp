@@ -136,34 +136,37 @@ namespace HoudiniEngine
         return false;
     }
 
-    bool HoudiniGeoImporter::BuildAllOutputsForNode(const HAPI_NodeId& InNodeId, AZ::EntityId outer, AZStd::vector<HoudiniOutput*>& InOldOutputs, AZStd::vector<HoudiniOutput*>& OutNewOutputs, bool bInAddOutputsToRootSet, bool bInUseOutputNodes)
+    bool HoudiniGeoImporter::BuildAllOutputsForNode(const HAPI_NodeId& nodeId, AZ::EntityId /*outer*/, AZStd::vector<HoudiniOutput*>& /*oldOutputs*/, AZStd::vector<HoudiniOutput*>& /*newOutputs*/, bool addOutputsToRootSet, bool useOutputNodes)
     {
-        AZ_UNUSED(InNodeId);
-        AZ_UNUSED(outer);
-        AZ_UNUSED(InOldOutputs);
-        AZ_UNUSED(OutNewOutputs);
-        AZ_UNUSED(bInAddOutputsToRootSet);
-        AZ_UNUSED(bInUseOutputNodes);
-        //bool bOutputTemplateGeos = false;
+        bool outputTemplateGeos = false;
 
-        //// Gather output nodes for the HAC
-        //AZStd::vector<int> OutputNodes;
-        //HoudiniEngineUtils::GatherAllAssetOutputs(InNodeId, bInUseOutputNodes, bOutputTemplateGeos, OutputNodes);
+        HAPI_Session* session = nullptr;
+        SessionRequestBus::BroadcastResult(session, &SessionRequests::GetSessionPtr);
+        if (!session)
+        {
+            AZ_Error("Houdini", false, "No active Houdini session");
+            return false;
+        }
 
-        //AZStd::unordered_map<HAPI_NodeId, int> OutputNodeCookCount;
-        //if (!FHoudiniOutputTranslator::BuildAllOutputs(InNodeId, InOuter, OutputNodes, OutputNodeCookCount, InOldOutputs, OutNewOutputs, bOutputTemplateGeos, bInUseOutputNodes))
+        // Gather output nodes for the HAC
+        AZStd::vector<int> outputNodes;
+        HoudiniEngineUtils::GatherAllAssetOutputs(session, nodeId, useOutputNodes, outputTemplateGeos, outputNodes);
+
+        AZStd::unordered_map<HAPI_NodeId, int> outputNodeCookCount;
+        // TODO-GMT: implement HoudiniOutputTranslator
+        //if (!HoudiniOutputTranslator::BuildAllOutputs(nodeId, outer, outputNodes, outputNodeCookCount, InOldOutputs, OutNewOutputs, outputTemplateGeos, useOutputNodes))
         //{
-        //    // Couldn't create the package
-        //    HOUDINI_LOG_ERROR(TEXT("Houdini GEO Importer: Failed to process the File SOP's outputs!"));
+            // Couldn't create the package
+        //    AZ_Error("Houdini", false, "Houdini GEO Importer: Failed to process the File SOP's outputs!");
         //    return false;
         //}
 
-        //if (bInAddOutputsToRootSet)
-        //{
-        //    // Add the output objects to the RootSet to prevent them from being GCed
-        //    for (auto& Out : OutNewOutputs)
-        //        Out->AddToRoot();
-        //}
+        if (addOutputsToRootSet)
+        {
+            // Add the output objects to the RootSet to prevent them from being GCed
+            //for (auto& Out : OutNewOutputs)
+            //    Out->AddToRoot();
+        }
 
         return true;
     }

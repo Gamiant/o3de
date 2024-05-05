@@ -10,6 +10,8 @@
 
 #include <HoudiniEngine/HoudiniEngineBus.h>
 #include <HoudiniEngine/HoudiniCommonForwards.h>
+#include <HoudiniSettings.h>
+
 #include <Components/HoudiniNodeComponentConfig.h>
 #include <Components/HoudiniFbxConfig.h>
 #include <Components/HoudiniNodeExporter.h>
@@ -38,6 +40,7 @@ namespace HoudiniEngine
         , public AzToolsFramework::EditorVisibilityNotificationBus::Handler
         , public LmbrCentral::SplineComponentNotificationBus::Handler
         , AZ::Data::AssetBus::MultiHandler
+        , SessionNotificationBus::Handler
     {
     public:
         AZ_EDITOR_COMPONENT(HoudiniAssetComponent, HOUDINI_ASSET_COMPONENT_GUID, AzToolsFramework::Components::EditorComponentBase)
@@ -66,6 +69,9 @@ namespace HoudiniEngine
         void OnAssetError(AZ::Data::Asset<AZ::Data::AssetData> asset) override;
         ///
 
+        // SessionNotificationBus::Handler
+        void OnSessionStatusChange(SessionRequests::ESessionStatus sessionStatus) override;
+        ///
 
         ////////////////////////////////////////////////////////////////////////
         // AZ::Component interface implementation

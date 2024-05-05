@@ -148,6 +148,11 @@ namespace HoudiniEngine
 
     void OperatorSelection::LoadData()
     {
+        if (!m_asset.IsReady())
+        {
+            return;
+        }
+
         for (auto& operatorName : m_asset->m_assetNames)
         {
             if (m_selectionMode == OperatorMode::Scatter)
