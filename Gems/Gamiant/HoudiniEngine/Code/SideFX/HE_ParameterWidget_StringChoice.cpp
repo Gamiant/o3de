@@ -14,16 +14,16 @@
 #include <QtWidgets/qlabel.h>
 #include <QtWidgets/qcombobox.h>
 
-#include <string>
-#include <vector>
+#include <AzCore/std/containers/vector.h>
+#include <AzCore/std/string/string.h>
 
 namespace HoudiniEngine
 {
     HE_ParameterWidget_StringChoice::HE_ParameterWidget_StringChoice(HAPI_ParmId ParmId, const char *ParmLabel,
                                                                      int ChoiceSize,
-                                                                     const std::vector<std::string> &Choices,
-                                                                     const std::vector<std::string> &ChoiceVals,
-                                                                     std::string CurrentChoice)
+                                                                     const AZStd::vector<AZStd::string> &Choices,
+                                                                     const AZStd::vector<AZStd::string> &ChoiceVals,
+                                                                     AZStd::string CurrentChoice)
         : HE_ParameterWidget(ParmId)
     {
         Layout = new QGridLayout;
@@ -67,7 +67,7 @@ namespace HoudiniEngine
     }
 
     void
-    HE_ParameterWidget_StringChoice::SetHelpToolTip(std::string HelpString)
+    HE_ParameterWidget_StringChoice::SetHelpToolTip(AZStd::string HelpString)
     {
         if (Label)
         {

@@ -11,8 +11,8 @@
 #if !defined(Q_MOC_RUN)
 #include "HE_ParameterWidget.h"
 
-#include <vector>
-#include <string>
+#include <AzCore/std/containers/vector.h>
+
 #include <HAPI/HAPI.h>
 #endif
 
@@ -29,16 +29,16 @@ namespace HoudiniEngine
 
     public:
         HE_ParameterWidget_Float() = delete;
-        HE_ParameterWidget_Float(HAPI_ParmId ParmId, const char *ParmLabel, const std::vector<float> &Values, int ParmSize);
+        HE_ParameterWidget_Float(HAPI_ParmId ParmId, const char *ParmLabel, const AZStd::vector<float> &Values, int ParmSize);
         HE_ParameterWidget_Float(HAPI_ParmId ParmId, const char *ParmLabel, float Value, float Min, float Max);
         ~HE_ParameterWidget_Float();
 
-        void SetHelpToolTip(std::string HelpString) override;
+        void SetHelpToolTip(AZStd::string HelpString) override;
 
     private:
         QGridLayout *Layout;
         QLabel *Label;
-        std::vector<QLineEdit*> Floats;
+        AZStd::vector<QLineEdit*> Floats;
         QSlider* Slider;
 
         float UIMin;
@@ -49,7 +49,7 @@ namespace HoudiniEngine
         float CalculateFloatValueFromSliderPosition();
         float CalculateFloatValueFromSliderPosition(int Position);
 
-        std::vector<float> GetFloatValues();
+        AZStd::vector<float> GetFloatValues();
 
     private slots:
         void EditingFinished();
@@ -57,6 +57,6 @@ namespace HoudiniEngine
         void SliderReleased();
 
     signals:
-        void Signal_FloatParmUpdate(HAPI_ParmId, std::vector<float>);
+        void Signal_FloatParmUpdate(HAPI_ParmId, AZStd::vector<float>);
     };
 }

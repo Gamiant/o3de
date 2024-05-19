@@ -12,8 +12,10 @@
 #include "HE_ParameterWidget.h"
 
 #include <HAPI/HAPI.h>
-#include <string>
-#include <vector>
+
+#include <AzCore/std/containers/vector.h>
+#include <AzCore/std/string/string.h>
+
 #endif
 
 class QGridLayout;
@@ -30,11 +32,11 @@ namespace HoudiniEngine
         HE_ParameterWidget_IntegerChoice() = delete;
         HE_ParameterWidget_IntegerChoice(HAPI_ParmId ParmId, const char *ParmLabel,
                                             int ChoiceSize,
-                                            const std::vector<std::string> &Choices,
+                                            const AZStd::vector<AZStd::string> &Choices,
                                             int CurrentChoice);
         ~HE_ParameterWidget_IntegerChoice();
 
-        void SetHelpToolTip(std::string HelpString) override;
+        void SetHelpToolTip(AZStd::string HelpString) override;
 
     private:
         QGridLayout *Layout;

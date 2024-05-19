@@ -11,7 +11,7 @@
 #if !defined(Q_MOC_RUN)
 #include <QtWidgets/qwidget.h>
 #include <HAPI/HAPI.h>
-#include <string>
+#include <AzCore/std/string/string.h>
 #endif
 
 namespace HoudiniEngine
@@ -25,7 +25,7 @@ namespace HoudiniEngine
         HE_ParameterWidget(HAPI_ParmId ParmId);
         ~HE_ParameterWidget();
 
-        virtual void SetHelpToolTip(std::string HelpString);
+        virtual void SetHelpToolTip(AZStd::string HelpString);
 
     protected:
         HAPI_ParmId Id;

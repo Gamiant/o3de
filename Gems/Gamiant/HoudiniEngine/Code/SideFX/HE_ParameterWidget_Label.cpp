@@ -30,7 +30,7 @@ namespace HoudiniEngine
     }
 
     void
-    HE_ParameterWidget_Label::SetHelpToolTip(std::string HelpString)
+    HE_ParameterWidget_Label::SetHelpToolTip(AZStd::string HelpString)
     {
         if (Label)
         {

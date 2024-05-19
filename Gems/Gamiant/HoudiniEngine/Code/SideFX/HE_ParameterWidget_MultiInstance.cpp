@@ -12,9 +12,10 @@
 
 #include <QtWidgets/qgridlayout.h>
 #include <QtWidgets/qpushbutton.h>
-#include <vector>
 
 #include <AzCore/Casting/numeric_cast.h>
+#include <AzCore/std/containers/vector.h>
+#include <AzCore/std/string/string.h>
 
 
 namespace HoudiniEngine

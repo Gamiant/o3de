@@ -11,7 +11,7 @@
 #if !defined(Q_MOC_RUN)
 #include "HE_ParameterWidget.h"
 
-#include <string>
+#include <AzCore/std/string/string.h>
 #endif
 
 class QGridLayout;
@@ -28,7 +28,7 @@ namespace HoudiniEngine
         HE_ParameterWidget_Label(HAPI_ParmId ParmId, const char *LabelText);
         ~HE_ParameterWidget_Label();
 
-        void SetHelpToolTip(std::string HelpString) override;
+        void SetHelpToolTip(AZStd::string HelpString) override;
 
     private:
         QGridLayout* Layout;

@@ -29,7 +29,7 @@ namespace HoudiniEngine
 
     HE_ParameterWidget_FolderList::~HE_ParameterWidget_FolderList()
     {
-        for (std::vector<HE_ParameterWidget_Folder*>::size_type i = 0; i < Folders.size(); i++)
+        for (AZStd::vector<HE_ParameterWidget_Folder*>::size_type i = 0; i < Folders.size(); i++)
         {
             if (Folders[i])
             {

@@ -11,8 +11,8 @@
 #if !defined(Q_MOC_RUN)
 #include "HE_ParameterWidget.h"
 
-#include <vector>
-#include <string>
+#include <AzCore/std/containers/vector.h>
+
 #include <HAPI/HAPI.h>
 #endif
 
@@ -29,11 +29,11 @@ namespace HoudiniEngine
 
     public:
         HE_ParameterWidget_Integer() = delete;
-        HE_ParameterWidget_Integer(HAPI_ParmId ParmId, const char *ParmLabel, const std::vector<int> &Values, int ParmSize);
+        HE_ParameterWidget_Integer(HAPI_ParmId ParmId, const char *ParmLabel, const AZStd::vector<int> &Values, int ParmSize);
         HE_ParameterWidget_Integer(HAPI_ParmId ParmId, const char *ParmLabel, int Value, int UIMin, int UIMax);
         ~HE_ParameterWidget_Integer();
 
-        void SetHelpToolTip(std::string HelpString) override;
+        void SetHelpToolTip(AZStd::string HelpString) override;
 
         int CalculateSliderPosition();
         void UpdateSliderPosition();
@@ -42,10 +42,10 @@ namespace HoudiniEngine
     private:
         QGridLayout *Layout;
         QLabel *Label;
-        std::vector<QLineEdit*> Integers;
+        AZStd::vector<QLineEdit*> Integers;
         QSlider* Slider;
 
-        std::vector<int> GetIntegerValues();
+        AZStd::vector<int> GetIntegerValues();
 
     private slots:
         void EditingFinished();
@@ -53,6 +53,6 @@ namespace HoudiniEngine
         void SliderReleased();
 
     signals:
-        void Signal_IntegerParmUpdate(HAPI_ParmId ParmId, std::vector<int> Integers);
+        void Signal_IntegerParmUpdate(HAPI_ParmId ParmId, AZStd::vector<int> Integers);
     };
 }

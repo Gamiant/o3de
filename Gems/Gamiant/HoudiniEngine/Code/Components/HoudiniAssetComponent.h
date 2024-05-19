@@ -139,12 +139,19 @@ namespace HoudiniEngine
             return m_config.GetNodeName(); 
         }
 
+        /// Buttons
+        void OnRecook();
+        void OnRebuild();
+        void OnResetParameters();
+
         AZStd::vector<AZStd::string> m_assetNames;
         const AZStd::vector<AZStd::string>& GetAssetNames() const { return m_assetNames; }
 
         IHoudiniNode* GetNode() override { return m_config.GetNode(); }
         IHoudiniNodeComponentConfig * GetConfig() { return &m_config; }
         void SaveToFbx() override;
+
+        AZStd::string m_tempCookFolder;
 
         float m_updatePeriod = 0.5f;
         bool m_updating = false;

@@ -20,8 +20,11 @@ namespace HoudiniEngine
 
         bool m_removeHdaAfterBake = false;
         bool m_replacePreviousBake = false;
-        bool m_cmdSaveFbx = false;
+        bool m_autoBake = false;
+        bool m_recentBakedActors = false;
+
         AZ::u32 m_bakeCounter = 0;
+
         void Bake();
     };
 }

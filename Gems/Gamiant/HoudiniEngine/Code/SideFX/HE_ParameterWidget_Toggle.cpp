@@ -11,7 +11,6 @@
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qcheckbox.h>
 #include <QtWidgets/qlabel.h>
-#include <string>
 
 namespace HoudiniEngine
 {
@@ -46,7 +45,7 @@ namespace HoudiniEngine
     }
 
     void
-    HE_ParameterWidget_Toggle::SetHelpToolTip(std::string HelpString)
+    HE_ParameterWidget_Toggle::SetHelpToolTip(AZStd::string HelpString)
     {
         if (Label)
         {

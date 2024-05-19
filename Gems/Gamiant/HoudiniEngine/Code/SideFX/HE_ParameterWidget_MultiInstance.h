@@ -11,7 +11,8 @@
 #if !defined(Q_MOC_RUN)
 #include "HE_ParameterWidget.h"
 
-#include <vector>
+#include <AzCore/std/containers/vector.h>
+
 #endif
 
 class QGridLayout;
@@ -37,7 +38,7 @@ namespace HoudiniEngine
         QPushButton *AddBefore;
         QPushButton *Remove;
 
-        std::vector<HE_ParameterWidget*> ParameterWidgets;
+        AZStd::vector<HE_ParameterWidget*> ParameterWidgets;
 
         HAPI_ParmId ParentId;
     };

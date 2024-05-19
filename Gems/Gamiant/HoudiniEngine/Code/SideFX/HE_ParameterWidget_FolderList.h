@@ -11,7 +11,8 @@
 #if !defined(Q_MOC_RUN)
 #include "HE_ParameterWidget_Folder.h"
 
-#include <vector>
+#include <AzCore/std/containers/vector.h>
+
 #endif
 
 class QVBoxLayout;
@@ -34,6 +35,6 @@ namespace HoudiniEngine
         QVBoxLayout* Layout;
         QTabWidget* FolderContainer;
 
-        std::vector<HE_ParameterWidget_Folder*> Folders;
+        AZStd::vector<HE_ParameterWidget_Folder*> Folders;
     };
 }

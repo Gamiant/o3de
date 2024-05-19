@@ -8,8 +8,6 @@
 
 #include "HE_ParameterWidget_Float.h"
 
-#include <string>
-#include <vector>
 #include <QtWidgets/qgridlayout.h>
 #include <QtWidgets/qlabel.h>
 #include <QtWidgets/qlineedit.h>
@@ -17,7 +15,7 @@
 
 namespace HoudiniEngine
 {
-    HE_ParameterWidget_Float::HE_ParameterWidget_Float(HAPI_ParmId ParmId, const char *ParmLabel, const std::vector<float> &Values, int ParmSize)
+    HE_ParameterWidget_Float::HE_ParameterWidget_Float(HAPI_ParmId ParmId, const char *ParmLabel, const AZStd::vector<float> &Values, int ParmSize)
         : HE_ParameterWidget(ParmId)
     {
         Layout = new QGridLayout;
@@ -99,7 +97,7 @@ namespace HoudiniEngine
     }
 
     void
-    HE_ParameterWidget_Float::SetHelpToolTip(std::string HelpString)
+    HE_ParameterWidget_Float::SetHelpToolTip(AZStd::string HelpString)
     {
         if (Label)
         {
@@ -136,10 +134,10 @@ namespace HoudiniEngine
         return (((UIMax - UIMin) * SliderPercentage) + UIMin);
     }
 
-    std::vector<float>
+    AZStd::vector<float>
     HE_ParameterWidget_Float::GetFloatValues()
     {
-        std::vector<float> Ret;
+        AZStd::vector<float> Ret;
         for (int i = 0; i < Floats.size(); i++)
         {
             Ret.push_back(Floats[i]->text().toFloat());

@@ -23,6 +23,6 @@ namespace HoudiniEngine
 
     namespace Handlers
     {
-        static const AZ::Crc32 FolderList = AZ_CRC("HEFolderList");
+        static const AZ::Crc32 FolderList = AZ_CRC_CE("HEFolderList");
     }
 } // namespace HoudiniEngine

@@ -12,7 +12,7 @@
 #include "HE_ParameterWidget.h"
 
 #include <HAPI/HAPI.h>
-#include <string>
+#include <AzCore/std/string/string.h>
 #endif
 
 class QGridLayout;
@@ -29,7 +29,7 @@ namespace HoudiniEngine
         HE_ParameterWidget_Button(HAPI_ParmId ParmId, const char *ParmLabel);
         ~HE_ParameterWidget_Button();
 
-        void SetHelpToolTip(std::string HelpString) override;
+        void SetHelpToolTip(AZStd::string HelpString) override;
 
     private:
         QGridLayout *Layout;

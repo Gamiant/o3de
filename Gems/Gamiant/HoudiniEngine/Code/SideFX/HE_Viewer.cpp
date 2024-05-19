@@ -23,7 +23,10 @@
 #include "HE_ParameterWidget_MultiInstance.h"
 
 #include <HAPI/HAPI.h>
-#include <string>
+
+#include <AzCore/std/string/string.h>
+#include <AzCore/std/containers/unordered_map.h>
+
 #include <QtWidgets/qwidget.h>
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qgroupbox.h>
@@ -31,8 +34,6 @@
 #include <QtWidgets/qlabel.h>
 #include <QtWidgets/qscrollarea.h>
 #include <QtWidgets/qframe.h>
-#include <iostream>
-#include <unordered_map>
 
 #include <iostream>
 
@@ -143,7 +144,7 @@ namespace HoudiniEngine
             HAPI_NodeInfo NodeInfo;
             if (HAPI_GetNodeInfo(Session, Node, &NodeInfo) == HAPI_RESULT_SUCCESS)
             {
-                std::string NodeName;
+                AZStd::string NodeName;
                 if (GetNodeName(NodeInfo, NodeName))
                 {
                     ParametersSelectedAssetName->setText(NodeName.c_str());
@@ -152,8 +153,8 @@ namespace HoudiniEngine
 
                     if (HAPI_GetParameters(Session, Node, ParmInfos, 0, NodeInfo.parmCount) == HAPI_RESULT_SUCCESS)
                     {
-                        std::unordered_map<HAPI_ParmId, HE_ParameterWidget_Multi*> MultiListCache;
-                        std::unordered_map<HAPI_ParmId, HE_ParameterWidget_Folder*> FolderCache;
+                        AZStd::unordered_map<HAPI_ParmId, HE_ParameterWidget_Multi*> MultiListCache;
+                        AZStd::unordered_map<HAPI_ParmId, HE_ParameterWidget_Folder*> FolderCache;
                         bool ParsingFolderList = false;
                         HE_ParameterWidget_FolderList* ActiveFolderList = nullptr;
                         int RemainingFolders = 0;
@@ -307,7 +308,7 @@ namespace HoudiniEngine
     }
 
     bool
-    HE_Viewer::GetHapiString(HAPI_StringHandle Handle, std::string& HapiString)
+    HE_Viewer::GetHapiString(HAPI_StringHandle Handle, AZStd::string& HapiString)
     {
         int BufSize = 0;
         if (HAPI_GetStringBufLength(Session, Handle, &BufSize) == HAPI_RESULT_SUCCESS)
@@ -326,13 +327,13 @@ namespace HoudiniEngine
     }
 
     bool
-    HE_Viewer::GetNodeName(const HAPI_NodeInfo &NodeInfo, std::string &Name)
+    HE_Viewer::GetNodeName(const HAPI_NodeInfo &NodeInfo, AZStd::string &Name)
     {
         return GetHapiString(NodeInfo.nameSH, Name);
     }
 
     bool
-    HE_Viewer::GetParameterLabel(const HAPI_ParmInfo &ParmInfo, std::string &Label)
+    HE_Viewer::GetParameterLabel(const HAPI_ParmInfo &ParmInfo, AZStd::string &Label)
     {
         return GetHapiString(ParmInfo.labelSH, Label);
     }
@@ -385,7 +386,7 @@ namespace HoudiniEngine
     HE_ParameterWidget_Folder*
     HE_Viewer::CreateFolderWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
             return new HE_ParameterWidget_Folder(ParmInfo.id, Label.c_str());
@@ -405,7 +406,7 @@ namespace HoudiniEngine
     HE_ParameterWidget_Label*
     HE_Viewer::CreateLabelWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
             return new HE_ParameterWidget_Label(ParmInfo.id, Label.c_str());
@@ -419,10 +420,10 @@ namespace HoudiniEngine
     HE_ParameterWidget_Integer*
     HE_Viewer::CreateIntegerWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
-            std::vector<int> ParmIntValues(ParmInfo.size);
+            AZStd::vector<int> ParmIntValues(ParmInfo.size);
             
             if (HAPI_GetParmIntValues(Session, Node, &ParmIntValues.front(), ParmInfo.intValuesIndex, ParmInfo.size) == HAPI_RESULT_SUCCESS)
             {
@@ -437,8 +438,8 @@ namespace HoudiniEngine
                     Widget = new HE_ParameterWidget_Integer(ParmInfo.id, Label.c_str(), ParmIntValues, ParmInfo.size);
                 }
 
-                QObject::connect(Widget, SIGNAL(Signal_IntegerParmUpdate(HAPI_ParmId, std::vector<int>)),
-                                 this, SLOT(Slot_IntegerParmUpdate(HAPI_ParmId, std::vector<int>)));
+                QObject::connect(Widget, SIGNAL(Signal_IntegerParmUpdate(HAPI_ParmId, AZStd::vector<int>)),
+                                 this, SLOT(Slot_IntegerParmUpdate(HAPI_ParmId, AZStd::vector<int>)));
 
                 return Widget;
             }
@@ -456,10 +457,10 @@ namespace HoudiniEngine
     HE_ParameterWidget_Float*
     HE_Viewer::CreateFloatWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
-            std::vector<float> ParmFloatValues(ParmInfo.size);
+            AZStd::vector<float> ParmFloatValues(ParmInfo.size);
 
             if (HAPI_GetParmFloatValues(Session, Node, &ParmFloatValues.front(), ParmInfo.floatValuesIndex, ParmInfo.size) == HAPI_RESULT_SUCCESS)
             {
@@ -473,8 +474,8 @@ namespace HoudiniEngine
                     Widget = new HE_ParameterWidget_Float(ParmInfo.id, Label.c_str(), ParmFloatValues, ParmInfo.size);
                 }
 
-                QObject::connect(Widget, SIGNAL(Signal_FloatParmUpdate(HAPI_ParmId, std::vector<float>)),
-                                 this, SLOT(Slot_FloatParmUpdate(HAPI_ParmId, std::vector<float>)));
+                QObject::connect(Widget, SIGNAL(Signal_FloatParmUpdate(HAPI_ParmId, AZStd::vector<float>)),
+                                 this, SLOT(Slot_FloatParmUpdate(HAPI_ParmId, AZStd::vector<float>)));
                 
                 return Widget;
             }
@@ -492,13 +493,13 @@ namespace HoudiniEngine
     HE_ParameterWidget_String*
     HE_Viewer::CreateStringWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
-            std::vector<HAPI_StringHandle> StringHandles(ParmInfo.size);
+            AZStd::vector<HAPI_StringHandle> StringHandles(ParmInfo.size);
             if (HAPI_GetParmStringValues(Session, Node, true, &StringHandles.front(), ParmInfo.stringValuesIndex, ParmInfo.size) == HAPI_RESULT_SUCCESS)
             {
-                std::vector<std::string> ParmStrings(ParmInfo.size);
+                AZStd::vector<AZStd::string> ParmStrings(ParmInfo.size);
                 for (int i = 0; i < StringHandles.size(); i++)
                 {
                     GetHapiString(StringHandles[i], ParmStrings[i]); 
@@ -506,8 +507,8 @@ namespace HoudiniEngine
                 
                 HE_ParameterWidget_String *Widget = new HE_ParameterWidget_String(ParmInfo.id, Label.c_str(), ParmStrings, ParmInfo.size);
 
-                QObject::connect(Widget, SIGNAL(Signal_StringParmUpdate(HAPI_ParmId, std::vector<std::string>)),
-                                 this, SLOT(Slot_StringParmUpdate(HAPI_ParmId, std::vector<std::string>)));
+                QObject::connect(Widget, SIGNAL(Signal_StringParmUpdate(HAPI_ParmId, AZStd::vector<AZStd::string>)),
+                                 this, SLOT(Slot_StringParmUpdate(HAPI_ParmId, AZStd::vector<AZStd::string>)));
 
                 return Widget;
             }
@@ -519,10 +520,10 @@ namespace HoudiniEngine
     HE_ParameterWidget_Toggle*
     HE_Viewer::CreateToggleWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
-            std::vector<int> ParmIntVal(ParmInfo.size);
+            AZStd::vector<int> ParmIntVal(ParmInfo.size);
             if (HAPI_GetParmIntValues(Session, Node, &ParmIntVal.front(), ParmInfo.intValuesIndex, ParmInfo.size) == HAPI_RESULT_SUCCESS)
             {
                 HE_ParameterWidget_Toggle *Widget = new HE_ParameterWidget_Toggle(ParmInfo.id, Label.c_str(), ParmIntVal[0]);
@@ -540,7 +541,7 @@ namespace HoudiniEngine
     HE_ParameterWidget_Button*
     HE_Viewer::CreateButtonWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
             HE_ParameterWidget_Button *Widget = new HE_ParameterWidget_Button(ParmInfo.id, Label.c_str());
@@ -557,11 +558,11 @@ namespace HoudiniEngine
     HE_ParameterWidget_IntegerChoice*
     HE_Viewer::CreateIntegerChoiceWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
             HAPI_ParmChoiceInfo* ChoiceInfos = new HAPI_ParmChoiceInfo[ParmInfo.choiceCount];
-            std::vector<std::string> ChoiceLabels(ParmInfo.choiceCount);
+            AZStd::vector<AZStd::string> ChoiceLabels(ParmInfo.choiceCount);
             if (HAPI_GetParmChoiceLists(Session, Node, ChoiceInfos, ParmInfo.choiceIndex, ParmInfo.choiceCount) == HAPI_RESULT_SUCCESS)
             {
                 for (int i = 0; i < ParmInfo.choiceCount; i++)
@@ -569,7 +570,7 @@ namespace HoudiniEngine
                     GetHapiString(ChoiceInfos[i].labelSH, ChoiceLabels[i]);
                 }
 
-                std::vector<int> CurrentChoice(1);
+                AZStd::vector<int> CurrentChoice(1);
                 if (HAPI_GetParmIntValues(Session, Node, &CurrentChoice.front(), ParmInfo.intValuesIndex, 1) == HAPI_RESULT_SUCCESS)
                 {
                     delete[] ChoiceInfos;
@@ -595,12 +596,12 @@ namespace HoudiniEngine
     HE_ParameterWidget_StringChoice*
     HE_Viewer::CreateStringChoiceWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
             HAPI_ParmChoiceInfo* ChoiceInfos = new HAPI_ParmChoiceInfo[ParmInfo.choiceCount];
-            std::vector<std::string> ChoiceLabels(ParmInfo.choiceCount);
-            std::vector<std::string> ChoiceValues(ParmInfo.choiceCount);
+            AZStd::vector<AZStd::string> ChoiceLabels(ParmInfo.choiceCount);
+            AZStd::vector<AZStd::string> ChoiceValues(ParmInfo.choiceCount);
             if (HAPI_GetParmChoiceLists(Session, Node, ChoiceInfos, ParmInfo.choiceIndex, ParmInfo.choiceCount) == HAPI_RESULT_SUCCESS)
             {
                 for (int i = 0; i < ParmInfo.choiceCount; i++)
@@ -609,10 +610,10 @@ namespace HoudiniEngine
                     GetHapiString(ChoiceInfos[i].valueSH, ChoiceValues[i]);
                 }
 
-                std::vector<HAPI_StringHandle> CurrentChoice(1);
+                AZStd::vector<HAPI_StringHandle> CurrentChoice(1);
                 if (HAPI_GetParmStringValues(Session, Node, true, &CurrentChoice.front(), ParmInfo.stringValuesIndex, 1) == HAPI_RESULT_SUCCESS)
                 {
-                    std::string Selection;
+                    AZStd::string Selection;
                     GetHapiString(CurrentChoice[0], Selection);
 
                     delete[] ChoiceInfos;
@@ -624,8 +625,8 @@ namespace HoudiniEngine
                                                             ChoiceValues,
                                                             Selection);
 
-                    QObject::connect(Widget, SIGNAL(Signal_StringChoiceParmUpdate(HAPI_ParmId, std::string)),
-                                     this, SLOT(Slot_StringChoiceParmUpdate(HAPI_ParmId, std::string)));
+                    QObject::connect(Widget, SIGNAL(Signal_StringChoiceParmUpdate(HAPI_ParmId, AZStd::string)),
+                                     this, SLOT(Slot_StringChoiceParmUpdate(HAPI_ParmId, AZStd::string)));
 
                     return Widget;
                 }
@@ -639,7 +640,7 @@ namespace HoudiniEngine
     HE_ParameterWidget_Multi*
     HE_Viewer::CreateMultiWidget(const HAPI_ParmInfo &ParmInfo)
     {
-        std::string Label;
+        AZStd::string Label;
         if (GetParameterLabel(ParmInfo, Label))
         {
             return new HE_ParameterWidget_Multi(ParmInfo.id, Label.c_str(), ParmInfo.instanceCount); 
@@ -649,19 +650,19 @@ namespace HoudiniEngine
     }
 
     void
-    HE_Viewer::Slot_IntegerParmUpdate(HAPI_ParmId ParmId, std::vector<int> Integers)
+    HE_Viewer::Slot_IntegerParmUpdate(HAPI_ParmId ParmId, AZStd::vector<int> Integers)
     {
         emit IntParmChanged(ParmId, Integers);
     }
 
     void
-    HE_Viewer::Slot_FloatParmUpdate(HAPI_ParmId ParmId, std::vector<float> Floats)
+    HE_Viewer::Slot_FloatParmUpdate(HAPI_ParmId ParmId, AZStd::vector<float> Floats)
     {
         emit FloatParmChanged(ParmId, Floats);
     }
 
     void
-    HE_Viewer::Slot_StringParmUpdate(HAPI_ParmId ParmId, std::vector<std::string> Strings)
+    HE_Viewer::Slot_StringParmUpdate(HAPI_ParmId ParmId, AZStd::vector<AZStd::string> Strings)
     {
         emit StringParmChanged(ParmId, Strings);
     }
@@ -669,7 +670,7 @@ namespace HoudiniEngine
     void
     HE_Viewer::Slot_ToggleParmUpdate(HAPI_ParmId ParmId, int On)
     {
-        std::vector<int> ParmVal(1);
+        AZStd::vector<int> ParmVal(1);
         ParmVal[0] = On;
         emit IntParmChanged(ParmId, ParmVal);
     }
@@ -677,7 +678,7 @@ namespace HoudiniEngine
     void
     HE_Viewer::Slot_ButtonParmUpdate(HAPI_ParmId ParmId)
     {
-        std::vector<int> ParmVal(1);
+        AZStd::vector<int> ParmVal(1);
         ParmVal[0] = 1;
         emit IntParmChanged(ParmId, ParmVal);
     }
@@ -685,15 +686,15 @@ namespace HoudiniEngine
     void
     HE_Viewer::Slot_IntegerChoiceParmUpdate(HAPI_ParmId ParmId, int Choice)
     {
-        std::vector<int> ParmVal(1);
+        AZStd::vector<int> ParmVal(1);
         ParmVal[0] = Choice;
         emit IntParmChanged(ParmId, ParmVal);
     }
 
     void
-    HE_Viewer::Slot_StringChoiceParmUpdate(HAPI_ParmId ParmId, std::string Choice)
+    HE_Viewer::Slot_StringChoiceParmUpdate(HAPI_ParmId ParmId, AZStd::string Choice)
     {
-        std::vector<std::string> ParmVal(1);
+        AZStd::vector<AZStd::string> ParmVal(1);
         ParmVal[0] = Choice;
         emit StringParmChanged(ParmId, ParmVal);
     }

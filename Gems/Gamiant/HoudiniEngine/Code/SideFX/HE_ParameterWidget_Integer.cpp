@@ -16,7 +16,7 @@
 namespace HoudiniEngine
 {
     HE_ParameterWidget_Integer::HE_ParameterWidget_Integer(HAPI_ParmId ParmId, const char *ParmLabel,
-                                                            const std::vector<int> &Values, int ParmSize)
+                                                            const AZStd::vector<int> &Values, int ParmSize)
         : HE_ParameterWidget(ParmId)
     {
         Layout = new QGridLayout;
@@ -97,7 +97,7 @@ namespace HoudiniEngine
     }
 
     void
-    HE_ParameterWidget_Integer::SetHelpToolTip(std::string HelpString)
+    HE_ParameterWidget_Integer::SetHelpToolTip(AZStd::string HelpString)
     {
         if (Label)
         {
@@ -126,10 +126,10 @@ namespace HoudiniEngine
         return (Slider->sliderPosition());
     }
 
-    std::vector<int>
+    AZStd::vector<int>
     HE_ParameterWidget_Integer::GetIntegerValues()
     {
-        std::vector<int> Ret;
+        AZStd::vector<int> Ret;
         for (int i = 0; i < Integers.size(); i++)
         {
             Ret.push_back(Integers[i]->text().toInt()); 

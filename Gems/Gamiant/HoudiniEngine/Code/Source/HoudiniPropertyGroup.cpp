@@ -11,6 +11,7 @@
 
 namespace HoudiniEngine
 {
+    // HoudiniPropertyGroup
     void HoudiniPropertyGroup::Reflect(AZ::ReflectContext* reflection)
     {
         AZ::SerializeContext* serializeContext = azrtti_cast<AZ::SerializeContext*>(reflection);
@@ -32,14 +33,12 @@ namespace HoudiniEngine
                     /*->DataElement(Handlers::FolderList, &HoudiniPropertyGroup::m_folders, "", "")
                     ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::HideChildren)
                     ->Attribute(AZ::Edit::Attributes::ContainerCanBeModified, false)*/
-                    ->DataElement(nullptr, &HoudiniPropertyGroup::m_properties, "", "Properties in this property group")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniPropertyGroup::m_properties, "", "Properties in this property group")
                     ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)
                     ->Attribute(AZ::Edit::Attributes::ContainerCanBeModified, false)
-                    ->DataElement(/*nullptr*/Handlers::FolderList, &HoudiniPropertyGroup::m_groups, "", "Subgroups in this property group")
+                    ->DataElement(AZ::Edit::UIHandlers::Default/*Handlers::FolderList*/, &HoudiniPropertyGroup::m_groups, "", "Subgroups in this property group")
                     ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)
                     ->Attribute(AZ::Edit::Attributes::ContainerCanBeModified, false)
-                    //AZ_CRC("ForbidExpansion", 0x966ad11a)
-                    
                     ;
             }
         }
@@ -114,15 +113,14 @@ namespace HoudiniEngine
             {
                 ec->Class<HoudiniPropertyFolderList>("Houdini Property group", "This is a  property group")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "HoudiniPropertyFolderList's class attributes.")
-                    ->Attribute(AZ::Edit::Attributes::NameLabelOverride, &HoudiniPropertyFolderList::m_name)
-                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(nullptr, &HoudiniPropertyFolderList::m_properties, "", "Properties in this property group")
-                    ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)
-                    ->Attribute(AZ::Edit::Attributes::ContainerCanBeModified, false)
-                    ->DataElement(nullptr/*Handlers::FolderList*/, &HoudiniPropertyFolderList::m_groups, "", "Subgroups in this property group")
-                    ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)
-                    ->Attribute(AZ::Edit::Attributes::ContainerCanBeModified, false)
-                    //AZ_CRC("ForbidExpansion", 0x966ad11a)
+                        ->Attribute(AZ::Edit::Attributes::NameLabelOverride, &HoudiniPropertyFolderList::m_name)
+                        ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &HoudiniPropertyFolderList::m_properties, "", "Properties in this property group")
+                        ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)
+                        ->Attribute(AZ::Edit::Attributes::ContainerCanBeModified, false)
+                    ->DataElement(AZ::Edit::UIHandlers::Default/*Handlers::FolderList*/, &HoudiniPropertyFolderList::m_groups, "", "Subgroups in this property group")
+                        ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)
+                        ->Attribute(AZ::Edit::Attributes::ContainerCanBeModified, false)
                     ;
             }
         }

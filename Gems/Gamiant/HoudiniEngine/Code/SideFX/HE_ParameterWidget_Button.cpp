@@ -12,7 +12,6 @@
 
 #include <QtWidgets/qgridlayout.h>
 #include <QtWidgets/qpushbutton.h>
-#include <string>
 
 namespace HoudiniEngine
 {
@@ -38,7 +37,7 @@ namespace HoudiniEngine
     }
 
     void
-    HE_ParameterWidget_Button::SetHelpToolTip(std::string HelpString)
+    HE_ParameterWidget_Button::SetHelpToolTip(AZStd::string HelpString)
     {
         if (Button)
         {

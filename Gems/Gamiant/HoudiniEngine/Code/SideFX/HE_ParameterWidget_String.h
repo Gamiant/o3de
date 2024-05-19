@@ -26,20 +26,20 @@ namespace HoudiniEngine
 
     public:
         HE_ParameterWidget_String() = delete;
-        HE_ParameterWidget_String(HAPI_ParmId ParmId, const char *ParmLabel, const std::vector<std::string>& Values, int ParmSize);
+        HE_ParameterWidget_String(HAPI_ParmId ParmId, const char *ParmLabel, const AZStd::vector<AZStd::string>& Values, int ParmSize);
         ~HE_ParameterWidget_String();
 
-        void SetHelpToolTip(std::string HelpString) override;
+        void SetHelpToolTip(AZStd::string HelpString) override;
 
     private:
         QGridLayout *Layout;
         QLabel *Label;
-        std::vector<QLineEdit*> Strings;
+        AZStd::vector<QLineEdit*> Strings;
 
     private slots:
         void EditingFinished();
 
     signals:
-        void Signal_StringParmUpdate(HAPI_ParmId, std::vector<std::string>);
+        void Signal_StringParmUpdate(HAPI_ParmId, AZStd::vector<AZStd::string>);
     };
 }

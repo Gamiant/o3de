@@ -15,6 +15,7 @@
 
 namespace HoudiniEngine
 {
+    //! Binds Houdini parameters to O3DE
     class HoudiniParameter : public IHoudiniParameter
     {
         friend class Houdini;

@@ -10,8 +10,9 @@
 
 #include "HE_ParameterWidget.h"
 
-#include <string>
-#include <vector>
+#include <AzCore/std/containers/vector.h>
+#include <AzCore/std/string/string.h>
+
 #include <QtWidgets/qgridlayout.h>
 #include <QtWidgets/qlabel.h>
 #include <QtWidgets/qlineedit.h>
@@ -19,7 +20,7 @@
 namespace HoudiniEngine
 {
     HE_ParameterWidget_String::HE_ParameterWidget_String(HAPI_ParmId ParmId, const char *ParmLabel,
-                                                            const std::vector<std::string>& Values, int ParmSize)
+                                                            const AZStd::vector<AZStd::string>& Values, int ParmSize)
         : HE_ParameterWidget(ParmId)
     {
         Layout = new QGridLayout;
@@ -57,7 +58,7 @@ namespace HoudiniEngine
     }
 
     void
-    HE_ParameterWidget_String::SetHelpToolTip(std::string HelpString)
+    HE_ParameterWidget_String::SetHelpToolTip(AZStd::string HelpString)
     {
         if (Label)
         {
@@ -68,10 +69,10 @@ namespace HoudiniEngine
     void
     HE_ParameterWidget_String::EditingFinished()
     {
-        std::vector<std::string> StringVals;
+        AZStd::vector<AZStd::string> StringVals;
         for (int i = 0; i < Strings.size(); i++)
         {
-            StringVals.push_back(Strings[i]->text().toStdString());
+            StringVals.push_back(Strings[i]->text().toStdString().c_str());
         }
         emit Signal_StringParmUpdate(Id, StringVals);
     }

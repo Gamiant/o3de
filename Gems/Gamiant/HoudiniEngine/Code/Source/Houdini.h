@@ -41,46 +41,6 @@ namespace HoudiniEngine
         , AZ::SystemTickBus::Handler
         , AZ::TickBus::Handler
     {
-    protected:
-
-        SessionSettings::ESessionType m_sessionType = SessionSettings::ESessionType::TCPSocket;
-        SessionSettings::EViewportSync m_viewportSync = SessionSettings::EViewportSync::Disabled;
-        SessionRequests::ESessionStatus m_sessionStatus = SessionRequests::ESessionStatus::Offline;
-
-        AZStd::string m_namedPipe;
-        AZStd::string m_serverHost;
-        AZ::u32 m_serverPort;
-        AZStd::string m_houdiniPath;
-        HAPI_Session m_session;
-        AZStd::string m_HAPIlibPath; // Path to the HAPI dynamic library
-        AZ::u32 m_licenseType;
-        bool m_environmentSet = false;
-        Viewport m_viewport;
-        bool m_startingSession = false;
-        InputNodeManagerPtr m_inputNodeManager;
-        ///
-
-        HAPI_CookOptions m_cookOptions;
-
-        HAPI_ProcessId m_thriftServerProcId;
-        HAPI_ThriftServerOptions m_thriftServerOptions;
-
-        HoudiniNodePtr m_rootNode;
-
-        bool m_printHistory = true;
-        AZStd::string m_historyLine;
-        AZStd::queue<AZStd::string> m_history;
-
-        AZStd::vector<AZStd::string> m_searchPaths;
-        AZStd::map<AZStd::string, HoudiniAssetPtr > m_assetCache;
-        AZStd::map<IHoudiniNode*, HoudiniNodePtr> m_nodeCache;
-        AZStd::map<AZStd::string, HoudiniNodePtr> m_nodeNameCache;
-        
-        // Lookups
-        AZStd::mutex m_lookupLock;
-        AZStd::map<AZ::EntityId, HoudiniEntityContext> m_lookups;
-
-        AZStd::string FindHda(const AZStd::string& hdaFile);
 
     public:
 
@@ -179,46 +139,85 @@ namespace HoudiniEngine
             return m_inputNodeManager;
         }
 
-        protected:
+    protected:
 
-            AZStd::unique_ptr<AzFramework::ProcessWatcher> m_houdiniProcessWatcher;
+        SessionSettings::ESessionType m_sessionType = SessionSettings::ESessionType::TCPSocket;
+        SessionSettings::EViewportSync m_viewportSync = SessionSettings::EViewportSync::Disabled;
+        SessionRequests::ESessionStatus m_sessionStatus = SessionRequests::ESessionStatus::Offline;
 
-            std::chrono::steady_clock::time_point m_startSyncTime;
+        AZStd::string m_namedPipe;
+        AZStd::string m_serverHost;
+        AZ::u32 m_serverPort;
+        AZStd::string m_houdiniPath;
+        HAPI_Session m_session;
+        AZStd::string m_HAPIlibPath; // Path to the HAPI dynamic library
+        AZ::u32 m_licenseType;
+        bool m_environmentSet = false;
+        Viewport m_viewport;
+        bool m_startingSession = false;
+        InputNodeManagerPtr m_inputNodeManager;
+        ///
 
-            // AZ::TickBus::Handler...
-            void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
-            ///
+        HAPI_CookOptions m_cookOptions;
 
-            // SessionRequestBus...
-            void OpenHoudini() override;
-            void CloseHoudini() override;
-            void StartSession() override;
-            void StopSession() override;
-            void RestartSession() override;
-            void SetViewportSync(int index) override;
-            HAPI_Session* GetSessionPtr() override;
-            SessionRequests::ESessionStatus GetSessionStatus() override;
-            ///
+        HAPI_ProcessId m_thriftServerProcId;
+        HAPI_ThriftServerOptions m_thriftServerOptions;
 
-            // NodeSyncRequestBus...
-            void SendToHoudini() override;
-            void FetchFromHoudini() override;
-            ///
+        HoudiniNodePtr m_rootNode;
 
-            // SystemTickBus...
-            void OnSystemTick() override;
-            ///
+        bool m_printHistory = true;
+        AZStd::string m_historyLine;
+        AZStd::queue<AZStd::string> m_history;
 
-            // IEditorNotifyListener...
-            void OnEditorNotifyEvent(EEditorNotifyEvent event) override;
-            ///
+        AZStd::vector<AZStd::string> m_searchPaths;
+        AZStd::map<AZStd::string, HoudiniAssetPtr > m_assetCache;
+        AZStd::map<IHoudiniNode*, HoudiniNodePtr> m_nodeCache;
+        AZStd::map<AZStd::string, HoudiniNodePtr> m_nodeNameCache;
 
-            void ComputeSearchPaths();
-            void SetupEnvironment();
-            void SessionSync();
+        // Lookups
+        AZStd::mutex m_lookupLock;
+        AZStd::map<AZ::EntityId, HoudiniEntityContext> m_lookups;
 
-            bool InitializeHAPISession();
-            void ConfigureSession();
+        AZStd::string FindHda(const AZStd::string& hdaFile);
+
+        AZStd::unique_ptr<AzFramework::ProcessWatcher> m_houdiniProcessWatcher;
+
+        std::chrono::steady_clock::time_point m_startSyncTime;
+
+        // AZ::TickBus::Handler...
+        void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
+        ///
+
+        // SessionRequestBus...
+        void OpenHoudini() override;
+        void CloseHoudini() override;
+        void StartSession() override;
+        void StopSession() override;
+        void RestartSession() override;
+        void SetViewportSync(int index) override;
+        HAPI_Session* GetSessionPtr() override;
+        SessionRequests::ESessionStatus GetSessionStatus() override;
+        ///
+
+        // NodeSyncRequestBus...
+        void SendToHoudini() override;
+        void FetchFromHoudini() override;
+        ///
+
+        // SystemTickBus...
+        void OnSystemTick() override;
+        ///
+
+        // IEditorNotifyListener...
+        void OnEditorNotifyEvent(EEditorNotifyEvent event) override;
+        ///
+
+        void ComputeSearchPaths();
+        void SetupEnvironment();
+        void SessionSync();
+
+        bool InitializeHAPISession();
+        void ConfigureSession();
 
         private:
 

@@ -41,7 +41,7 @@ namespace HoudiniEngine
         QVBoxLayout* Layout;
         QTabWidget* FolderContainer;
 
-        //std::vector<HE_ParameterWidget_Folder*> Folders;
+        //AZStd::vector<HE_ParameterWidget_Folder*> Folders;
 #if HE_TOGGLE
         AZStd::vector<HoudiniPropertyGroup> m_folders;
 #else

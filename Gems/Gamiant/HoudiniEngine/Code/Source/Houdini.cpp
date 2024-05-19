@@ -163,10 +163,10 @@ namespace HoudiniEngine
         SettingsBus::BroadcastResult(settings, &SettingsBusRequests::GetSessionSettings);
         AZ_Assert(settings, "Settings cannot be null");
 
-        std::string otl = std::string(settings->GetOTLPath().c_str());
+        AZStd::string otl = AZStd::string(settings->GetOTLPath().c_str());
         auto start = 0U;
         auto end = otl.find(';');
-        while (end != std::string::npos)
+        while (end != AZStd::string::npos)
         {
             m_searchPaths.push_back(AZStd::string(otl.substr(start, end - start).c_str()));
             start = (unsigned int)(end + 1);

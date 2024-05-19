@@ -12,7 +12,9 @@
 #include "HE_ParameterWidget.h"
 #include "HE_ParameterWidget_MultiInstance.h"
 
-#include <vector>
+#include <AzCore/std/containers/vector.h>
+#include <AzCore/std/string/string.h>
+
 #endif
 
 class QVBoxLayout;
@@ -39,7 +41,7 @@ namespace HoudiniEngine
     private:
         int NumOfInstances;
 
-        std::vector<HE_ParameterWidget_MultiInstance*> Instances;
+        AZStd::vector<HE_ParameterWidget_MultiInstance*> Instances;
 
         QVBoxLayout *Layout;
         QWidget *ControlWidget;

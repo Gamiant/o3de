@@ -24,8 +24,7 @@ namespace HoudiniEngine
         : StringId(Other.StringId)
     {}
 
-    HoudiniEngineString &
-    HoudiniEngineString::operator=(const HoudiniEngineString& Other)
+    HoudiniEngineString& HoudiniEngineString::operator=(const HoudiniEngineString& Other)
     {
         if (this != &Other)
             StringId = Other.StringId;
@@ -33,32 +32,27 @@ namespace HoudiniEngine
         return *this;
     }
 
-    bool
-    HoudiniEngineString::operator==(const HoudiniEngineString& Other) const
+    bool HoudiniEngineString::operator==(const HoudiniEngineString& Other) const
     {
         return Other.StringId == StringId;
     }
 
-    bool
-    HoudiniEngineString::operator!=(const HoudiniEngineString& Other) const
+    bool HoudiniEngineString::operator!=(const HoudiniEngineString& Other) const
     {
         return Other.StringId != StringId;
     }
 
-    AZ::s32
-    HoudiniEngineString::GetId() const
+    AZ::s32 HoudiniEngineString::GetId() const
     {
         return StringId;
     }
 
-    bool
-    HoudiniEngineString::HasValidId() const
+    bool HoudiniEngineString::HasValidId() const
     {
         return StringId > 0;
     }
 
-    bool
-    HoudiniEngineString::ToAZString(AZStd::string& String) const
+    bool HoudiniEngineString::ToAZString(AZStd::string& String) const
     {
         HoudiniPtr houdini;
         HoudiniEngineRequestBus::BroadcastResult(houdini, &HoudiniEngineRequestBus::Events::GetHoudiniEngine);
@@ -86,7 +80,7 @@ namespace HoudiniEngine
         if (NameLength <= 0)
             return false;
 
-        std::vector<char> NameBuffer(NameLength, '\0');
+        AZStd::vector<char> NameBuffer(NameLength, '\0');
         if (HAPI_RESULT_SUCCESS != HAPI_GetString(&houdini->GetSession(), StringId, &NameBuffer[0], NameLength))
         {
             return false;
@@ -97,8 +91,7 @@ namespace HoudiniEngine
         return true;
     }
 
-    bool
-    HoudiniEngineString::ToAZString(const AZ::s32& InStringId, AZStd::string& OutString)
+    bool HoudiniEngineString::ToAZString(const AZ::s32& InStringId, AZStd::string& OutString)
     {
         HoudiniEngineString HAPIString(InStringId);
         return HAPIString.ToAZString(OutString);

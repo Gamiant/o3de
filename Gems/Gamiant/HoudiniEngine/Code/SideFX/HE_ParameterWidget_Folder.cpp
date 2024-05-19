@@ -9,11 +9,12 @@
 #include "HE_ParameterWidget_Folder.h"
 
 #include <QtWidgets/qgridlayout.h>
-#include <vector>
+
+#include <AzCore/std/containers/vector.h>
 
 namespace HoudiniEngine
 {
-    HE_ParameterWidget_Folder::HE_ParameterWidget_Folder(HAPI_ParmId ParmId, const std::string &FolderName)
+    HE_ParameterWidget_Folder::HE_ParameterWidget_Folder(HAPI_ParmId ParmId, const AZStd::string &FolderName)
         : HE_ParameterWidget(ParmId)
     {
         Layout = new QGridLayout;
@@ -28,7 +29,7 @@ namespace HoudiniEngine
 
     HE_ParameterWidget_Folder::~HE_ParameterWidget_Folder()
     {
-        for (std::vector<HE_ParameterWidget*>::size_type i = 0; i < ParameterWidgets.size(); i++)
+        for (AZStd::vector<HE_ParameterWidget*>::size_type i = 0; i < ParameterWidgets.size(); i++)
         {
             if (ParameterWidgets[i])
             {
@@ -36,7 +37,7 @@ namespace HoudiniEngine
             }
         }
 
-        for (std::vector<QHBoxLayout*>::size_type i = 0; i < Rows.size(); i++)
+        for (AZStd::vector<QHBoxLayout*>::size_type i = 0; i < Rows.size(); i++)
         {
             if (Rows[i])
             {
@@ -72,7 +73,7 @@ namespace HoudiniEngine
         }
     }
 
-    std::string
+    AZStd::string
     HE_ParameterWidget_Folder::GetName() const
     {
         return Name;

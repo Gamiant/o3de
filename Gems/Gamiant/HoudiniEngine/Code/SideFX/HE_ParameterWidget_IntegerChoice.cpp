@@ -13,14 +13,12 @@
 #include <QtWidgets/qgridlayout.h>
 #include <QtWidgets/qlabel.h>
 #include <QtWidgets/qcombobox.h>
-#include <string>
-#include <vector>
 
 namespace HoudiniEngine
 {
     HE_ParameterWidget_IntegerChoice::HE_ParameterWidget_IntegerChoice(HAPI_ParmId ParmId, const char *ParmLabel,
                                                                         int ChoiceSize,
-                                                                        const std::vector<std::string> &Choices,
+                                                                        const AZStd::vector<AZStd::string> &Choices,
                                                                         int CurrentChoice)
         : HE_ParameterWidget(ParmId)
     {
@@ -57,7 +55,7 @@ namespace HoudiniEngine
     }
 
     void
-    HE_ParameterWidget_IntegerChoice::SetHelpToolTip(std::string HelpString)
+    HE_ParameterWidget_IntegerChoice::SetHelpToolTip(AZStd::string HelpString)
     {
         if (Label)
         {

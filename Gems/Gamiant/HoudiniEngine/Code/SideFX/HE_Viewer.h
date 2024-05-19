@@ -24,8 +24,10 @@
 #include "HE_ParameterWidget_MultiInstance.h"
 
 #include <QWidget>
-#include <vector>
-#include <string>
+
+#include <AzCore/std/containers/vector.h>
+#include <AzCore/std/string/string.h>
+
 #include <HAPI/HAPI.h>
 #endif
 
@@ -67,7 +69,7 @@ namespace HoudiniEngine
         QScrollArea* ParametersDetailScrollArea;
         QGroupBox* ParametersDetailBox;
         QGridLayout* ParametersDetailGridLayout;
-        std::vector<QHBoxLayout*> ParametersDetailRows;
+        AZStd::vector<QHBoxLayout*> ParametersDetailRows;
 
     private:
         const HAPI_Session* Session;
@@ -75,22 +77,22 @@ namespace HoudiniEngine
 
         int RowCount;
 
-        std::vector<HE_ParameterWidget*> Widgets;
+        AZStd::vector<HE_ParameterWidget*> Widgets;
 
         // Returns true if the set session is valid
         bool IsSessionValid();
 
         // Places the node name in Name
         // Return val: indicates whether the function succeeded
-        bool GetNodeName(const HAPI_NodeInfo &NodeInfo, std::string &Name);
+        bool GetNodeName(const HAPI_NodeInfo &NodeInfo, AZStd::string &Name);
 
         // Places the string in HapiString
         // Return val: indicates whether the function succeeded
-        bool GetHapiString(HAPI_StringHandle Handle, std::string& HapiString);
+        bool GetHapiString(HAPI_StringHandle Handle, AZStd::string& HapiString);
 
         // Places the node label in Label
         // Return val: indicates whether the function succeeded
-        bool GetParameterLabel(const HAPI_ParmInfo &ParmInfo, std::string &Label);
+        bool GetParameterLabel(const HAPI_ParmInfo &ParmInfo, AZStd::string &Label);
 
         // Returns whether the parameter is a root level parameter
         bool IsParameterRootLevel(const HAPI_ParmInfo &ParmInfo);
@@ -114,18 +116,18 @@ namespace HoudiniEngine
         HE_ParameterWidget_Multi* CreateMultiWidget(const HAPI_ParmInfo &ParmInfo);
 
     private slots:
-        void Slot_IntegerParmUpdate(HAPI_ParmId ParmId, std::vector<int> Integers);
-        void Slot_FloatParmUpdate(HAPI_ParmId ParmId, std::vector<float> Floats);
-        void Slot_StringParmUpdate(HAPI_ParmId ParmId, std::vector<std::string> Strings);
+        void Slot_IntegerParmUpdate(HAPI_ParmId ParmId, AZStd::vector<int> Integers);
+        void Slot_FloatParmUpdate(HAPI_ParmId ParmId, AZStd::vector<float> Floats);
+        void Slot_StringParmUpdate(HAPI_ParmId ParmId, AZStd::vector<AZStd::string> Strings);
         void Slot_ToggleParmUpdate(HAPI_ParmId ParmId, int On);
         void Slot_ButtonParmUpdate(HAPI_ParmId ParmId);
         void Slot_IntegerChoiceParmUpdate(HAPI_ParmId ParmId, int Choice);
-        void Slot_StringChoiceParmUpdate(HAPI_ParmId ParmId, std::string Choice);
+        void Slot_StringChoiceParmUpdate(HAPI_ParmId ParmId, AZStd::string Choice);
         void Slot_MultiParmUpdate();
 
     signals:
-        void IntParmChanged(HAPI_ParmId, std::vector<int>);
-        void FloatParmChanged(HAPI_ParmId, std::vector<float>);
-        void StringParmChanged(HAPI_ParmId, std::vector<std::string>);
+        void IntParmChanged(HAPI_ParmId, AZStd::vector<int>);
+        void FloatParmChanged(HAPI_ParmId, AZStd::vector<float>);
+        void StringParmChanged(HAPI_ParmId, AZStd::vector<AZStd::string>);
     };
 }

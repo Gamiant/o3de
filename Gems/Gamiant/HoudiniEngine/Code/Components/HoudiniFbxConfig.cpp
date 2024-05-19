@@ -21,7 +21,6 @@ namespace HoudiniEngine
                 ->Version(0)
                 ->Field("RemoveHdaAfterBake", &HoudiniFbxConfig::m_removeHdaAfterBake)
                 ->Field("ReplacePreviousBake", &HoudiniFbxConfig::m_replacePreviousBake)
-                ->Field("SaveToFbx", &HoudiniFbxConfig::m_cmdSaveFbx)
                 ->Field("BakeCounter", &HoudiniFbxConfig::m_bakeCounter)
                 ;
 
@@ -30,13 +29,14 @@ namespace HoudiniEngine
             {
                 editContext->Class<HoudiniFbxConfig>("", "")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
-                    ->DataElement(0, &HoudiniFbxConfig::m_removeHdaAfterBake, "Remove HDA Output After Bake", "")
+                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &HoudiniFbxConfig::m_removeHdaAfterBake, "Remove HDA Output After Bake<br/>", "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(0, &HoudiniFbxConfig::m_replacePreviousBake, "Replace Previous Bake", "")
-                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::Button, &HoudiniFbxConfig::m_cmdSaveFbx, "", "")
-                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniFbxConfig::Bake)
+                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &HoudiniFbxConfig::m_replacePreviousBake, "Replace Previous Bake", "")
+                    //->Attribute(AZ::Edit::Attributes::AutoExpand, true)
+                    ->UIElement(AZ::Edit::UIHandlers::Button, "Bake")
                     ->Attribute(AZ::Edit::Attributes::ButtonText, "Bake")
+                    ->Attribute(AZ::Edit::Attributes::NameLabelOverride, "")
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, &HoudiniFbxConfig::Bake)
                     ;
             }
         }

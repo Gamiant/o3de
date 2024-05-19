@@ -12,7 +12,7 @@
 #include "HE_ParameterWidget.h"
 
 #include <HAPI/HAPI.h>
-#include <string>
+#include <AzCore/std/string/string.h>
 #endif
 
 class QHBoxLayout;
@@ -33,7 +33,7 @@ namespace HoudiniEngine
         HE_ParameterWidget_Toggle(HAPI_ParmId ParmId, const char *ParmLabel, bool Checked);
         ~HE_ParameterWidget_Toggle();
 
-        void SetHelpToolTip(std::string HelpString) override;
+        void SetHelpToolTip(AZStd::string HelpString) override;
 
     private:
         QHBoxLayout *Layout;

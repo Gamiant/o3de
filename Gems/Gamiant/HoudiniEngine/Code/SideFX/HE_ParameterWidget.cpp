@@ -9,7 +9,7 @@
 #include "HE_ParameterWidget.h"
 
 #include <HAPI/HAPI.h>
-#include <string>
+
 
 namespace HoudiniEngine
 {
@@ -24,7 +24,7 @@ namespace HoudiniEngine
     }
 
     void
-    HE_ParameterWidget::SetHelpToolTip(std::string HelpString)
+    HE_ParameterWidget::SetHelpToolTip(AZStd::string HelpString)
     {
         this->setToolTip(HelpString.c_str());
     }
