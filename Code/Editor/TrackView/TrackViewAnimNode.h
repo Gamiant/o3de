@@ -16,7 +16,6 @@
 #include <AzToolsFramework/Entity/EditorEntityContextBus.h>
 #include <AzCore/Component/TransformBus.h>
 
-#include "Objects/BaseObject.h"
 #include "TrackViewNode.h"
 #include "TrackViewTrack.h"
 
@@ -118,9 +117,6 @@ public:
 
     // Checks if anim node is part of active sequence and of an active director
     virtual bool IsActive();
-
-    // Set as view camera
-    virtual void SetAsViewCamera();
 
     // Name setter/getter
     AZStd::string GetName() const override { return m_animNode->GetName(); }
@@ -224,7 +220,7 @@ public:
     virtual bool IsValidReparentingTo(CTrackViewAnimNode* pNewParent);
 
     int GetDefaultKeyTangentFlags() const { return m_animNode ? m_animNode->GetDefaultKeyTangentFlags() : SPLINE_KEY_TANGENT_UNIFIED; }
-    
+
     void SetComponent(AZ::ComponentId componentId, const AZ::Uuid& componentTypeId);
 
     // returns the AZ::ComponentId of the component associated with this node if it is of type AnimNodeType::Component, InvalidComponentId otherwise
@@ -234,7 +230,7 @@ public:
     void MarkAsModified() override;
     // ~IAnimNodeOwner
 
-    // Compares all of the node's track values at the given time with the associated property value and 
+    // Compares all of the node's track values at the given time with the associated property value and
     //     sets a key at that time if they are different to match the latter
     // Returns the number of keys set
     int SetKeysForChangedTrackValues(float time) { return m_animNode->SetKeysForChangedTrackValues(time); }
@@ -252,7 +248,7 @@ public:
     // AZ::EntityBus
     void OnEntityActivated(const AZ::EntityId& entityId) override;
     void OnEntityDestruction(const AZ::EntityId& entityId) override;
-    //~AZ::EntityBus 
+    //~AZ::EntityBus
 
     //////////////////////////////////////////////////////////////////////////
     //! AZ::TransformNotificationBus::Handler
