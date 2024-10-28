@@ -42,10 +42,11 @@ namespace AZ
             friend class ImageMipChainAssetTester;
             friend class StreamingImageAssetCreator;
             friend class StreamingImageAssetHandler;
+
         public:
-            static const char* DisplayName;
-            static const char* Extension;
-            static const char* Group;
+            static constexpr const char* DisplayName{ "ImageMipChain" };
+            static constexpr const char* Group{ "Image" };
+            static constexpr const char* Extension{ "imagemipchain" };
 
             AZ_RTTI(ImageMipChainAsset, "{CB403C8A-6982-4C9F-8090-78C9C36FBEDB}", Data::AssetData);
             AZ_CLASS_ALLOCATOR(ImageMipChainAsset, AZ::SystemAllocator);
@@ -70,7 +71,7 @@ namespace AZ
             AZStd::span<const uint8_t> GetSubImageData(uint32_t subImageIndex) const;
             
             //! Returns the sub-image layout for a single sub-image by index.
-            const RHI::ImageSubresourceLayout& GetSubImageLayout(uint32_t subImageIndex) const;
+            const RHI::DeviceImageSubresourceLayout& GetSubImageLayout(uint32_t subImageIndex) const;
 
             using MipSliceList = AZStd::fixed_vector<RHI::StreamingImageMipSlice, RHI::Limits::Image::MipCountMax>;
 
@@ -109,7 +110,7 @@ namespace AZ
             AZStd::array<uint16_t, RHI::Limits::Image::MipCountMax> m_mipToSubImageOffset;
 
             // [Serialized] Maps the local mip level to a sub resource layout.
-            AZStd::array<RHI::ImageSubresourceLayout, RHI::Limits::Image::MipCountMax> m_subImageLayouts;
+            AZStd::array<RHI::DeviceImageSubresourceLayout, RHI::Limits::Image::MipCountMax> m_subImageLayouts;
 
             // [Serialized] Contains a flat list of sub-images which reference the flat data blob.
             AZStd::vector<AZ::u64> m_subImageDataOffsets;

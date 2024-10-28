@@ -28,7 +28,6 @@ public:
 
     MOCK_METHOD0(DeleteThis, void());
     MOCK_METHOD0(GetSystem, ISystem*());
-    MOCK_METHOD0(GetClassFactory, IEditorClassFactory* ());
     MOCK_METHOD0(GetCommandManager, CEditorCommandManager*());
     MOCK_METHOD0(GetICommandManager, ICommandManager* ());
     MOCK_METHOD1(ExecuteCommand, void(const QString& sCommand));
@@ -82,22 +81,13 @@ public:
     MOCK_METHOD0(GetActiveView, class CViewport* ());
     MOCK_METHOD1(SetActiveView, void(CViewport*));
     MOCK_METHOD0(GetFileMonitor, struct IEditorFileMonitor* ());
-    MOCK_CONST_METHOD0(CreateQMimeData, QMimeData* ());
-    MOCK_CONST_METHOD1(DestroyQMimeData, void(QMimeData*));
     MOCK_METHOD0(GetLevelIndependentFileMan, class CLevelIndependentFileMan* ());
     MOCK_METHOD2(UpdateViews, void(int , const AABB* ));
     MOCK_METHOD0(ResetViews, void());
     MOCK_METHOD0(ReloadTrackView, void());
-    MOCK_METHOD0(GetMarkerPosition, Vec3());
-    MOCK_METHOD1(SetMarkerPosition, void(const Vec3&));
-    MOCK_METHOD1(SetSelectedRegion, void(const AABB& box));
-    MOCK_METHOD1(GetSelectedRegion, void(AABB& box));
-    MOCK_METHOD1(SetOperationMode, void(EOperationMode ));
-    MOCK_METHOD0(GetOperationMode, EOperationMode());
+
     MOCK_METHOD1(SetAxisConstraints, void(AxisConstrains ));
     MOCK_METHOD0(GetAxisConstrains, AxisConstrains());
-    MOCK_METHOD1(SetAxisVectorLock, void(bool));
-    MOCK_METHOD0(IsAxisVectorLocked, bool());
     MOCK_METHOD1(SetTerrainAxisIgnoreObjects, void(bool));
     MOCK_METHOD0(IsTerrainAxisIgnoreObjects, bool());
     MOCK_METHOD1(SetReferenceCoordSys, void(RefCoordSys ));
@@ -141,19 +131,12 @@ public:
     MOCK_METHOD2(NotifyExcept, void(EEditorNotifyEvent , IEditorNotifyListener* ));
     MOCK_METHOD1(RegisterNotifyListener, void(IEditorNotifyListener* ));
     MOCK_METHOD1(UnregisterNotifyListener, void(IEditorNotifyListener* ));
-    MOCK_METHOD1(RegisterDocListener, void(IDocListener* ));
-    MOCK_METHOD1(UnregisterDocListener, void(IDocListener* ));
-    MOCK_METHOD0(GetSourceControl, ISourceControl* ());
-    MOCK_METHOD0(IsSourceControlAvailable, bool());
-    MOCK_METHOD0(IsSourceControlConnected, bool());
     MOCK_METHOD0(ReduceMemory, void());
     MOCK_CONST_METHOD0(GetEditorConfigPlatform, ESystemConfigPlatform());
     MOCK_METHOD0(ReloadTemplates, void());
     MOCK_METHOD1(ShowStatusText, void(bool ));
     MOCK_METHOD0(GetEnv, SSystemGlobalEnvironment* ());
-    MOCK_METHOD0(GetImageUtil, IImageUtil* ());
     MOCK_METHOD0(GetEditorSettings, SEditorSettings* ());
-    MOCK_METHOD0(GetLogFile, ILogFile* ());
     MOCK_METHOD0(UnloadPlugins, void());
     MOCK_METHOD0(LoadPlugins, void());
     MOCK_METHOD1(GetSearchPath, QString(EEditorPathName));

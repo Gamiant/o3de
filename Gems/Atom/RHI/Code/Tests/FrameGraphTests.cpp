@@ -10,6 +10,8 @@
 #include <Tests/FrameGraph.h>
 #include <Tests/Factory.h>
 #include <Tests/Device.h>
+#include <Atom/RHI/ImagePool.h>
+#include <Atom/RHI/BufferPool.h>
 #include <Atom/RHI/ImageFrameAttachment.h>
 #include <Atom/RHI/BufferFrameAttachment.h>
 #include <Atom/RHI/ImageScopeAttachment.h>
@@ -39,10 +41,10 @@ namespace UnitTest
             ASSERT_TRUE(&scopeAttachment->GetScope() == scope);
 
             const RHI::BufferFrameAttachment& attachment = scopeAttachment->GetFrameAttachment();
-            ASSERT_TRUE(attachment.GetFirstScope() == scope);
-            ASSERT_TRUE(attachment.GetLastScope() == scope);
-            ASSERT_TRUE(attachment.GetFirstScopeAttachment() == scopeAttachment);
-            ASSERT_TRUE(attachment.GetLastScopeAttachment() == scopeAttachment);
+            ASSERT_TRUE(attachment.GetFirstScope(scope->GetDeviceIndex()) == scope);
+            ASSERT_TRUE(attachment.GetLastScope(scope->GetDeviceIndex()) == scope);
+            ASSERT_TRUE(attachment.GetFirstScopeAttachment(scope->GetDeviceIndex()) == scopeAttachment);
+            ASSERT_TRUE(attachment.GetLastScopeAttachment(scope->GetDeviceIndex()) == scopeAttachment);
 
             if (buffer)
             {
@@ -60,10 +62,10 @@ namespace UnitTest
             ASSERT_TRUE(&scopeAttachment->GetScope() == scope);
 
             const RHI::ImageFrameAttachment& attachment = scopeAttachment->GetFrameAttachment();
-            ASSERT_TRUE(attachment.GetFirstScope() == scope);
-            ASSERT_TRUE(attachment.GetLastScope() == scope);
-            ASSERT_TRUE(attachment.GetFirstScopeAttachment() == scopeAttachment);
-            ASSERT_TRUE(attachment.GetLastScopeAttachment() == scopeAttachment);
+            ASSERT_TRUE(attachment.GetFirstScope(scope->GetDeviceIndex()) == scope);
+            ASSERT_TRUE(attachment.GetLastScope(scope->GetDeviceIndex()) == scope);
+            ASSERT_TRUE(attachment.GetFirstScopeAttachment(scope->GetDeviceIndex()) == scopeAttachment);
+            ASSERT_TRUE(attachment.GetLastScopeAttachment(scope->GetDeviceIndex()) == scopeAttachment);
 
             if (image)
             {
@@ -77,22 +79,25 @@ namespace UnitTest
 
             m_rootFactory.reset(aznew Factory());
 
-            RHI::Ptr<RHI::Device> device = MakeTestDevice();
+            m_rhiSystem.reset(aznew AZ::RHI::RHISystem);
+            m_rhiSystem->InitDevices();
+            m_rhiSystem->Init();
 
             m_state.reset(new State);
 
             {
-                m_state->m_bufferPool = RHI::Factory::Get().CreateBufferPool();
+                m_state->m_bufferPool = aznew RHI::BufferPool;
 
                 RHI::BufferPoolDescriptor desc;
                 desc.m_bindFlags = RHI::BufferBindFlags::ShaderReadWrite;
-                m_state->m_bufferPool->Init(*device, desc);
+                desc.m_deviceMask = RHI::MultiDevice::DefaultDevice;
+                m_state->m_bufferPool->Init(desc);
             }
 
             for (uint32_t i = 0; i < BufferCount; ++i)
             {
                 RHI::Ptr<RHI::Buffer> buffer;
-                buffer = RHI::Factory::Get().CreateBuffer();
+                buffer = aznew RHI::Buffer;
 
                 RHI::BufferDescriptor desc;
                 desc.m_bindFlags = RHI::BufferBindFlags::ShaderReadWrite;
@@ -109,17 +114,18 @@ namespace UnitTest
             }
 
             {
-                m_state->m_imagePool = RHI::Factory::Get().CreateImagePool();
+                m_state->m_imagePool = aznew RHI::ImagePool;
 
                 RHI::ImagePoolDescriptor desc;
                 desc.m_bindFlags = RHI::ImageBindFlags::ShaderReadWrite;
-                m_state->m_imagePool->Init(*device, desc);
+                desc.m_deviceMask = RHI::MultiDevice::DefaultDevice;
+                m_state->m_imagePool->Init(desc);
             }
 
             for (uint32_t i = 0; i < ImageCount; ++i)
             {
                 RHI::Ptr<RHI::Image> image;
-                image = RHI::Factory::Get().CreateImage();
+                image = aznew RHI::Image;
 
                 RHI::ImageDescriptor desc = RHI::ImageDescriptor::Create2D(
                     RHI::ImageBindFlags::ShaderReadWrite,
@@ -148,12 +154,14 @@ namespace UnitTest
             }
 
             m_state->m_frameGraphCompiler = RHI::Factory::Get().CreateFrameGraphCompiler();
-            m_state->m_frameGraphCompiler->Init(*device);
+            m_state->m_frameGraphCompiler->Init();
         }
 
         void TearDown() override
         {
             m_state.reset();
+            m_rhiSystem->Shutdown();
+            m_rhiSystem.reset();
             m_rootFactory.reset();
             RHITestFixture::TearDown();
         }
@@ -432,9 +440,10 @@ namespace UnitTest
                 for (const RHI::FrameAttachment* attachment : attachmentDatabase.GetAttachments())
                 {
                     const RHI::ScopeAttachment* scopeAttachmentPrev = nullptr;
-                    for (const RHI::ScopeAttachment* scopeAttachment = attachment->GetFirstScopeAttachment();
-                        scopeAttachment;
-                        scopeAttachment = scopeAttachment->GetNext())
+                    for (const RHI::ScopeAttachment* scopeAttachment =
+                             attachment->GetFirstScopeAttachment(RHI::MultiDevice::DefaultDeviceIndex);
+                         scopeAttachment;
+                         scopeAttachment = scopeAttachment->GetNext())
                     {
                         ASSERT_TRUE(&scopeAttachment->GetFrameAttachment() == attachment);
                         ASSERT_TRUE(scopeAttachment->GetPrevious() == scopeAttachmentPrev);
@@ -461,8 +470,8 @@ namespace UnitTest
                 frameGraph.BeginScope(*m_state->m_scopes[0]);
                 frameGraph.SetHardwareQueueClass(RHI::HardwareQueueClass::Graphics);
 
-                constexpr uint32_t numImports = 10;
-                for (uint32_t i = 0; i < numImports; ++i)
+                constexpr uint32_t numBufferImports = 6;
+                for (uint32_t i = 0; i < numBufferImports; ++i)
                 {
                     frameGraph.GetAttachmentDatabase().ImportBuffer(
                         m_state->m_bufferAttachments[i].m_id, m_state->m_bufferAttachments[i].m_buffer);
@@ -526,7 +535,8 @@ namespace UnitTest
                     AZ_TEST_STOP_ASSERTTEST(1);
                 }
 
-                for (uint32_t i = 0; i < numImports; ++i)
+                constexpr uint32_t numImageImports = 9;
+                for (uint32_t i = 0; i < numImageImports; ++i)
                 {
                     frameGraph.GetAttachmentDatabase().ImportImage(
                         m_state->m_imageAttachments[i].m_id, m_state->m_imageAttachments[i].m_image);
@@ -553,7 +563,7 @@ namespace UnitTest
                     AZ_TEST_STOP_ASSERTTEST(1);
 
                     // Mipmap overlap, Slice Overlap
-                    desc.m_attachmentId = m_state->m_imageAttachments[3].m_id;
+                    desc.m_attachmentId = m_state->m_imageAttachments[2].m_id;
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor::Create(RHI::Format::Unknown, 0, 1, 0, 1);
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::ReadWrite, RHI::ScopeAttachmentStage::AnyGraphics);
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor::Create(RHI::Format::Unknown, 1, 2, 1, 2);
@@ -562,7 +572,7 @@ namespace UnitTest
                     AZ_TEST_STOP_ASSERTTEST(1);
 
                     // No overlap, different aspect mask
-                    desc.m_attachmentId = m_state->m_imageAttachments[4].m_id;
+                    desc.m_attachmentId = m_state->m_imageAttachments[3].m_id;
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor();
                     desc.m_imageViewDescriptor.m_aspectFlags = RHI::ImageAspectFlags::Depth;
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::ReadWrite, RHI::ScopeAttachmentStage::AnyGraphics);
@@ -570,34 +580,34 @@ namespace UnitTest
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::ReadWrite, RHI::ScopeAttachmentStage::AnyGraphics);
 
                     // No overlap on mimap
-                    desc.m_attachmentId = m_state->m_imageAttachments[5].m_id;
+                    desc.m_attachmentId = m_state->m_imageAttachments[4].m_id;
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor::Create(RHI::Format::Unknown, 0, 1, 0, 1);
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::ReadWrite, RHI::ScopeAttachmentStage::AnyGraphics);
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor::Create(RHI::Format::Unknown, 2, 3, 0, 1);
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::ReadWrite, RHI::ScopeAttachmentStage::AnyGraphics);
 
                     // No overlap on slice
-                    desc.m_attachmentId = m_state->m_imageAttachments[6].m_id;
+                    desc.m_attachmentId = m_state->m_imageAttachments[5].m_id;
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor::Create(RHI::Format::Unknown, 0, 1, 0, 1);
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::ReadWrite, RHI::ScopeAttachmentStage::AnyGraphics);
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor::Create(RHI::Format::Unknown, 0, 1, 2, 3);
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::ReadWrite, RHI::ScopeAttachmentStage::AnyGraphics);
 
                     // No overlap on mipmap and slice
-                    desc.m_attachmentId = m_state->m_imageAttachments[7].m_id;
+                    desc.m_attachmentId = m_state->m_imageAttachments[6].m_id;
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor::Create(RHI::Format::Unknown, 0, 1, 1, 2);
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::ReadWrite, RHI::ScopeAttachmentStage::AnyGraphics);
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor::Create(RHI::Format::Unknown, 2, 3, 3, 4);
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::ReadWrite, RHI::ScopeAttachmentStage::AnyGraphics);
 
                     // Overlap read only
-                    desc.m_attachmentId = m_state->m_imageAttachments[8].m_id;
+                    desc.m_attachmentId = m_state->m_imageAttachments[7].m_id;
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor();
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::Read, RHI::ScopeAttachmentStage::AnyGraphics);
                     frameGraph.UseShaderAttachment(desc, RHI::ScopeAttachmentAccess::Read, RHI::ScopeAttachmentStage::AnyGraphics);
 
                     // Overlap invalid usage
-                    desc.m_attachmentId = m_state->m_imageAttachments[9].m_id;
+                    desc.m_attachmentId = m_state->m_imageAttachments[8].m_id;
                     desc.m_imageViewDescriptor = RHI::ImageViewDescriptor();
                     frameGraph.UseDepthStencilAttachment(
                         desc, RHI::ScopeAttachmentAccess::Read, RHI::ScopeAttachmentStage::EarlyFragmentTest);
@@ -605,7 +615,7 @@ namespace UnitTest
                     frameGraph.UseDepthStencilAttachment(
                         desc, RHI::ScopeAttachmentAccess::Read, RHI::ScopeAttachmentStage::EarlyFragmentTest);
                     AZ_TEST_STOP_ASSERTTEST(1);
-                }              
+                }
 
                 frameGraph.EndScope();
 
@@ -623,6 +633,7 @@ namespace UnitTest
         static const uint32_t ImageArrayCount = 3;
         static const uint32_t ScopeCount = 128;
 
+        AZStd::unique_ptr<AZ::RHI::RHISystem> m_rhiSystem;
         AZStd::unique_ptr<Factory> m_rootFactory;
 
         struct ImageAttachment

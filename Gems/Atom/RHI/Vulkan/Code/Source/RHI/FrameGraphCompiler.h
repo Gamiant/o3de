@@ -44,7 +44,7 @@ namespace AZ
 
             //////////////////////////////////////////////////////////////////////////
             // RHI::FrameGraphCompiler
-            RHI::ResultCode InitInternal(RHI::Device& device) override;
+            RHI::ResultCode InitInternal() override;
             void ShutdownInternal() override;
             RHI::MessageOutcome CompileInternal(const RHI::FrameGraphCompileRequest& request) override;
             //////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ namespace AZ
             // Queue the resource buffer barrier into the provided scope.
             void QueueResourceBarrier(
                 Scope& scope,
-                const RHI::ScopeAttachment& scopeAttachment,
+                RHI::ScopeAttachment& scopeAttachment,
                 Buffer& buffer,
                 const RHI::BufferSubresourceRange& range,
                 const Scope::BarrierSlot slot,
@@ -71,7 +71,7 @@ namespace AZ
             // Queue the resource barrier into the provided scope.
             void QueueResourceBarrier(
                 Scope& scope,
-                const RHI::ScopeAttachment& scopeAttachment,
+                RHI::ScopeAttachment& scopeAttachment,
                 Image& image,
                 const RHI::ImageSubresourceRange& range,
                 const Scope::BarrierSlot slot,
@@ -86,14 +86,17 @@ namespace AZ
             void CompileSemaphoreSynchronization(const RHI::FrameGraph& frameGraph);
 
             RHI::Scope* FindPreviousScope(RHI::ScopeAttachment& scopeAttachment) const;
+
+            // Optimize queued barriers of scopes.
+            void OptimizeBarriers(const RHI::FrameGraphCompileRequest& request);
         };
 
         template<class ResourceScopeAttachment, class ResourceType>
         void FrameGraphCompiler::CompileScopeAttachment(ResourceScopeAttachment& scopeAttachment, ResourceType& resource)
         {
-            auto& device = static_cast<Device&>(GetDevice());
-            auto& queueContext = device.GetCommandQueueContext();
             Scope& scope = static_cast<Scope&>(scopeAttachment.GetScope());
+            auto& device = static_cast<Device&>(scope.GetDevice());
+            auto& queueContext = device.GetCommandQueueContext();
             Scope* prevScope = static_cast<Scope*>(FindPreviousScope(scopeAttachment));
 
             auto subresourceRange = GetSubresourceRange(scopeAttachment);

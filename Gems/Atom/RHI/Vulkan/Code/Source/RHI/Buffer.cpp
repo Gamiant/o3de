@@ -5,18 +5,19 @@
  * SPDX-License-Identifier: Apache-2.0 OR MIT
  *
  */
+#include <Atom/RHI.Reflect/BufferDescriptor.h>
+#include <Atom/RHI.Reflect/Vulkan/Conversion.h>
+#include <Atom/RHI/DeviceBufferView.h>
+#include <Atom/RHI/MemoryStatisticsBuilder.h>
 #include <AzCore/std/algorithm.h>
 #include <AzCore/std/parallel/lock.h>
 #include <AzCore/std/sort.h>
-#include <Atom/RHI/BufferView.h>
-#include <Atom/RHI/MemoryStatisticsBuilder.h>
-#include <Atom/RHI.Reflect/BufferDescriptor.h>
 #include <RHI/Buffer.h>
 #include <RHI/BufferPool.h>
-#include <Atom/RHI.Reflect/Vulkan/Conversion.h>
-#include <RHI/MemoryView.h>
 #include <RHI/Device.h>
+#include <RHI/MemoryView.h>
 #include <RHI/Queue.h>
+#include <RHI/RayTracingAccelerationStructure.h>
 #include <RHI/ReleaseContainer.h>
 
 namespace AZ
@@ -88,7 +89,7 @@ namespace AZ
             return m_ownerQueue.Get(range ? *range : RHI::BufferSubresourceRange(GetDescriptor()));
         }
 
-        AZStd::vector<Buffer::SubresourceRangeOwner> Buffer::GetOwnerQueue(const RHI::BufferView& bufferView) const
+        AZStd::vector<Buffer::SubresourceRangeOwner> Buffer::GetOwnerQueue(const RHI::DeviceBufferView& bufferView) const
         {
             auto range = RHI::BufferSubresourceRange(bufferView.GetDescriptor());
             return GetOwnerQueue(&range);
@@ -100,7 +101,7 @@ namespace AZ
             m_ownerQueue.Set(range ? *range : RHI::BufferSubresourceRange(GetDescriptor()), queueId);
         }
 
-        void Buffer::SetOwnerQueue(const QueueId& queueId, const RHI::BufferView& bufferView)
+        void Buffer::SetOwnerQueue(const QueueId& queueId, const RHI::DeviceBufferView& bufferView)
         {
             auto range = RHI::BufferSubresourceRange(bufferView.GetDescriptor());
             return SetOwnerQueue(queueId , &range);
@@ -157,10 +158,10 @@ namespace AZ
             AZ_Assert(RHI::CheckBitsAll(GetDescriptor().m_bindFlags, RHI::BufferBindFlags::RayTracingAccelerationStructure),
                 "GetNativeAccelerationStructure() is only valid for buffers with the RayTracingAccelerationStructure bind flag");
 
-            return m_nativeAccelerationStructure;
+            return m_nativeAccelerationStructure->GetNativeAccelerationStructure();
         }
 
-        void Buffer::SetNativeAccelerationStructure(const VkAccelerationStructureKHR& accelerationStructure)
+        void Buffer::SetNativeAccelerationStructure(const RHI::Ptr<RayTracingAccelerationStructure>& accelerationStructure)
         {
             AZ_Assert(RHI::CheckBitsAll(GetDescriptor().m_bindFlags, RHI::BufferBindFlags::RayTracingAccelerationStructure),
                 "SetNativeAccelerationStructure() is only valid for buffers with the RayTracingAccelerationStructure bind flag");
