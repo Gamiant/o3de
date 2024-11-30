@@ -6,7 +6,6 @@
  *
  */
 
-#include <Atom/Feature/Mesh/MeshFeatureProcessor.h>
 #include <Atom/RHI/BufferFrameAttachment.h>
 #include <Atom/RHI/BufferScopeAttachment.h>
 #include <Atom/RHI/CommandList.h>
@@ -17,6 +16,7 @@
 #include <Atom/RPI.Public/Buffer/BufferSystemInterface.h>
 #include <Atom/RPI.Public/RenderPipeline.h>
 #include <Atom/RPI.Public/Scene.h>
+#include <Mesh/MeshFeatureProcessor.h>
 #include <RayTracing/RayTracingAccelerationStructurePass.h>
 #include <RayTracing/RayTracingFeatureProcessor.h>
 
@@ -52,14 +52,17 @@ namespace AZ
 
         void RayTracingAccelerationStructurePass::FrameBeginInternal(FramePrepareParams params)
         {
+            if (IsTimestampQueryEnabled())
+            {
+                m_timestampResult = AZ::RPI::TimestampResult();
+            }
+
             if (GetScopeId().IsEmpty())
             {
                 InitScope(RHI::ScopeId(GetPathName()), RHI::HardwareQueueClass::Graphics, Pass::GetDeviceIndex());
             }
 
             params.m_frameGraphBuilder->ImportScopeProducer(*this);
-
-            ReadbackScopeQueryResults();
 
             RPI::Scene* scene = m_pipeline->GetScene();
             RayTracingFeatureProcessor* rayTracingFeatureProcessor = scene->GetFeatureProcessor<RayTracingFeatureProcessor>();
@@ -71,6 +74,7 @@ namespace AZ
                 if (m_rayTracingRevisionOutDated)
                 {
                     m_rayTracingRevision = revision;
+                    ReadbackScopeQueryResults();
                 }
             }
         }
