@@ -81,7 +81,6 @@ ly_add_target(
             Gem::LmbrCentral
             Gem::Atom_Feature_Common
             Gem::Atom_Feature_Common.Public
-            Gem::Atom_Feature_Common.Static
             Gem::Atom_RPI.Public
             Gem::Atom_RHI.Reflect
             Gem::CommonFeaturesAtom.Public
@@ -178,7 +177,6 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
                 Gem::Atom_RPI.Edit
                 3rdParty::houdini
                 Gem::Atom_RPI.Public
-                Gem::Atom_Feature_Common.Static
                 Gem::AtomLyIntegration_CommonFeatures.Static
                 $<TARGET_OBJECTS:Gem::${gem_name}.Private.Object>
     )
