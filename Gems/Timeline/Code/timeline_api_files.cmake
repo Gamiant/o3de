@@ -2,4 +2,18 @@
 set(FILES
     Include/Timeline/TimelineBus.h
     Include/Timeline/TimelineTypeIds.h
+    Include/Timeline/AnimationParamType.h
+    Include/Timeline/IAnimationNode.h
+    Include/Timeline/IAnimatonTrack.h
+    Include/Timeline/TimelineTypeIds.h
+    Include/Timeline/AnimationTrackOwner.h
+    Include/Timeline/AnimationTrack.h
+    Include/Timeline/AnimationSequence.h
+    Include/Timeline/AnimationNode.h
+    Include/Timeline/AnimationCurveType.h
+    Include/Timeline/IAnimationSequence.h
+    Include/Timeline/TimelineDefinitions.h
+    Include/Timeline/AnimationValueTypes.h
+    Include/Timeline/TimelineTypeIds.h
+    Include/Timeline/AnimationNodeTypes.h
 )
