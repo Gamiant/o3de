@@ -13,7 +13,7 @@ set(FILES
     Include/Timeline/AnimationCurveType.h
     Include/Timeline/IAnimationSequence.h
     Include/Timeline/TimelineDefinitions.h
-    Include/Timeline/AnimationValueTypes.h
+    Include/Timeline/AnimationValueType.h
     Include/Timeline/TimelineTypeIds.h
     Include/Timeline/AnimationNodeTypes.h
 )

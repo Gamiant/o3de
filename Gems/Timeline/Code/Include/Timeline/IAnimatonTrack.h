@@ -8,8 +8,14 @@
 
 #pragma once
 
+#include "TimelineDefinitions.h"
+
+#include <AzCore/std/string/string.h>
+
 namespace Timeline
 {
+    class IAnimationNode;
+
     class IAnimationTrack
     {
         AZ_TYPE_INFO_WITH_NAME_DECL(IAnimationTrack);
@@ -21,17 +27,16 @@ namespace Timeline
         //! Flags that can be set on animation track.
         enum EAnimTrackFlags
         {
-            eAnimTrackFlags_Linear = BIT(1), //!< Use only linear interpolation between keys.
-            eAnimTrackFlags_Loop = BIT(2), //!< Play this track in a loop.
-            eAnimTrackFlags_Cycle = BIT(3), //!< Cycle track.
-            eAnimTrackFlags_Disabled = BIT(4), //!< Disable this track.
+            eAnimTrackFlags_Linear      = AZ_BIT(1), //!< Use only linear interpolation between keys.
+            eAnimTrackFlags_Loop        = AZ_BIT(2), //!< Play this track in a loop.
+            eAnimTrackFlags_Cycle       = AZ_BIT(3), //!< Cycle track.
+            eAnimTrackFlags_Disabled    = AZ_BIT(4), //!< Disable this track.
 
             //////////////////////////////////////////////////////////////////////////
             // Used by editor.
             //////////////////////////////////////////////////////////////////////////
-            eAnimTrackFlags_Hidden = BIT(5), //!< Set when track is hidden in track view.
-            eAnimTrackFlags_Muted =
-                BIT(8), //!< Mute this sound track or music track. This only affects the playback in editor on these types of tracks.
+            eAnimTrackFlags_Hidden      = AZ_BIT(5), //!< Set when track is hidden in track view.
+            eAnimTrackFlags_Muted       = AZ_BIT(8), //!< Mute this sound track or music track. This only affects the playback in editor on these types of tracks.
         };
 
         virtual ~IAnimationTrack(){};
@@ -60,7 +65,7 @@ namespace Timeline
 
         virtual void SetNode(IAnimNode* node) = 0;
         // Return Animation Sequence that owns this node.
-        virtual IAnimNode* GetNode() = 0;
+        virtual IAnimationNode* GetNode() = 0;
 
         //////////////////////////////////////////////////////////////////////////
         // Animation track can contain sub-tracks (Position XYZ anim track have sub-tracks for x,y,z)

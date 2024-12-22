@@ -6,6 +6,8 @@
 
 #include <Clients/TimelineSystemComponent.h>
 
+#include <Timeline/IAnimationNode.h>
+
 namespace Timeline
 {
     AZ_TYPE_INFO_WITH_NAME_IMPL(TimelineModuleInterface,

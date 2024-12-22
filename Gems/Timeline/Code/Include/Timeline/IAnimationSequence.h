@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include <AzCore/RTTI/RTTI.h>
+#include "TimelineDefinitions.h"
+
 namespace AZ
 {
     class ReflectContext;
@@ -15,6 +18,8 @@ namespace AZ
 
 namespace Timeline
 {
+    class IAnimationNode;
+
     //! Animation sequence, operates on animation nodes contained in it
     class IAnimationSequence
     {
@@ -29,21 +34,21 @@ namespace Timeline
         //! Flags used for SetFlags(),GetFlags(),SetParentFlags(),GetParentFlags() methods.
         enum EAnimSequenceFlags
         {
-            eSeqFlags_PlayOnReset = BIT(0), //!< Start playing this sequence immediately after reset of movie system(Level load).
-            eSeqFlags_OutOfRangeConstant = BIT(1), //!< Constant Out-Of-Range,time continues normally past sequence time range.
-            eSeqFlags_OutOfRangeLoop = BIT(2), //!< Loop Out-Of-Range,time wraps back to the start of range when reaching end of range.
-            eSeqFlags_CutScene = BIT(3), //!< Cut scene sequence.
-            eSeqFlags_NoHUD = BIT(4), //!< @deprecated - Don`t display HUD
-            eSeqFlags_NoPlayer = BIT(5), //!< Disable input and drawing of player
-            eSeqFlags_NoGameSounds = BIT(9), //!< Suppress all game sounds.
-            eSeqFlags_NoSeek = BIT(10), //!< Cannot seek in sequence.
-            eSeqFlags_NoAbort = BIT(11), //!< Cutscene can not be aborted
-            eSeqFlags_NoSpeed = BIT(13), //!< Cannot modify sequence speed - TODO: add interface control if required
-            // eSeqFlags_CanWarpInFixedTime  = BIT(14), //!< @deprecated - Timewarp by scaling a fixed time step - removed July 2017, unused
-            eSeqFlags_EarlyMovieUpdate = BIT(15), //!< Turn the 'sys_earlyMovieUpdate' on during the sequence.
-            eSeqFlags_LightAnimationSet = BIT(16), //!< A special unique sequence for light animations
-            eSeqFlags_NoMPSyncingNeeded = BIT(17), //!< this sequence doesn't require MP net syncing
-            eSeqFlags_DisplayAsFramesOrSeconds = BIT(18), //!< Display Start/End time as frames or seconds
+            eSeqFlags_PlayOnReset               = AZ_BIT(0), //!< Start playing this sequence immediately after reset of movie system(Level load).
+            eSeqFlags_OutOfRangeConstant        = AZ_BIT(1), //!< Constant Out-Of-Range,time continues normally past sequence time range.
+            eSeqFlags_OutOfRangeLoop            = AZ_BIT(2), //!< Loop Out-Of-Range,time wraps back to the start of range when reaching end of range.
+            eSeqFlags_CutScene                  = AZ_BIT(3), //!< Cut scene sequence.
+            eSeqFlags_NoHUD                     = AZ_BIT(4), //!< @deprecated - Don`t display HUD
+            eSeqFlags_NoPlayer                  = AZ_BIT(5), //!< Disable input and drawing of player
+            eSeqFlags_NoGameSounds              = AZ_BIT(9), //!< Suppress all game sounds.
+            eSeqFlags_NoSeek                    = AZ_BIT(10), //!< Cannot seek in sequence.
+            eSeqFlags_NoAbort                   = AZ_BIT(11), //!< Cutscene can not be aborted
+            eSeqFlags_NoSpeed                   = AZ_BIT(13), //!< Cannot modify sequence speed - TODO: add interface control if required
+            // eSeqFlags_CanWarpInFixedTime     = AZ_BIT(14), //!< @deprecated - Timewarp by scaling a fixed time step - removed July 2017, unused
+            eSeqFlags_EarlyMovieUpdate          = AZ_BIT(15), //!< Turn the 'sys_earlyMovieUpdate' on during the sequence.
+            eSeqFlags_LightAnimationSet         = AZ_BIT(16), //!< A special unique sequence for light animations
+            eSeqFlags_NoMPSyncingNeeded         = AZ_BIT(17), //!< this sequence doesn't require MP net syncing
+            eSeqFlags_DisplayAsFramesOrSeconds  = AZ_BIT(18), //!< Display Start/End time as frames or seconds
         };
 
         virtual ~IAnimationSequence(){};
@@ -70,9 +75,9 @@ namespace Timeline
         virtual const AZ::EntityId& GetSequenceEntityId() const = 0;
 
         //! Set the currently active director node.
-        virtual void SetActiveDirector(IAnimNode* pDirectorNode) = 0;
+        virtual void SetActiveDirector(IAnimationNode* pDirectorNode) = 0;
         //! Get the currently active director node, if any.
-        virtual IAnimNode* GetActiveDirector() const = 0;
+        virtual IAnimationNode* GetActiveDirector() const = 0;
 
         //! Set animation sequence flags
         virtual void SetFlags(int flags) = 0;
@@ -90,36 +95,36 @@ namespace Timeline
         //! Return number of animation nodes in sequence.
         virtual int GetNodeCount() const = 0;
         //! Get animation node at specified index.
-        virtual IAnimNode* GetNode(int index) const = 0;
+        virtual IAnimationNode* GetNode(int index) const = 0;
 
         //! Add animation node to sequence.
         //! @return True if node added, same node will not be added 2 times.
-        virtual bool AddNode(IAnimNode* node) = 0;
+        virtual bool AddNode(IAnimationNode* node) = 0;
 
         // Reorders the array of nodes, so the specified node is placed after or before the given pivot node depending on the parameter
         // 'next'.
-        virtual void ReorderNode(IAnimNode* node, IAnimNode* pPivotNode, bool next) = 0;
+        virtual void ReorderNode(IAnimationNode* node, IAnimationNode* pPivotNode, bool next) = 0;
 
         // Description:
         //      Creates a new animation node with specified type.
         // Arguments:
         //      nodeType - Type of node, one of AnimNodeType enums.
-        virtual IAnimNode* CreateNode(AnimNodeType nodeType) = 0;
+        virtual IAnimationNode* CreateNode(AnimationNodeType nodeType) = 0;
 
         // Description:
         //      Creates a new animation node from serialized node XML.
         // Arguments:
         //      node - Serialized form of node
-        virtual IAnimNode* CreateNode(XmlNodeRef node) = 0;
+        virtual IAnimationNode* CreateNode(XmlNodeRef node) = 0;
 
         //! Remove animation node from sequence.
-        virtual void RemoveNode(IAnimNode* node, bool removeChildRelationships /*=true*/) = 0;
+        virtual void RemoveNode(IAnimationNode* node, bool removeChildRelationships /*=true*/) = 0;
 
         // Finds node by name, can be slow.
         // If the node belongs to a director, the director node also should be given
         // since there can be multiple instances of the same node(i.e. the same name)
         // across multiple director nodes.
-        virtual IAnimNode* FindNodeByName(const char* sNodeName, const IAnimNode* pParentDirector) = 0;
+        virtual IAnimationNode* FindNodeByName(const char* sNodeName, const IAnimationNode* pParentDirector) = 0;
 
         //! Remove all nodes from sequence.
         virtual void RemoveAll() = 0;
@@ -186,10 +191,10 @@ namespace Timeline
         virtual void InitPostLoad() = 0;
 
         // Copy some nodes of this sequence to XML.
-        virtual void CopyNodes(XmlNodeRef& xmlNode, IAnimNode** pSelectedNodes, uint32 count) = 0;
+        virtual void CopyNodes(XmlNodeRef& xmlNode, IAnimationNode** pSelectedNodes, uint32 count) = 0;
 
         // Paste nodes given by the XML to this sequence.
-        virtual void PasteNodes(const XmlNodeRef& xmlNode, IAnimNode* pParent) = 0;
+        virtual void PasteNodes(const XmlNodeRef& xmlNode, IAnimationNode* pParent) = 0;
 
         // Summary:
         //  Adds/removes track events in sequence.

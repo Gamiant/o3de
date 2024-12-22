@@ -8,8 +8,19 @@
 
 #pragma once
 
+#include "AnimationParamType.h"
+#include "AnimationValueType.h"
+#include "AnimationNodeTypes.h"
+#include "TimelineDefinitions.h"
+
+#include <AzCore/std/containers/vector.h>
+
+class IMovieSystem;
+
 namespace Timeline
 {
+    class IAnimationSequence;
+
     class IAnimationNode
     {
     public:
@@ -31,18 +42,17 @@ namespace Timeline
         struct SParamInfo
         {
             SParamInfo();
-            SParamInfo(const char* _name, CAnimParamType _paramType, AnimValueType _valueType, ESupportedParamFlags _flags);
+            SParamInfo(const char* _name, AnimationParameterType _paramType, AnimationValueType _valueType, ESupportedParamFlags _flags);
 
             AZStd::string name; // parameter name.
-            CAnimParamType paramType; // parameter id.
-            AnimValueType valueType; // value type, defines type of track to use for animating this parameter.
+            AnimationParameterType paramType; // parameter id.
+            AnimationValueType valueType; // value type, defines type of track to use for animating this parameter.
             ESupportedParamFlags flags; // combination of flags from ESupportedParamFlags.
         };
 
         using AnimParamInfos = AZStd::vector<SParamInfo>;
 
-        // <interfuscator:shuffle>
-        virtual ~IAnimNode(){};
+        virtual ~IAnimationNode(){};
 
         // for intrusive_ptr support
         virtual void add_ref() = 0;
@@ -55,13 +65,13 @@ namespace Timeline
         virtual const char* GetName() const = 0;
 
         // Get Type of this node.
-        virtual AnimNodeType GetType() const = 0;
+        virtual AnimationNodeType GetType() const = 0;
 
         // Return Animation Sequence that owns this node.
-        virtual IAnimSequence* GetSequence() const = 0;
+        virtual IAnimationSequence* GetSequence() const = 0;
 
         // Set the Animation Sequence that owns this node.
-        virtual void SetSequence(IAnimSequence* sequence) = 0;
+        virtual void SetSequence(IAnimationSequence* sequence) = 0;
 
         // Called when sequence is activated / deactivated
         virtual void Activate(bool bActivate) = 0;
@@ -77,7 +87,7 @@ namespace Timeline
         virtual int GetFlags() const = 0;
 
         // return true if flagsToCheck is set on the node or any of the node's parents
-        virtual bool AreFlagsSetOnNodeOrAnyParent(EAnimNodeFlags flagsToCheck) const = 0;
+        virtual bool AreFlagsSetOnNodeOrAnyParent(AnimationNodeFlags flagsToCheck) const = 0;
 
         // AZ::Entity is bound/handled via their Id over EBuses, as opposed to directly with pointers.
         virtual void SetAzEntityId(const AZ::EntityId& id) = 0;
@@ -91,29 +101,29 @@ namespace Timeline
         virtual void SetScale(float time, const AZ::Vector3& scale) = 0;
 
         //! Compute and return the offset which brings the current position to the given position
-        virtual Vec3 GetOffsetPosition(const Vec3& position);
+        virtual AZ::Vector3 GetOffsetPosition(const AZ::Vector3& position);
 
         //! Get current entity position.
-        virtual Vec3 GetPos() = 0;
+        virtual AZ::Vector3 GetPos() = 0;
         //! Get current entity rotation.
-        virtual Quat GetRotate() = 0;
+        virtual AZ::Quaternion GetRotate() = 0;
         //! Get entity rotation at specified time.
-        virtual Quat GetRotate(float time) = 0;
+        virtual AZ::Quaternion GetRotate(float time) = 0;
         //! Get current entity scale.
-        virtual Vec3 GetScale() = 0;
+        virtual AZ::Vector3 GetScale() = 0;
 
         // General Set param.
         // Set float/vec3/vec4 parameter at given time.
         // @return true if parameter set, false if this parameter not exist in node.
-        virtual bool SetParamValue(float time, CAnimParamType param, float value) = 0;
-        virtual bool SetParamValue(float time, CAnimParamType param, const AZ::Vector3& value) = 0;
-        virtual bool SetParamValue(float time, CAnimParamType param, const AZ::Vector4& value) = 0;
+        virtual bool SetParamValue(float time, AnimationParameterType param, float value) = 0;
+        virtual bool SetParamValue(float time, AnimationParameterType param, const AZ::Vector3& value) = 0;
+        virtual bool SetParamValue(float time, AnimationParameterType param, const AZ::Vector4& value) = 0;
 
         // Get float/vec3/vec4 parameter at given time.
         // @return true if parameter exist, false if this parameter not exist in node.
-        virtual bool GetParamValue(float time, CAnimParamType param, float& value) = 0;
-        virtual bool GetParamValue(float time, CAnimParamType param, AZ::Vector3& value) = 0;
-        virtual bool GetParamValue(float time, CAnimParamType param, AZ::Vector4& value) = 0;
+        virtual bool GetParamValue(float time, AnimationParameterType param, float& value) = 0;
+        virtual bool GetParamValue(float time, AnimationParameterType param, AZ::Vector3& value) = 0;
+        virtual bool GetParamValue(float time, AnimationParameterType param, AZ::Vector4& value) = 0;
 
         //! Evaluate animation node while not playing animation.
         virtual void StillUpdate() = 0;
@@ -131,25 +141,25 @@ namespace Timeline
         //      Returns the type of a param by index
         // Arguments:
         //      nIndex - parameter index in range 0 <= nIndex < GetSupportedParamCount()
-        virtual CAnimParamType GetParamType(unsigned int nIndex) const = 0;
+        virtual AnimationParameterType GetParamType(unsigned int nIndex) const = 0;
 
         // Description:
         //      Check if parameter is supported by this node.
-        virtual bool IsParamValid(const CAnimParamType& paramType) const = 0;
+        virtual bool IsParamValid(const AnimationParameterType& paramType) const = 0;
 
         // Description:
         //      Returns name of supported parameter of this animation node or NULL if not available
         // Arguments:
         //          paramType - parameter id
-        virtual AZStd::string GetParamName(const CAnimParamType& paramType) const = 0;
+        virtual AZStd::string GetParamName(const AnimationParameterType& paramType) const = 0;
 
         // Description:
         //      Returns the params value type
-        virtual AnimValueType GetParamValueType(const CAnimParamType& paramType) const = 0;
+        virtual AnimValueType GetParamValueType(const AnimationParameterType& paramType) const = 0;
 
         // Description:
         //      Returns the params value type
-        virtual ESupportedParamFlags GetParamFlags(const CAnimParamType& paramType) const = 0;
+        virtual ESupportedParamFlags GetParamFlags(const AnimationParameterType& paramType) const = 0;
 
         // Called node data is re-initialized, such as when changing the entity associated with it.
         virtual void OnReset() = 0;
@@ -163,23 +173,23 @@ namespace Timeline
         virtual IAnimTrack* GetTrackByIndex(int nIndex) const = 0;
 
         // Return first track assigned to the specified parameter.
-        virtual IAnimTrack* GetTrackForParameter(const CAnimParamType& paramType) const = 0;
+        virtual IAnimTrack* GetTrackForParameter(const AnimationParameterType& paramType) const = 0;
 
         // Return the i-th track assigned to the specified parameter in case of multiple tracks.
-        virtual IAnimTrack* GetTrackForParameter(const CAnimParamType& paramType, uint32 index) const = 0;
+        virtual IAnimTrack* GetTrackForParameter(const AnimationParameterType& paramType, uint32 index) const = 0;
 
         // Get the index of a given track among tracks with the same parameter type in this node.
         virtual uint32 GetTrackParamIndex(const IAnimTrack* pTrack) const = 0;
 
         // Creates a new track for given parameter.
-        virtual IAnimTrack* CreateTrack(const CAnimParamType& paramType) = 0;
+        virtual IAnimTrack* CreateTrack(const AnimationParameterType& paramType) = 0;
 
         // Initializes track default values after de-serialization / user creation. Only called in editor.
-        virtual void InitializeTrackDefaultValue(IAnimTrack* pTrack, const CAnimParamType& paramType) = 0;
+        virtual void InitializeTrackDefaultValue(IAnimTrack* pTrack, const AnimationParameterType& paramType) = 0;
 
         // Assign animation track to parameter.
         // if track parameter is NULL track with parameter id param will be removed.
-        virtual void SetTrack(const CAnimParamType& paramType, IAnimTrack* track) = 0;
+        virtual void SetTrack(const AnimationParameterType& paramType, IAnimTrack* track) = 0;
 
         // Set time range for all tracks in this sequence.
         virtual void SetTimeRange(Range timeRange) = 0;
