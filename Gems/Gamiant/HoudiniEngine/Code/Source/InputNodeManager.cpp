@@ -243,7 +243,7 @@ namespace HoudiniEngine
                 AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateInputNodeFromSpline::HAPI_CreateInputNodeForSpline");
 
                 hasSplineChanged = true;
-                HAPI_CreateInputNode(&session, &newInput, name.c_str());
+                HAPI_CreateInputNode(&session, 0, &newInput, name.c_str());
                 AddSplineChangeHandler(id);
                 *m_houdini << "Create Input Node: Spline: " << newInput << " verts: " << numVerts << " " << name;
             }
@@ -497,7 +497,7 @@ namespace HoudiniEngine
             if (newInput == HOUDINI_INVALID_ID)
             {
                 AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateInputNodeFromTerrain::CreateNewTerrainInputNode");
-                HAPI_CreateInputNode(&session, &newInput, "TERRAIN");
+                HAPI_CreateInputNode(&session, 0, &newInput, "TERRAIN");
                 *m_houdini << "Create Input Node: TERRAIN: " << newInput << " verts: " << numVerts << "";
             }
 
@@ -654,7 +654,7 @@ namespace HoudiniEngine
                 {
                     AZ_PROFILE_SCOPE(Editor, "InputNodeManager::CreateNodeFromMesh::CreateNewMeshInputNode");
                     AZStd::string nodeName = "MESH " + entity->GetName();
-                    HAPI_CreateInputNode(&session, &newInput, nodeName.c_str());
+                    HAPI_CreateInputNode(&session, 0, &newInput, nodeName.c_str());
                     *m_houdini << "Create Input Node: " << nodeName << " verts: " << indexCount << "";
                     m_meshNodesCache[id] = newInput;
                 }

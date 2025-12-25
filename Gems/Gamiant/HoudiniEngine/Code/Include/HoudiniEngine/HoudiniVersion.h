@@ -16,5 +16,5 @@
 
 namespace HoudiniEngine
 {
-    constexpr AZStd::string_view HoudiniVersionString = "20.0.590";
+    constexpr AZStd::string_view HoudiniVersionString = "21.0.559";
 }

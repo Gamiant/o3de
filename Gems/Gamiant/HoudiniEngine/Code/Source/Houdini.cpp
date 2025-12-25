@@ -198,19 +198,20 @@ namespace HoudiniEngine
         HAPI_ClearConnectionError();
 
         HAPI_Result sessionResult = HAPI_RESULT_FAILURE;
+        HAPI_SessionInfo sessionInfo;
 
         switch (sessionType)
         {
         case SessionSettings::ESessionType::TCPSocket:
 
             // Try to connect to an existing socket session first
-            sessionResult = HAPI_CreateThriftSocketSession(&m_session, serverHost.c_str(), serverPort);
+            sessionResult = HAPI_CreateThriftSocketSession( & m_session, serverHost.c_str(), serverPort, &sessionInfo);
             break;
 
         case SessionSettings::ESessionType::NamedPipe:
 
             // Try to connect to an existing socket session first
-            sessionResult = HAPI_CreateThriftNamedPipeSession(&m_session, namedPipe.c_str());
+            sessionResult = HAPI_CreateThriftNamedPipeSession(&m_session, namedPipe.c_str(), &sessionInfo);
             break;
 
         default:
@@ -341,7 +342,7 @@ namespace HoudiniEngine
         {
             case SessionSettings::ESessionType::TCPSocket:
             {
-                SessionResult = HAPI_CreateThriftSocketSession(&m_session, serverHost.c_str(), serverPort);
+                SessionResult = HAPI_CreateThriftSocketSession(&m_session, serverHost.c_str(), serverPort, &m_sessionInfo);
 
                 // Start a session and try to connect to it if we failed
                 if (SessionResult != HAPI_RESULT_SUCCESS)
@@ -349,14 +350,14 @@ namespace HoudiniEngine
                     SetupEnvironment();
                     HAPI_StartThriftSocketServer(&ServerOptions, serverPort, nullptr, nullptr);
 
-                    SessionResult = HAPI_CreateThriftSocketSession(&m_session, serverHost.c_str(), serverPort);
+                    SessionResult = HAPI_CreateThriftSocketSession(&m_session, serverHost.c_str(), serverPort, &m_sessionInfo);
                 }
             }
                 break;
 
             case SessionSettings::ESessionType::NamedPipe:
             {
-                SessionResult = HAPI_CreateThriftNamedPipeSession(&m_session, namedPipe.c_str());
+                SessionResult = HAPI_CreateThriftNamedPipeSession(&m_session, namedPipe.c_str(), &m_sessionInfo);
 
                 // Start a session and try to connect to it if we failed
                 if (SessionResult != HAPI_RESULT_SUCCESS)
@@ -364,7 +365,7 @@ namespace HoudiniEngine
                     SetupEnvironment();
                     HAPI_StartThriftNamedPipeServer(&ServerOptions, namedPipe.c_str(), nullptr, nullptr);
 
-                    SessionResult = HAPI_CreateThriftNamedPipeSession(&m_session, namedPipe.c_str());
+                    SessionResult = HAPI_CreateThriftNamedPipeSession(&m_session, namedPipe.c_str(), &m_sessionInfo);
                 }
             }
             break;

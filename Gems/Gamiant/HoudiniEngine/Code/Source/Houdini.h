@@ -64,6 +64,8 @@ namespace HoudiniEngine
         int m_currentPercent = 0;
         AZStd::string m_currentStatus;
 
+        HAPI_SessionInfo m_sessionInfo;
+
         void ExecuteCommand(AZ::EntityId currentId, AZStd::function<bool()> functionToCall) override;
         void RaiseCommandPriority(AZ::EntityId newId) override;
 

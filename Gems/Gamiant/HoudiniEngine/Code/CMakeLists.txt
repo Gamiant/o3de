@@ -197,8 +197,6 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
             PUBLIC
                 Gem::${gem_name}.Editor.Private.Object
                 Gem::${gem_name}.Editor.API
-        RUNTIME_DEPENDENCIES
-                3rdParty::assimplib
     )
 
     # By default, we will specify that the above target ${gem_name} would be used by
